@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block additional-headers %}
+{% endblock %}
+
+{% block additional-javascript %}
+{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-list-alt"></i> Add Menu Item
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="/usermodule/add-menu/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.title.id_for_label }}">Title:</label>
+                                <input type="text" name="{{ menu_form.title.name }}" class="form-control">
+                                <span class="help-block">{{ menu_form.title.errors.as_text }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.url.id_for_label }}">Url:</label>
+                                <input type="text" name="{{ menu_form.url.name }}" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.list_class.id_for_label }}">Menu List Class:</label>
+                                <input type="text" name="{{ menu_form.list_class.name }}" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.icon_class.id_for_label }}">Menu Icon Class:</label>
+
+                                <input type="text" name="{{ menu_form.icon_class.name }}" class="form-control">
+                                <span class="help-block">{{ menu_form.email.errors.as_text }}</span>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.parent_menu.id_for_label }}">Parent Menu:</label>
+                                <select id="{{ menu_form.parent_menu.id_for_label }}"
+                                        name="{{ menu_form.parent_menu.name }}" class="form-control">
+                                    <option value="">Parent Menu</option>
+                                    {% for x,y in menu_form.fields.parent_menu.choices %}
+                                    <option value="{{ x }}">{{ y }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ menu_form.parent_menu.errors.as_text }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.sort_order.id_for_label }}">Sort order:</label>
+                                <input class="form-control" type="number" id="{{ menu_form.sort_order.id_for_label }}" min="0" name="{{ menu_form.sort_order.name }}">
+                                <span class="help-block">{{ menu_form.sort_order.errors.as_text }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--<section id="data-view">
+    <h1>Menu Management</h1>
+    <span class="span12">
+        <div class="data-table-container table table-striped table-hover">
+            {% if is_added %}
+                <strong>Menu Added!</strong>
+            {% else %}
+                <strong>Add Menu</strong><br />
+                <form id="menu_form" method="post" action="/usermodule/add-menu/">
+
+                    {% csrf_token %}
+                    {{ menu_form.as_p }}
+                    &lt;!&ndash; Provide a button to click to submit the form. &ndash;&gt;
+                    <input type="submit" class="btn btn-primary btn-lg" name="submit" value="Save" />
+                </form>
+            {% endif %}
+            <div style="clear: both;"></div>
+        </div>
+    </span>
+
+</section>-->
+{% endblock %}

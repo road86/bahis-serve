@@ -1,0 +1,148 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+
+    <head>
+        <title>
+            {% block title %} Workdays Calculations {% endblock %}
+        </title>
+    </head>
+
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+<style type="text/css">
+.td-right{
+    text-align: right;
+}
+</style>
+
+{% endblock %}
+{% block content %}
+<div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <div class="caption"><i class="fa fa-adn"></i> Workdays Calculations </div>
+            </div>
+        </div>
+        <div class="portlet-body form">
+        <form id="filter_trends" action="" method="post">
+            {%  csrf_token %}
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>Division: </label>
+                    <select class="form-control" name="division_id" id="division_id">
+                        <option value="%">Select One</option>
+                        {% for dl in get_division_list %}
+                            <option value="{{ dl.0 }}">{{ dl.1 }}</option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+            </div>
+            
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>From: </label>
+                <input type="text" class="datepicker form-control"
+                       value="{{ start_date }}" name="collecion_from_date" id="collecion_from_date" readonly>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>To: </label>
+                <input type="text" class="datepicker form-control"
+                       value="{{ end_date }}" name="collecion_to_date" id="collecion_to_date" readonly>
+                </div>
+            </div>
+
+            <div class="col-md-3" style="margin-top: 25px;">
+                <label class="control-label"></label>
+                <button type="submit"
+                        class="btn btn-primary">Search <span
+                        class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                </button>
+            </div>
+        </form>
+        <div style="margin:10px 10px;">
+        <table id="workday_table" class="table table-bordered table-striped  nowrap">
+                <thead>
+                <tr><th style="text-align:center;" colspan="6">(1) District wise U2C Form Submissions </th></tr>
+                <tr>
+                <th class="td-left">District</th>
+                    <th class="td-right">Farm Assessment Monitoring</th>
+                    <th class="td-right">Avian Influenza Investigation</th>
+                    <th class="td-right">Avian Influenza Sample Submission</th>
+                    <th class="td-right">Disease Investigation</th>
+                    <th class="td-right">Participatory Livestock Assessment</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for item in district_form_data %}
+                <tr>
+                <td class="td-left">{{ item.district }}</td>
+                <td class="td-right">{{ item.fam_con }}</td>
+                <td class="td-right">{{ item.aii_con }}</td>
+                <td class="td-right">{{ item.ais_con }}</td>
+                <td class="td-right">{{ item.di_con }}</td>
+                <td class="td-right">{{ item.pla_con }}</td>
+                </tr>    
+                {% endfor %}
+                </tbody>
+
+            </table>
+
+
+            <table id="workday_table2" class="table table-bordered table-striped  nowrap">
+                <thead>
+                <tr><th style="text-align:center;" colspan="6">(2) Percentage of Operating U2C Officer (PDSR Officer with Reports) </th></tr>
+                <tr>
+                <th class="td-left">District</th>
+                    <th class="td-right">Active U2C officer</th>
+                    <th class="td-right">U2C Officers with NO report/Dormant PDS</th>
+                    <th class="td-right">U2C with report/ Operating U2C officer</th>
+                    <th class="td-right">Percentage of Operating U2C officers</th>
+                    <th class="td-right">Percentage of Dormant U2C Officers</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for item in user_stats %}
+                <tr>
+                <td class="td-left">{{ item.district }}</td>
+                <td class="td-right">{{ item.active_user }}</td>
+                <td class="td-right">{{ item.dormant_user }}</td>
+                <td class="td-right">{{ item.operating_user }}</td>
+                <td class="td-right">{{ item.operating_percentage|floatformat:2 }}%</td>
+                <td class="td-right">{{ item.dormant_percentage|floatformat:2 }}%</td>
+                </tr>    
+                {% endfor %}
+                </tbody>
+
+            </table>
+            </div>       
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+<script type="text/javascript">
+var division_id = '{{ division_id|safe }}';
+$(document).ready(function () {
+
+            $('#collecion_from_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+            $('#collecion_to_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+});
+</script>
+{% endblock %}
+

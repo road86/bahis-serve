@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+   <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+{% endblock %}
+
+
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Sector list</div>
+        </div>
+        <div class="portlet-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <a href="/usermodule/add-sector/">
+                        <button type="submit" class="btn btn-info pull-left" id="add_new" data-original-title=""
+                                title="">Add New
+                        </button>
+                    </a>
+                </div>
+            </div>
+            <br>
+            <table id="sector_table" class="table table-bordered table-striped table-condensed flip-content nowrap">
+                <thead class="flip-content">
+                <tr>
+
+                    <th>Sector Code </th>
+                    <th>TL pin </th>
+                    <th class="td-center"></th>
+                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+   <div class="modal fade" id="del_modal" role="dialog">
+        <div class="modal-dialog">
+          <!-- Modal content-->
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal">&times;</button>
+              <h4 class="modal-title">Warning!</h4>
+            </div>
+            <div class="modal-body" id="hh_sla_modal_body">
+              <h3>Data cannot be deleted.</h3>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+{% endblock %}
+{% block additional-javascript %}
+    <!--<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>-->
+     <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+
+    <script>
+    var table;
+    $(document).ready(function () {
+
+        table = $('#sector_table').DataTable({
+            "scrollX": true, "ordering": false,
+            deferRender: true
+        });
+
+        });
+
+
+        var tbody = '';
+        var sector_list = {{ sector_list|safe }};
+
+        for (var idx in sector_list) {
+            tbody += '<tr><td>' + sector_list[idx].sector_code + '</td><td>' + sector_list[idx].tlpin_code + '</td><td class="td-center"><a class="tooltips" data-placement="top" data-container="body" data-original-title="Edit" href="/usermodule/edit-sector/' + sector_list[idx].id + '"><i class="fa fa-2x fa-pencil-square-o"></i></a><a class=" tooltips"     onclick = "delete_entity('+sector_list[idx].id+')" href="#" ><i class="fa fa-2x fa-trash-o"></i></a></td></tr>';
+            //tbody += '<tr><td>' + sector_list[idx].sector_code + '</td><td>' + sector_list[idx].tlpin_code + '</td><td class="td-center"><a class="tooltips" data-placement="top" data-container="body" data-original-title="Edit" href="/usermodule/edit-sector/' + sector_list[idx].id + '><i class="fa fa-2x fa-pencil-square-o"></i></a><button class="tooltips" data-placement="top" data-container="body" data-original-title="Edit"  onclick="delete_sector('+sector_list[idx].id+'");"><i class="fa fa-2x fa-trash-o"></i></button></td></tr>';
+        }
+
+        $("#sector_table").find('tbody').html(tbody);
+
+        function delete_entity(id) {
+            if (confirm("Are you sure you want to delete this?")) {
+                $.ajax({
+                    type: 'GET',
+                    url: "/usermodule/delete_sector/" + id + "/",
+                    success: function (data) {
+                        window.location.href = "/usermodule/sector-list/";
+                    },
+                     error: function (xhr, status, error) {
+                        $('#del_modal').modal('show');
+
+                        }
+                }); //ajax end
+            }
+            else {
+                return false;
+            }
+        }
+
+
+
+
+    </script>
+{% endblock %}

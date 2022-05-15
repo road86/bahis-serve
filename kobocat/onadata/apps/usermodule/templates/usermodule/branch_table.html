@@ -1,0 +1,38 @@
+   <!-- SMS MODAL-->
+   <div  id="">
+                        <h3  style="">Branch list</h3>
+<!--<form id = "b_form" method = "post">-->
+
+                        <table id ="branch_table_id" class="table table-bordered table-hover table-fixed table-striped">
+                            <thead>
+                            <tr>
+                                <th> Name </th>
+                                <th>Code</th>
+                                <th> Address</th>
+                                <th>Action</th>
+                            </tr>
+                            <tr>
+                                <td> Name </td>
+                                <td>Code</td>
+                                <td> Address</td>
+                                <td>      </td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for data in dataset %}
+                            <tr>
+                                <td>{{data.branch_name}}</td>
+                                <td>{{data.branch_code }}</td>
+                                <td>{{ data.address }}</td>
+                                <td><input id="{{ data.id }}" name="branch" {{ data.checked }} value="{{ data.branch_name }}@@{{ data.id }}"   type="checkbox"></td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+<button type="button" class="btn btn-primary" id = "select_branch" value = "">Add Branch</button>
+<!--</form>-->
+
+                    </div>
+
+
+<!--modal ended-->

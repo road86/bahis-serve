@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Add Organization {% endblock %}
+    </title>
+</head>
+{% endblock %}
+{% block content %}
+<div class="col-md-offset-3 col-md-6">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Add Organization
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="user_form" method="post" action="/usermodule/add-organization/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label for="{{ organization_form.organization.id_for_label }}">Organization:</label>
+                        <input type="text" name="{{ organization_form.organization.name }}" class="form-control" {% if organization_form.organization.value %}value="{{ organization_form.organization.value }}" {% else %}value = "" {% endif %} required>
+                        <span class="help-block">{{ organization_form.organization.errors.as_text }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Parent Organisation:</label>
+                        <select id="{{ organization_form.parent_organization.id_for_label }}"
+                                name="{{ organization_form.parent_organization.name }}" class="form-control">
+                            {% for m,n in organization_form.fields.parent_organization.choices %}
+                            <option value="{{ m }}"
+
+                            {% if organization_form.parent_organization.value == m %} selected{% endif %}
+
+
+                            >{{ n }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <span class="help-block">{{ organization_form.parent_organization.errors.as_text }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ organization_form.address.id_for_label }}">Address:</label>
+                    <textarea name="{{ organization_form.address.name }}" class="form-control" >{% if organization_form.address.value %}{{ organization_form.address.value}}{% else %} {% endif %}</textarea>
+
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

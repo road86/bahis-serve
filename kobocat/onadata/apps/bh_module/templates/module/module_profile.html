@@ -1,0 +1,548 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}css/BootSideMenu.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}css/select-picker.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}assets/css/card.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}assets/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+{% comment %} <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> {% endcomment %}
+
+
+<style>
+    .panel {
+            margin-bottom: 20px;
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-group .panel {
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        .panel-group .panel + .panel {
+            margin-top: 0;
+        }
+
+        .panel-default {
+            border: none;
+        }
+
+        .panel-heading {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .panel-default > .panel-heading {
+            color: #333;
+            background: none;
+            border-top: 1px solid #ddd;
+        }
+
+        .panel-default > .panel-heading + .panel-collapse > .panel-body {
+            border: none;
+            background: white;
+        }
+
+        .panel-sub-body {
+            padding: 10px;
+            background: white;
+        }
+
+        .panel-heading .accordion-toggle:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading .accordion-toggle.collapsed:after {
+            content: "\e080";
+        }
+ 
+
+.panel-body img{
+    
+    width: 50px;
+    height: 60px;
+    display:block;
+    margin:auto;
+    
+   }
+
+.row-bottom-15{
+    margin-bottom: 15px;
+}
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"> 
+            {{module.module_name_english}}</div>
+        <div class="tools">
+        {% if can_conf == True %}
+            <a class="tooltips" href="/bhmodule/edit-module/{{ module_id }}/?next=/bhmodule/module-profile/{{module_id}}/" data-original-title="Edit"><i class="fa fa-2x fa-pencil-square-o" ></i></a> 
+            <a class="tooltips" href="/bhmodule/module/catchment-tree/{{ module_id }}/?next=/bhmodule/module-profile/{{module_id}}/" data-original-title="Catchment"><i class="fa fa-2x fa fa-globe" ></i></a>
+            <a class="tooltips" {% if module.module_type == '2' %} href="/bhmodule/module-list-config/{{ module_id }}/?next=/bhmodule/module-profile/{{module_id}}/" 
+            {% elif module.module_type == '1' %} href="/bhmodule/module-entry-config/{{ module_id }}/?next=/bhmodule/module-profile/{{module_id}}/" 
+            {% else %} href="/bhmodule/module-container-config/{{ module_id }}/?next=/bhmodule/module-profile/{{module_id}}/"
+            {% endif %} 
+            data-original-title="Settings"><i class="fa fa-2x fa-gear" ></i></a>
+        {% endif %}
+            <a class="tooltips" 
+            {% if module.parent_is_project%}
+            href="/bhmodule/project-profile/{{ module.node_parent }}/" 
+            {% else %} 
+            href="/bhmodule/module-profile/{{ module.node_parent }}/" 
+            {% endif %}
+            data-original-title="Back"><i class="fa fa-2x fa-arrow-left"></i></a>
+            
+        </div>
+
+    </div>
+    <div class="portlet-body">
+        <div class="row" style="margin: 10px;">
+            
+            <div class="col-md-3" >
+                
+                <p><strong>Creation Date:</strong>  {{module.created_date|default_if_none:'' }}</p>
+                
+            </div>
+            
+           
+            
+        
+        </div>
+        <div class="row">
+            {% if module.module_type == '2' %} 
+            <div class="col-md-offset-5 col-md-3">
+                <div class="panel panel-default" >
+                   
+                    <div class="panel-body">
+                        {%if module.list_def_id %}
+                        <a href="/bhmodule/list-view/generate/{{module.list_def_id}}/"><h4 style="text-align: center;">View List</h4></a>
+                        {% else %}
+                        <p style="text-align: center;">No Settings</p>
+                        {% endif %}
+                    </div>
+                    
+                    
+
+                    
+                </div>
+            </div>
+            {% elif module.module_type == '1' %}
+            <div class="col-md-offset-3 col-md-3">
+                <div class="panel panel-default" >
+                   
+                    <div class="panel-body">
+                        <a href="/add/{{module.id_string}}/"><h4 style="text-align: center;">New Submission</h4></a>
+                       
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="panel panel-default" >
+                   
+                    <div class="panel-body">
+                        <a href="/usermodule/fao_admin/projects-views/{{module.id_string}}/"><h4 style="text-align: center;">Details</h4></a>
+                       
+                    </div>
+                    
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+        <div class="panel-group" id="accordion">
+            {% if module.module_type == '3' %} 
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseModule">
+                            <b>Modules</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseModule" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        {% if can_conf == True %}
+                        <div class="row row-bottom-15">
+                            <a href="/bhmodule/add-module/{{ module_id }}/?next=/bhmodule/module-profile/{{ module_id }}/" class="btn red pull-right"><i class="fa fa-plus" aria-hidden="true"></i> Add Module</a>
+                        </div>
+                        {% endif %}
+                        <div class="row row-bottom-15">
+                            {% for each in child_module_list %}
+
+                            <div class="col-md-3" > 
+                                <div class="panel panel-default" >
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">
+                                        <div class="row">
+                                            <div class="col-md-9"><a style="font-size: 14px;" href="/bhmodule/module-profile/{{each.id}}/">{{ each.module_name_english }}</a> <small></small></div>
+                                            <div class="col-md-3" class="btn-group pull-right navbar-right">
+                                                {% if can_conf == True %}
+                                                    <a class="tooltips"  data-container="body" data-placement="top" data-toggle="modal" 
+                                                    data-target="#confirm-settings"
+                                                    data-original-title="Settings" onclick="showProjectSettiings('{{each.id}}','{{each.module_name_english}}','{{each.status}}', '{{each.publish_status}}','{{each.archive}}')"><i class="fa fa-2x fa-gear" ></i></a>
+                                                    <a class="tooltips" data-container="body" data-placement="top" href="/bhmodule/edit-module/{{each.id}}/?next=/bhmodule/module-profile/{{module_id}}/" data-original-title="Edit"><i style="margin-top: 5px;" class="fa fa-2x fa-pencil-square-o" ></i></a>
+                                                {% endif %}
+                        
+                                            </div>
+                                        </div>
+                                        </h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <img {% if each.icon and each.icon != 'None' %} src="/{{ each.icon }}" 
+                                             {% else %} 
+                                                {% if each.module_type == '1' %} src="{{ STATIC_URL }}assets/img/bahis_icon/form_icon.png" 
+                                                {% elif each.module_type == '2' %} src="{{ STATIC_URL }}assets/img/bahis_icon/list_icon.png" 
+                                                {% else %} src="{{ STATIC_URL }}assets/img/bahis_icon/container.png" 
+                                                {% endif %}
+                                            {% endif %} >
+                                       
+                                    </div>
+                                    <div class="panel-footer">
+                                
+                                        <p>Creation Date: {{each.created_at}}</p>
+                                        <p>Module Type: {{each.module_type}}</p>
+                                        <div class="clearfix">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                {% ifequal forloop.counter|divisibleby:"4"  True %}
+                                    </div>
+                                    <div class="row row-bottom-15">
+                                {% endifequal %}
+                            
+                            {% endfor %}
+                        </div>
+                    
+                    </div>
+                </div>
+            </div>
+                <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseArchived">
+                            <b>Archived</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseArchived" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="row row-bottom-15">
+                            {% for each in child_archived_module_data %}
+
+                            <div class="col-md-3" >
+                                <div class="panel panel-default" >
+                                    <div class="panel-heading">
+                                        <h3 class="panel-title">
+                                            <div class="row">
+                                            <div class="col-md-9"><a style="font-size: 14px;" href="/bhmodule/module-profile/{{each.id}}/">{{ each.module_name_english }}</a> <small></small></div>
+                                            <div class="col-md-3" class="btn-group pull-right navbar-right">
+                                                {% if can_conf == True %}
+                                                    <a class="tooltips"  data-container="body" data-placement="top" data-toggle="modal"
+                                                    data-target="#confirm-settings"
+                                                    data-original-title="Settings" onclick="showProjectSettiings('{{each.id}}','{{each.module_name_english}}','{{each.status}}', '{{each.publish_status}}','{{each.archive}}')"><i class="fa fa-2x fa-gear" ></i></a>
+                                                    <a class="tooltips" data-container="body" data-placement="top" href="/bhmodule/edit-module/{{each.id}}/?next=/bhmodule/module-profile/{{module_id}}/" data-original-title="Edit"><i style="margin-top: 5px;" class="fa fa-2x fa-pencil-square-o" ></i></a>
+                                                {% endif %}
+
+                                            </div>
+                                            </div>
+                                        </h3>
+                                    </div>
+                                    <div class="panel-body">
+                                        <img {% if each.icon and each.icon != 'None' %} src="/{{ each.icon }}"
+                                             {% else %}
+                                                {% if each.module_type == '1' %} src="{{ STATIC_URL }}assets/img/bahis_icon/form_icon.png"
+                                                {% elif each.module_type == '2' %} src="{{ STATIC_URL }}assets/img/bahis_icon/list_icon.png"
+                                                {% else %} src="{{ STATIC_URL }}assets/img/bahis_icon/container.png"
+                                                {% endif %}
+                                            {% endif %} >
+
+                                    </div>
+                                    <div class="panel-footer">
+
+                                        <p>Creation Date: {{each.created_at}}</p>
+                                        <p>Module Type: {{each.module_type}}</p>
+                                        <div class="clearfix">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                                {% ifequal forloop.counter|divisibleby:"4"  True %}
+                                    </div>
+                                    <div class="row row-bottom-15">
+                                {% endifequal %}
+
+
+                            {% endfor %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% if can_conf == True %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapsePermission">
+                            <b>Set Permission</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapsePermission" class="panel-collapse collapse">
+                    <div class="panel-body" id="access_div">
+                        
+                    
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-settings" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <!-- <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button> -->
+                <h4 class="modal-title" id="myModalLabel"><span id="project_name"></span> Settings</h4>
+            </div>
+
+            <div class="modal-body">
+                <input name="project_id" id="project_id" type="hidden" value="">
+                <div class="form-check form-switch">
+                    <label>Publish/Unpublish Project</label>
+                    <input class="form-check-input ios-switch" type="checkbox" id="project-publish" />
+                    <label class="form-check-label" for=""
+                      >Publish</label
+                    >
+                  </div>
+                  <div class="form-check form-switch">
+                    <label>Active/Inactive Project</label>
+
+                    <input class="form-check-input ios-switch" type="checkbox" id="project-active" />
+                    <label class="form-check-label"
+                      >Active</label
+                    >
+                  </div>
+                  <div class="form-check form-switch">
+                    <label>Archive Project</label>
+                    <input class="form-check-input ios-switch" type="checkbox" id="project-archive" />
+                    <label class="form-check-label"
+                      >Archive</label
+                    >
+                  </div>
+
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok" onclick="saveSettings()">Save Changes</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a branch info, this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}node_modules/data-forge/dist/web/index.js"></script>
+<script src="{{ STATIC_URL }}js/BootSideMenu.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/filter.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/select-picker.js" type="text/javascript"></script>
+
+
+<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>-->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="{{ STATIC_URL }}js/Date-Range-Picker-For-Twitter-Bootstrap/date.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js" type="text/javascript"></script>
+<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>-->
+{% comment %} <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script> {% endcomment %}
+
+
+<script>
+
+
+    $(document).ready(function () {
+        // populateTreeTable(root_list);
+        // $(".table tbody tr.has-history td:first-child").append('<span class="collapse-icon"></span>');
+        getModuleAccess();
+    });
+
+    function getModuleAccess(){
+    
+        $.ajax({
+                type: 'GET',
+                url: "/bhmodule/module-access/{{ module_id }}",
+                success: function (data) {
+                    
+                    $('#access_div').html(data);
+                     
+                },
+                error: function (xhr, status, error) {
+                    // $('#confirm-settings').modal('show');
+
+                }
+        });
+    }
+
+    /**
+    * This Function will show message in top For Asynchronous Request
+    */
+    $(document).on("submit", "#module_access_form", function (event) {
+        event.preventDefault();
+        $("#div_messages").html("");
+        var form_data = $('#module_access_form').serialize();
+        $.ajax({
+            method: "POST",
+            url: "/bhmodule/module-access/{{ module_id }}/",
+            data: form_data,
+            success: function (result) {
+                console.log(result)
+                // window.location.href = '/webfront-msbcc/member-list/';
+                $('#access_div').html(result);
+                showAjaxConfirmationMessages('success', "Permission Saved");
+            },
+            error: function (result) {
+                console.log(result.responseJSON);
+                var response = result.responseJSON;
+                showAjaxConfirmationMessages('danger', response.message);
+            }
+        });
+
+    });
+
+
+    /**
+     * This Function will show message in top For Asynchronous Request
+     * @param: Json (messages, type field)
+     * @zinia
+     * */
+     function showAjaxConfirmationMessages(type, messages){
+        $("#div_messages").html("");
+        $("#div_messages").append("<div class='alert alert-"+type+" fade in'><a class='close' href='#' data-dismiss='alert'>×</a> <p>"+messages+"</p></div>");
+    } //end of showAjaxConfirmationMessages
+
+
+    /**
+        * This Function will show Project settings in the modal
+        * @param: Json (id, project_name, active, publish, archive)
+        * @zinia
+    * */
+    function showProjectSettiings(id, project_name, active, publish, archive){
+        $('#project_id').val(id);
+        $('#project_name').html(project_name);
+
+        if (active==='1'){
+            $('#project-active').prop('checked', true);
+        }
+        else{
+            $('#project-active').prop('checked', false);
+        }
+
+        if (publish==='1'){
+            $('#project-publish').prop('checked', true);
+        }
+        else{
+            $('#project-publish').prop('checked', false);
+        }
+
+        if (archive==='1'){
+            $('#project-archive').prop('checked', true);
+        }
+        else{
+            $('#project-archive').prop('checked', false);
+        }
+
+     }
+
+ 
+    /**
+     * This Function will save Project Settings
+     * @param: Json (id, project_name, active, publish, archive)
+     * @zinia
+     * */
+    function saveSettings(){
+        var dataSet = {};
+        dataSet['project_id'] = $('#project_id').val();
+        dataSet['project_active'] = ($('#project-active').is(':checked') === true) ? '1' : '0';
+        dataSet['project_publish'] = ($('#project-publish').is(':checked') === true) ? '1' : '0';
+        dataSet['project_archive'] = ($('#project-archive').is(':checked') === true) ? '1' : '0';
+        $.ajax({
+                    type: 'POST',
+                    url: "/bhmodule/project-settings/",
+                    data: dataSet,
+                    success: function (data) {
+                        
+                        $('#confirm-settings').modal('hide');
+                        showAjaxConfirmationMessages('success', "Settings added succesfully!");
+                        location.reload(); 
+                    },
+                    error: function (xhr, status, error) {
+                        $('#confirm-settings').modal('show');
+
+                    }
+                });
+    }
+ 
+
+</script>
+{% endblock %}

@@ -1,0 +1,545 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+
+    <head>
+        <title>
+            {% block title %} Disease Situation {% endblock %}
+        </title>
+    </head>
+
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+
+
+{% endblock %}
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <div class="caption"><i class="fa fa-adn"></i> Disease Situation</div>
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form id="filter_trends" action="" method="post">
+                {% csrf_token %}
+            {% if forWhom == 'central' %}
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Division: </label>
+                        <select class="form-control" name="division_id" id="division_id"
+                                {% if loc_type != None %}readonly{% endif %}>
+                            <option value="%">Select One</option>
+                            {% for dl in get_division_list %}
+                                <option value="{{ dl.0 }}">{{ dl.1 }}</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+                </div>
+            {% endif %}
+            {% if forWhom == 'central' or forWhom == 'division'  %}
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>District: </label>
+                        <select class="form-control" name="district_id" id="district_id"
+                                {% if loc_type > 1 %}readonly{% endif %}>
+                            <option value="%">Select One</option>
+
+                        </select>
+                    </div>
+                </div>
+            {% endif %}
+            {% if forWhom == 'central' or forWhom == 'division' or forWhom == 'district'  %}
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Upazila: </label>
+                        <select class="form-control" name="upazila_id" id="upazila_id"
+                                {% if loc_type > 2 %}readonly{% endif %}>
+                            <option value="%">Select One</option>
+
+                        </select>
+                    </div>
+                </div>
+            {% endif %}
+            <!-- <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Livestock Type: </label>
+                        <select class="form-control" name="livestock_id" id="livestock_id" onchange="getSpecies(this);">
+                            <option value="%">Select One</option>
+                            <option value="1">Mammal</option>
+                            <option value="2">Bird</option>
+                        </select>
+                    </div>
+                </div> -->
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>Animal Type: </label>
+                    <!--onchange="getSpecies(this);"-->
+                    <select class="form-control" name="livestock_id" id="livestock_id">
+                        <option value="%">Select One</option>
+                        <option value="Poultry">Poultry</option>
+                        <option value="Ruminant">Ruminant</option>
+                        <option value="Others">Others</option>
+                    </select>
+                </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Species: </label>
+                        <select class="form-control" name="species_id" id="species_id">
+                            <option value="%">Select One</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Disease: </label>
+                        <select class="form-control" name="disease_id" id="disease_id">
+                            <option value="%">Select One</option>
+                            {% for dl in get_disease_list %}
+                                <option value="{{ dl.0 }}">{{ dl.1 }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label>Show by</label>
+                    <select class="form-control" name="dwm_filter_id" id="dwm_filter_id">
+                        <!-- <option value>Select One</option> -->
+                        <option value="Daily">Day</option>
+                        <option value="Weekly">Week</option>
+                        <option value="Monthly">Month</option>
+                    </select>
+                </div>
+            </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>From: </label>
+                        <input type="text" class="datepicker form-control"
+                               value="{{ start_date }}" name="collecion_from_date" id="collecion_from_date" readonly>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>To: </label>
+                        <input type="text" class="datepicker form-control"
+                               value="{{ end_date }}" name="collecion_to_date" id="collecion_to_date" readonly>
+                    </div>
+                </div>
+
+                <div class="col-md-3" style="margin-top: 25px;">
+                    <label class="control-label"></label>
+                    <button type="submit"
+                            class="btn btn-primary">Search <span
+                            class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                    </button>
+
+                </div>
+            </form>
+
+
+            <div id="container" style="width:100%; height:400px;"></div>
+        </div>
+    </div>
+{% endblock %}
+{% block additional-javascript %}
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+
+    <script>
+        var division_id = '{{ division_id|safe }}';
+        var district_id = '{{ district_id|safe }}';
+        var upazila_id = '{{ upazila_id|safe }}';
+        var livestock_id = '{{ livestock_id|safe }}';
+        var species_id = '{{ species_id|safe }}';
+        var disease_id = '{{ disease_id|safe }}';
+    var dwm_filter_id = '{{ dwm_filter_id|safe }}';
+    $("#dwm_filter_id").val(dwm_filter_id);
+        var loc_type = '{{ loc_type|safe }}';
+        var geoid = '{{ geoid|safe }}';
+        if (loc_type == 1) {
+            division_id = geoid;
+        } else if (loc_type == 2) {
+            division_id = geoid.substring(0, 2);
+            district_id = geoid;
+        } else if (loc_type == 3) {
+            division_id = geoid.substring(0, 2);
+            district_id = geoid.substring(0, 4);
+            upazila_id = geoid;
+        }
+
+        function sortOn(property) {
+            return function (a, b) {
+                if (a[property] < b[property]) {
+                    return -1;
+                } else if (a[property] > b[property]) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+        }
+
+        $(document).ready(function () {
+
+            $('#collecion_from_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+            $('#collecion_to_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+
+            $('#division_id').val(division_id);
+            if (division_id != '%') {
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getDistrict_jq/',
+                    data: {
+                        'division': division_id
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        $('#district_id').find('option').remove();
+                        $('#district_id').append("<option value = '%'> Select Any </option>");
+                        var list = JSON.parse(data);
+                        for (var i = 0; i < list.district_List.length; i++) {
+                            $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                        }
+                        $('#district_id').val(district_id);
+                        if (district_id != '%') {
+                            $.ajax({
+                                type: 'POST',
+                                url: '/reportsmodule/getUpazilas_jq/',
+                                data: {
+                                    'district': district_id
+                                },
+                                success: function (data) {
+                                    console.log(data);
+                                    $('#upazila_id').find('option').remove();
+                                    $('#upazila_id').append("<option value = '%'> Select Any </option>");
+                                    var list = JSON.parse(data);
+                                    for (var i = 0; i < list.upazila_List.length; i++) {
+                                        $('#upazila_id').append('<option value = ' + list.upazila_List[i][0] + '>' + list.upazila_List[i][1] + '</option>')
+                                    }
+                                    $('#upazila_id').val(upazila_id);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+            $('#livestock_id').val(livestock_id);
+            getSpecies({'value': livestock_id});
+            $('#disease_id').val(disease_id);
+        });
+
+
+        var categories = {{ categories | safe }};
+        var names = {{ name | safe }};
+        var data = {{ data | safe }};
+        var pinfo = {{ pinfo|safe }};
+
+        var series = [];
+        for (i = 0; i < data.length; i++)
+            series.push({'name': names[i], 'data': data[i]});
+
+        series.sort(sortOn("name"));
+        
+        Highcharts.chart('container', {
+            chart: {
+                type: 'spline'
+            },
+            title: {
+                text: '{{ title_text }}',
+                useHTML: true,
+                style: {
+                    'white-space': 'normal',
+                    'text-align': 'center',
+                    'font-size': '16px',
+                    'font-weight': '600',
+                    'color': '#000'
+                }
+            },
+            xAxis: {
+                categories: categories
+            },
+            yAxis: {
+                title: {
+                    text: 'Number of Visits'
+                },
+                tickInterval: 1
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'middle'
+            },
+            tooltip: {
+                borderColor: '#2c3e50',
+                formatter: function () {
+                    var chart = this.series.chart;
+                    var sick_no = getCnt(pinfo, this.x, this.series.name, 'sick');
+                    var total_no = getCnt(pinfo, this.x, this.series.name, 'herd_flock');
+                    var treated_no = getCnt(pinfo, this.x, this.series.name, 'treated');
+                    return '<table><tr><th colspan="2"><h5><b>' + this.series.name + '</b></h5></th></tr><tr><th>Period:</th><td>' + this.x + '</td></tr><tr><th>Occurance</th><td>' + this.y + '</td></tr><tr><th>Total:</th><td>' + total_no + '</td></tr><tr><th>Sick:</th><td>' + sick_no + '</td></tr><tr><th>Treated:</th><td>' + treated_no + '</td></tr></table>';
+                },
+                useHTML: true
+            },
+
+            plotOptions: {
+                series: {
+                    states: {
+                        inactive: {
+                            opacity: 0
+                        }
+                    }
+                }
+            },
+
+            series: series,
+
+            responsive: {
+                rules: [{
+                    condition: {
+                        maxWidth: 500
+                    },
+                    chartOptions: {
+                        legend: {
+                            layout: 'horizontal',
+                            align: 'center',
+                            verticalAlign: 'bottom'
+                        }
+                    }
+                }]
+            }
+
+        });
+
+
+        //************ Emtiaz work (S)************
+
+        var division = '%'
+        var district = '%'
+        var upazila = '%'
+        var union = '%'
+        var species = '%'
+        var disease = '%'
+
+        function resetDistrict() {
+            $('#district_id').find('option').remove()
+            $('#district_id').append("<option value = '%'> Select Any </option>")
+
+            district = '%'
+        }
+
+        function resetUpazila() {
+            $('#upazila_id').find('option').remove()
+            $('#upazila_id').append("<option value = '%'> Select Any </option>")
+
+            upazila = '%'
+
+        }
+
+        function resetUnion() {
+            $('#union_id').find('option').remove()
+            $('#union_id').append("<option value = '%'> Select Any </option>")
+
+            union = '%'
+
+        }
+
+
+        function getSpecies(obj) {
+            var livestock_id = obj.value;
+            $.ajax({
+                type: 'POST',
+                url: '/reportsmodule/get_species_list_by_ltype/',
+                data: {
+                    'livestock_id': livestock_id
+                },
+                success: function (data) {
+                    $('#species_id').find('option').remove();
+                    $('#species_id').append("<option value = '%'> Select Any </option>");
+                    var datajson = JSON.parse(data);
+                    for (var idx in datajson) {
+                        $('#species_id').append('<option value = ' + datajson[idx].code + '>' + datajson[idx].species_name_en + '</option>');
+                    }
+                    if (species_id) {
+                        $('#species_id').val(species_id);
+                    }
+                }
+            });
+        }
+
+
+        function getCnt(basearr, case_date, tentative_diagnosis, type) {
+            var filtered = basearr.filter(function (el) {
+                return el.case_date == case_date &&
+                    el.tentative_diagnosis == tentative_diagnosis;
+            });
+            if (type == 'sick') {
+                return filtered[0].sick_number;
+            } else if (type == 'treated') {
+                return filtered[0].treated_number;
+            } else if (type == 'herd_flock') {
+                return filtered[0].herd_flock_number;
+            }
+        }
+
+
+        $(document).on("change", "#division_id", function () {
+
+            division = $(this).val()
+
+            if (division != null) {
+
+                resetUpazila()
+                resetUnion()
+
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getDistrict_jq/', // link : apps/usermodule/urls.py--
+                    data: {
+
+                        'division': division,
+                    },
+                    success: function (data) {
+                        list = JSON.parse(data)
+
+                        $('#district_id').find('option').remove()
+                        $('#district_id').append("<option value = '%'> Select Any </option>")
+
+                        for (var i = 0; i < list.district_List.length; i++) {
+
+                            $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+
+                        }
+
+                    }
+
+                });
+
+            }
+
+            //______when desect all option of a list
+            else if (division == null) {
+
+                // _____ For Changing the previous selected geo list if any parent is completely empty
+
+                division = '%'
+                resetDistrict()
+                resetUpazila()
+                resetUnion()
+
+            }
+
+        });
+
+
+        $(document).on("change", "#district_id", function () {
+            district = $(this).val()
+
+            if (district != null) {
+
+                resetUnion()
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getUpazilas_jq/', // link : apps/usermodule/urls.py--
+                    data: {
+
+                        'district': district,
+                    },
+                    success: function (data) {
+                        list = JSON.parse(data)
+
+                        $('#upazila_id').find('option').remove()
+                        $('#upazila_id').append("<option value = '%'> Select Any </option>")
+
+                        for (var i = 0; i < list.upazila_List.length; i++) {
+                            $('#upazila_id').append('<option value = ' + list.upazila_List[i][0] + '>' + list.upazila_List[i][1] + '</option>')
+                        }
+
+                        //$('select').multiselect('destroy').removeData().multiselect();
+                    }
+
+                });
+
+            }
+
+            //______when desect all option of a list
+            else if (district == null) {
+
+                // _____ For Changing the previous selected geo list if any parent is completely empty
+                district = '%'
+                resetUpazila()
+                resetUnion()
+
+
+            }
+        });
+
+        $(document).on("change", "#upazila_id", function () {
+            upazila = $(this).val()
+
+            if (upazila != null) {
+
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getUnions_jq/', // link : apps/usermodule/urls.py--
+                    data: {
+
+                        'upazila': upazila,
+                    },
+                    success: function (data) {
+                        list = JSON.parse(data)
+
+                        $('#union_id').find('option').remove()
+                        $('#union_id').append("<option value = '%'>Select Any</option>")
+                        for (var i = 0; i < list.union_List.length; i++) {
+                            $('#union_id').append('<option value = ' + list.union_List[i][0] + '>' + list.union_List[i][1] + '</option>')
+                        }
+                        //$('select').multiselect('destroy').removeData().multiselect();
+
+                    }
+
+                });
+
+            }
+
+            //______when desect all option of a list
+            else if (upazila == null) {
+
+                // _____ For Changing the previous selected geo list if any parent is completely empty
+
+                upazila = '%'
+                resetUnion()
+
+            }
+
+        });
+
+
+        $(document).on("change", "#union_id", function () {
+            union = $(this).val()
+            if (union == null)
+                union = '%'
+        });
+
+
+    </script>
+{% endblock %}
+
+

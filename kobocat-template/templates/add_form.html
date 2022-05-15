@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+    <style>
+
+        #loop {
+            background-color: #EEE;
+            padding: 10px;
+            margin-bottom: 11px;
+        }
+
+    </style>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i>
+            </div>
+        </div>
+        <div class="portlet-body">
+            <div class=".form-body"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+    <script>
+        form_id = {{ form_id | safe }};
+        form_builder_server = '{{ form_builder_server | safe}}'
+        request_param = {{ request_param | safe }};
+        console.log(typeof(request_param));
+        load_forms_html(form_id);
+        var web_address = '{{ web_address | safe }}';
+        function load_forms_html(form_id) {
+            server_address = '{{ kobo_server | safe }}'
+            username = '{{ username | safe }}';
+            console.log(server_address);
+            var param_url = ''
+            if(Object.keys(request_param).length) {
+                Object.keys(request_param).forEach(key => {
+                    param_url+='&'+key+'='+request_param[key];
+                    console.log("\n" + key + ": " + request_param[key]);
+                });
+            }
+            url = form_builder_server + "/?id=" + form_id + "&url=" + server_address + "&username=" + username
+            url+= param_url;
+            console.log(url);
+
+            $('.portlet-body').html('<iframe src="' + url + '" style="width:100%;height:500px;"></iframe>');
+
+            window.addEventListener('message', handleIframeTask);
+        }
+
+        function handleIframeTask(e) {
+            if (e.data === 'submitted form') {
+
+                console.log(e);
+                window.parent.location.href = '' + web_address + '/'
+            }
+        }
+
+    </script>
+
+{% endblock %}

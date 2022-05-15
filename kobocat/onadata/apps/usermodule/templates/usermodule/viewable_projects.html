@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load humanize %}
+
+{% block content %}
+<h1>Projects</h1>
+<table id="users-project-permission-table" class="table published_forms__table footable tablet footable-loaded" border="1">
+    <thead>
+        <tr>
+            <th>Projects</th>
+            <th>Date Created</th>
+            <th>Submissions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for xform in xforms_list %}
+    {% with submission_count=xform.submission_count time_of_last_submission=xform.time_of_last_submission has_instances_with_geopoints=xform.has_instances_with_geopoints %}
+        <tr class="clickable-row" data-id="{{ xform.id }}">
+            <td><a href="/usermodule/adjust-user-project-map/{{xform.id_string}}/{{xform.user.username}}">{{ xform.title }}</a></td>
+            <td>{{ xform.date_created|date:"N d, Y" }}</td>
+            <td>{{ submission_count|intcomma }}</td>
+        </tr>
+    {% endwith %}  
+    {% endfor %}    
+    <tbody>
+</table>
+
+{% endblock %}
+
+{% block additional-javascript %}
+{% endblock %}
+
+{% block additional-headers %}
+    <style >
+    .data-table-container table {
+        clear: both;
+        display: table !important;
+        overflow-x: auto;
+        width: 98% !important;
+    }
+
+    .highlight { background-color: #D9EDF7; }
+
+    .table th, .table td {
+        border: 1px solid #dddddd !important;
+        text-align:center !important;
+    }
+    
+    </style>
+    
+{% endblock %}

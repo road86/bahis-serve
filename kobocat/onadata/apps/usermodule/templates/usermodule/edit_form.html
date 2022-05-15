@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Geo Form
+            </div>
+        </div>
+
+        <div class="portlet-body">
+            <form class="horizontal-form" id="" method="post" action="/usermodule/update_form/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="parent_id" name="parent_id" value="">
+                <input type="hidden" id="form_id" name="form_id" value="">
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="Field Name">Field Name:</label>
+                                <input type="text" class="form-control" name="field_name" id="field_name"
+                                       value="{{ field_name }}" required>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                            <input type="hidden" name="field_type" value="{{ field_type_id }}" />
+                                <label for="Node Parent">Field Type:</label>
+                                <select class="form-control" onchange="load1(this)" name="field_type" id="field_type"
+                                        disabled="disabled">
+                                    <option value="{{ field_type_id }}">{{ field_type }}</option>
+                                    {% for node_id,node_val in node %}
+                                        {% if node_id != field_type_id %}
+                                            <option value="{{ node_id }}">{{ node_val }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                </select>
+                                <div class="field_parent"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="Field Name">Geo Code:</label>
+                                <input type="text" class="form-control" name="geocode" id="geocode"
+                                       value="{{ geocode }}" required>
+                                <span style="color:red;font-weight:bold" id ="alert_geocode">Duplicate Geocode Not Accepted</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="Field Name">Geo Json:</label>
+                                <input id="geojsonfile" name="geojsonfile" type="file" >
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit
+                            </button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript">
+        var list_of_both ={{ list_of_both|safe}};
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+        list = [];
+        j = 0;
+        var response, objet;
+        intialize();
+        var list_of_id_of_parents = list_of_both['list_of_id_of_parents'];
+        var list_of_name_of_parents = list_of_both['list_of_name_of_parents'];
+
+        $("#form_id").val({{ form_id | safe }});
+
+        function intialize() {
+            ajaxcall();
+            objet = {{ field_type_id | safe }};
+            $.ajax({
+                url: '/usermodule/tree/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'objet': objet},
+                success: function (result) {
+                    response = result.response_record;
+                    $("#parent_id").val(result.parent_id);
+                    if (Object.keys(response).length) {
+                        console.log("First");
+                        intialize_load(list_of_id_of_parents.length - 1, list_of_name_of_parents.length - 1, parseInt(Object.keys(response)[0]));
+                    }
+                }
+            });
+        }
+
+        function intialize_load(id, name, obj) {
+            ajaxcall();
+            var field_type = obj;
+            $.ajax({
+                url: '/usermodule/form_drop/', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'json', // request type html/json/xml
+                data: {'field_type': field_type},
+                success: function (result) {
+                    html_code = "<label class=\"control-label\" id=\"field_parent_" + field_type + "\" >" + result.field_type_name + "</label>";
+                    html_code += "<select required class=\"form-control\" name=\"field_parent_" + field_type + "\" id=\"field_parent_" + field_type + "\"  onchange = \"filtering(this," + response[field_type] + ")\" {% if dependency == 1 %} disabled {% endif %}>";
+                    html_code += "<option  value=\"" + list_of_id_of_parents[id] + "\">" + list_of_name_of_parents[name] + "</option>";
+
+
+                    input_html = "<input type=\"hidden\" name=\"field_parent_"+ field_type + "\" value=\""+list_of_id_of_parents[id]+"\" />";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        if(result.field_id[i]!=list_of_id_of_parents[id])
+                            html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    $(".field_parent").append(html_code);
+
+                    var dependency = {{ dependency |safe }};
+                    if(dependency)
+                    {
+                        $(".field_parent").append(input_html);
+                    }
+                    var start = response[obj];
+                    if (start != objet)
+                        intialize_filtering(id - 1, name - 1, start),console.log(start),console.log("Second");;
+                }
+            });
+        }
+
+        function intialize_filtering(id, name, field_type_id) {
+            ajaxcall();
+            var field_parent_id = list_of_id_of_parents[id + 1];
+            $.ajax({
+                url: '/usermodule/filtering/', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'json', // request type html/json/xml
+                data: {'field_parent_id': field_parent_id, 'field_type_id': field_type_id},
+                success: function (result) {
+                    //console.log("field_type "+ result.field_type);
+                    html_code = "<label class=\"control-label\" id=\"field_parent_" + field_type_id + "\">" + result.field_type + "</label>";
+                    html_code += "<select align=\"center\" required class=\"form-control\" name =\"field_parent_" + field_type_id + "\"  id=\"field_parent_" + field_type_id + "\" onchange = \"filtering(this," + response[field_type_id] + ")\" {% if dependency == 1 %} disabled {% endif %}>";
+                    html_code += "<option value=\"" + list_of_id_of_parents[id] + "\" >" + list_of_name_of_parents[name] + "</option>";
+                    input_html = "<input type=\"hidden\" name=\"field_parent_"+ field_type_id + "\" value=\""+list_of_id_of_parents[id]+"\" />";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        if(result.field_id[i]!=list_of_id_of_parents[id])
+                        html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    $(".field_parent").append(html_code);
+                    var dependency = {{ dependency |safe }};
+                    if(dependency)
+                    {
+                        $(".field_parent").append(input_html);
+                    }
+                    var start = response[field_type_id];
+                    if (start != objet)
+                        intialize_filtering(id - 1, name - 1, start),console.log(start),console.log("Third");;
+
+                }
+            });
+        }
+
+
+        function load1(obj) {
+            ajaxcall();
+            objet = Number(obj.value);
+            $.ajax({
+                url: '/usermodule/tree/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'objet': objet},
+                success: function (result) {
+                    response = result.response_record;
+                    $("#parent_id").val(result.parent_id);
+                    $(".field_parent").html("");
+                    if (Object.keys(response).length)
+                        load(parseInt(Object.keys(response)[0]));
+
+
+                }
+            });
+        }
+
+
+        html_code = "";
+
+        function load(obj) {
+            ajaxcall();
+            var field_type = obj;
+            $.ajax({
+                url: '/usermodule/form_drop/', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'json', // request type html/json/xml
+                data: {'field_type': field_type},
+                success: function (result) {
+                    html_code = "<label class=\"control-label\" id=\"field_parent_" + field_type + "\" >" + result.field_type_name + "</label>";
+                    html_code += "<select required class=\"form-control\" name=\"field_parent_" + field_type + "\" id=\"field_parent_" + field_type + "\" onchange = \"filtering(this," + response[field_type] + ")\" >";
+                    html_code += "<option  value=\"\">Select One</option>";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    $(".field_parent").append(html_code);
+                }
+            });
+        }
+
+
+        function filtering(filter, field_type_id) {
+            var start = field_type_id;
+            while (start != objet) {
+                console.log("field_parent_" + start + "");
+                $("#field_parent_" + start + "").remove();
+                $("#field_parent_" + start + "").remove();
+                start = response[start];
+            }
+            var field_parent_id = Number(filter.value);
+            $.ajax({
+                url: '/usermodule/filtering/', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'json', // request type html/json/xml
+                data: {'field_parent_id': field_parent_id, 'field_type_id': field_type_id},
+                success: function (result) {
+                    //console.log("field_type "+ result.field_type);
+                    html_code = "<label class=\"control-label\" id=\"field_parent_" + field_type_id + "\">" + result.field_type + "</label>";
+                    html_code += "<select align=\"center\" required class=\"form-control\" name =\"field_parent_" + field_type_id + "\"  id=\"field_parent_" + field_type_id + "\" onchange = \"filtering(this," + response[field_type_id] + ")\" >";
+                    html_code += "<option value=\"\" >Select One</option>";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    geocode = result.geocode;
+                    if (field_type_id != objet)
+                        $(".field_parent").append(html_code);
+
+                }
+            });
+        }
+
+        $('#alert_geocode').hide();
+        var geocode={{ all_geocode|safe }};
+        var set_geocode = {{ geocode|safe }};
+        var prev_parent = {{ field_parent_id |default_if_none:"0"}};
+
+
+        $('#geocode').on('keyup', function () {
+            var geo_value = $('#geocode').val();
+            var curr_parent = $('.field_parent').children().last().val();
+
+            if (curr_parent == prev_parent) {
+                if (set_geocode != geo_value && geocode.includes(geo_value))
+                    $('#alert_geocode').show();
+                else $('#alert_geocode').hide();
+            }
+            else {
+                if (geocode.includes(geo_value))
+                    $('#alert_geocode').show();
+                else $('#alert_geocode').hide();
+            }
+
+
+        });
+
+        $('#submit').on('click', function () {
+            var geo_value = $('#geocode').val();
+            var curr_parent = $('.field_parent').children().last().val();
+            if (curr_parent == prev_parent||typeof curr_parent=="undefined") {
+                if (set_geocode != geo_value && geocode.includes(geo_value)) {
+                    $('#alert_geocode').show();
+                    return false;
+                }
+                else {
+                    $('#alert_geocode').hide();
+                    return true;
+                }
+            }
+            else {
+                if (geocode.includes(geo_value)) {
+                    $('#alert_geocode').show();
+                    return false;
+                }
+                else {
+                    $('#alert_geocode').hide();
+                    return true;
+                }
+            }
+        });
+
+
+    </script>
+{% endblock %}

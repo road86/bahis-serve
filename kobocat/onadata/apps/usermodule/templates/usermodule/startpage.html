@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+{% endblock %} 
+
+{% block content %}
+<div class="portlet-body">
+            <div id="tables" class="table table-responsive">
+            <table class="table table-bordered table-striped" border="1">
+                <tr>
+                    <th>Role</th>
+                    <th>Organization</th>
+                    <th class="td-center">Can View</th>
+                    <th class="td-center">Can Submit</th>
+                    <th class="td-center">Can Edit</th>
+                    <th class="td-center">Can Delete</th>
+                </tr>
+                <form id="menu_form" method="post" action="/usermodule/kobo/forms/{{ id_string }}/role_form_map">
+{#                 <form id="menu_form" method="post" >#}
+                     {% csrf_token %}
+                {% for  k in role_list %}
+                <input name = "id_string" type = "hidden" value="{{ id_string }}"/>
+                <tr>
+                    <td class = "">
+                    {{ k.2|capfirst}}
+                    </td>
+                    <td>
+                        {{ k.3|capfirst}}
+                    </td>
+                    <td class="td-center">
+                        <label>
+                        <span><input name="view_id[]" type="checkbox" value ="{{ k.0}}"
+                                     {% for data in permission_data %}
+                                     {% if data.2 == k.0 and data.3 == 1 %}checked value="{{ data.3 }}"{% endif %}
+                                         {% endfor %}/></span>
+                        </label>
+                    </td>
+                    <td class="td-center">
+                        <label>
+                        <span><input name="submit_id[]" type="checkbox" value="{{ k.0}}"
+                                      {% for data in permission_data %}
+                                     {% if data.2 == k.0 and data.4 == 1 %}checked{% endif %}
+                                          {% endfor %}/></span>
+                        </label>
+                    </td>
+                   <td class="td-center">
+                        <label>
+                        <span><input name="edit_id[]" type="checkbox" value="{{ k.0}}"
+                                     {% for data in permission_data %}
+                                     {% if data.2 == k.0 and data.5 == 1 %}checked{% endif %}
+                                          {% endfor %}/></span>
+                        </label>
+                    </td>
+                   <td class="td-center">
+                        <label>
+                        <span><input name="delete_id[]" type="checkbox" value="{{ k.0}}"
+                                     {% for data in permission_data %}
+                                     {% if data.2 == k.0 and data.6 == 1 %}checked{% endif %}
+                                         {% endfor %}/></span>
+                        </label>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+            <input type="submit" class="btn red" name="submit" value="Save" />
+                </form>
+
+            <div style="clear: both;"></div>
+            </div>
+
+        </div>
+{% endblock %}
+

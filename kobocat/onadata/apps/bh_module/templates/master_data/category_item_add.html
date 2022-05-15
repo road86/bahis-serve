@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %}  Add Category Item {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="col-md-offset-2 col-md-8">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> {% if item_id %}Edit{%else%}Add{% endif %} {{category_name}} Item
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="{% if item_id %}/bhmodule/master-data-category-item/edit/{{ category_id }}/{{item_id}}/{%else%}/bhmodule/master-data-category-item/add/{{ category_id }}/{% endif %}"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label >Item Name (English):</label>
+                        <input type="text" name="item_name_eng" class="form-control" {% if item_data.name_eng %} value="{{ item_data.name_eng }}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <label >Item Name (Bangla):</label>
+                        <input type="text" name="item_name_bangla" class="form-control" {% if item_data.name_bangla %} value="{{ item_data.name_bangla }}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <label >Item Value:</label>
+                        <input type="text" name="item_value" class="form-control" {% if item_data.value %} value="{{ item_data.value }}" {% endif %} required>
+                    </div>
+                    {% if parent_category_name %}
+                    <div class="form-group">
+                        <label >{{parent_category_name|capfirst}}:</label>
+                        <select id="module_type" name="parent_item" class="form-control" >
+                                    <option value="">Select Type</option>
+                                    {% for m, n in parent_item_list %}
+                                    <option value="{{ m }}"{% if item_data.parent_item_id == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block additional-javascript %}
+<!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->
+
+    <script>
+    $('#module_type').on('change', function () {
+            var $this = $(this);
+            var value = $this.val();
+            if (value==='1'){
+                $('#xform_id_div').show();
+                $('#xform_id').prop('required',true);
+
+            }
+            else{
+                $('#xform_id_div').hide();
+                $('#xform_id').prop('required',false);
+            }
+        });
+
+    </script>
+{% endblock %}

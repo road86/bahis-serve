@@ -1,0 +1,693 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} {{ form_title }} Form Settings {% endblock %}
+        </title>
+    </head>
+    <style>
+        .panel {
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: none;
+            border-radius: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-group .panel {
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        .panel-group .panel + .panel {
+            margin-top: 0;
+        }
+
+        .panel-default {
+            border: none;
+        }
+
+        .panel-heading {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .panel-default > .panel-heading {
+            color: #333;
+            background: none;
+            border-top: 1px solid #ddd;
+        }
+
+        .panel-default > .panel-heading + .panel-collapse > .panel-body {
+            border: none;
+            background: #e8e7e4;
+        }
+
+        .panel-sub-body {
+            padding: 10px;
+            background-color: white;
+        }
+
+        .panel-heading .accordion-toggle:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading .accordion-toggle.collapsed:after {
+            content: "\e080";
+        }
+
+        .modal {
+            padding: 1%;
+        }
+
+        .modal-lg {
+            max-width: 80% !important;
+        }
+
+        .modal-body {
+            overflow-x: auto;
+        }
+
+
+    </style>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/alertify.min.css" media="all"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/themes/semantic.min.css"
+          media="all"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/plugins/select2/select2_metro.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+{% endblock %}
+
+{% block content %}
+
+
+    {#    <form action="/usermodule/register">#}
+    {#        <input type="submit" class="btn red pull-right" value="Register User" style="margin-bottom:15px;">#}
+    {#    </form>#}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>{{ form_title }} Form Settings</div>
+        </div>
+
+        <div class="portlet-body">
+            <div class="panel-group" id="accordion">
+                {% comment %} <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseTwo">
+                                Data Embed
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-12">
+
+
+                                </div>
+                            </div>
+
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="form-body">
+                                            <form>
+                                            <div class="data_embed_div">
+                                                <div class="recordset panel-sub-body" id="data_embed_div_0">
+
+                                                    <div class="form-group" id="data_embed_source_type">
+                                                        <label>Primary Datasouce Type:</label>
+                                                        <select id="p_source_type_0" name="p_source_type" class="form-control"
+                                                                required
+                                                                onchange="var changedVal = $(this).val(); changeSourceDropdown(changedVal,'source_0');">
+                                                            <option value="">Select Type</option>
+                                                            {% for m,n in datasource_type_choices %}
+                                                                <option value="{{ m }}"{% if p_source_type == m %}
+                                                                        selected {% endif %}>{{ n }}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group" id="data_embed_source" style="">
+                                                        <label>Source:</label>
+                                                        <select id="source_0" name="source" class="form-control" required
+                                                                onchange="var changedVal = $(this).val();onChangeDataSource(changedVal,'p_source_type_0','source_attribute_0') ">
+                                                        </select>
+                                                    </div>
+                                                    <div class="form-group" id="data_embed_source_attribute" style="">
+                                                        <label>Source Attribute:</label>
+                                                        <select id="source_attribute_0" name="source_attribute"
+                                                                class="form-control" required
+                                                                onchange="var changedVal = $(this).val();onChangeDataSource(changedVal) ">
+                                                        </select>
+                                                    </div>
+
+                                                    <div class="form-group" id="data_embed_source_attribute" style="">
+                                                        <label>Destination Attribute:</label>
+                                                        <select id="destination_attribute_0" name="destination_attribute"
+                                                                class="form-control" required
+                                                               >
+                                                                <option value="">Select Input</option>
+                                                            {% for m in input_columns %}
+                                                                <option value="{{ m }}"{% if p_source_type == m %}
+                                                                        selected {% endif %}>{{ m.0}}
+                                                                </option>
+                                                            {% endfor %}
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                            <div class="form-actions">
+                                                <div style="margin: 10px;padding-bottom: 25px; ">
+                                                    <button type="button" onclick="addMoreSubindicator();"
+                                                            class="btn red pull-right"><i
+                                                            class="fa fa-2x fa-plus-square-o"></i>Add More
+                                                    </button>
+
+                                                </div>
+                                                <button type="submit" class="btn red pull-right" style="margin-right:10px;"
+                                                        onclick="dataEmbedSubmit();">Submit
+                                                </button>
+                                                <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                                                        class="btn default pull-right">Cancel
+                                                </button>
+                                            </div>
+
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                            <br>
+                        </div>
+                    </div>
+                </div> {% endcomment %}
+
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseThree">
+                                Form Related File Configuration
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseThree" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-12">
+
+
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4" id="" style="padding: 20px;">
+                                    <div class="form-body" id="second" style="padding-top: 20px;background: white">
+                                        <form id="form_csv_config">
+                                            <div class="form-group" id=""><label>CSV Name *</label><input class="form-control" type="text" id="csv_name" name="csv_name" ></input></div>
+                                            <div class="form-group" id="p_source_datasource" style="display:None">
+                                                <label>Attribute Name *</label>
+                                                <select id="attribute_name" name="attribute_name" class="form-control select-picker" data-live-search="true"
+                                                        required>
+                                                    <option value="">Select Attribute</option>
+                                                    {% for m in selective_columns %}
+                                                        <option value="{{ m.0 }}">{{ m.0 }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="form-group" id="p_source_datasource" style="">
+                                                <label>Datasource *</label>
+                                                <select id="datasource_name" name="datasource_name" class="form-control"
+                                                        required>
+                                                    <option value="">Select Datasource</option>
+                                                    {% for m,n in csvsource_choices %}
+                                                        <option value="{{ m }}">{{ n }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </form>
+                                        <div class="form-actions">
+                                            <button type="submit" class="btn btn-info pull-right" id="update_csv"
+                                                    onclick="saveData('add',null);"
+                                                    title="">Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-8" id="">
+                                    <div id="first" style="padding-top: 20px;">
+                                        <table id="csv-table" style="background: white"
+                                               class="table table-bordered table-striped">
+                                            <tbody>
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <br>
+
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {#        <button type="submit" onclick="saveData(false);">Save</button>#}
+
+    </div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a user, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="data-preview" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog ">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Datasource Preview</h4>
+                </div>
+
+                <div class="modal-body">
+                    <div id="datasource_view" style="overflow: auto"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+
+    <script>
+
+        var dataEmbedHtml;
+        var dataEmbedSerial;
+
+        var datasource_choices = {{ datasource_choices|safe }};
+        var table_choices = {{ table_choices|safe }};
+        var xFormId = {{ xform_id }};
+        var presentFilter = [];
+
+        function onChangeDataSource(changed_val, datasource_element, element) {
+            var datasource = $('#' + datasource_element).val();
+            var datasource_type = ((datasource === '2') ? 'datasource' : 'table');
+
+            $.ajax({
+                type: 'POST',
+                url: "/bhmodule/get-column-name/",
+                data: {'datasource_name': changed_val, 'datasource_type': datasource_type},
+                success: function (data) {
+                    var table;
+                    var data_list = JSON.parse(data);
+
+                    var dropdown_html = '<option>Select</option>'
+                    if (data_list) {
+                        for (var d in data_list) {
+                            var l = data_list[d];
+                            console.log(l["column_name"]);
+                            select_initial = '';
+                            dropdown_html += '<option ' + select_initial + '    value="' + l["column_name"] + '">' + l["column_name"] + '</option>';
+                            select_initial = '';
+
+                        }
+                        $('#' + element).html(dropdown_html);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $('#del_modal').modal('show');
+
+                }
+            });
+        }
+
+        $('.delete-user-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+
+        function changeSourceDropdown(changedVal, element_name) {
+            var option = '';
+
+            if (changedVal === '1') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in table_choices) {
+                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                }
+            }
+            else if (changedVal === '2') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in datasource_choices) {
+                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                }
+            }
+            $('#' + element_name).html(option);
+
+
+        }
+
+
+        function saveData(flag, id) {
+
+            var datasource = $('#datasource_name').val();
+            if ( datasource === '') {
+                alert("Please select required Input");
+            }
+            var formCsv = $("#form_csv_config").serializeArray();
+            formCsv.push({'name': 'flag', 'value': flag});
+            formCsv.push({'name': 'id', 'value': id});
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/edit/form-csv-config/' + xFormId + '/',
+                data: formCsv,
+                success: function (response) {
+                    $('#datasource_name').val('');
+                    $('#csv_name').val('');
+                    getFormCsvTable();
+                },
+                error: function (xhr, status, error) {
+
+                }
+            });
+        }
+
+
+        function getFormCsvTable() {
+            $.ajax({
+                type: 'GET',
+                url: '/bhmodule/form-csv-config-list/' + xFormId + '/',
+                success: function (data) {
+                    console.log(data);
+                    table = $('#csv-table');
+                    table.find("tbody tr").remove();
+                    table.append('<tr> <td>CSV Name</td><td>Datasource Name</td> <td class="td-center">Action</td> </tr>');
+
+                    for (var d in data) {
+                        var l = data[d];
+                        console.log(data);
+                        var edit_href = '<a class="tooltips" onclick="loadCsvConfig(\'' + l['datasource_id'] + '\',\'' + l['datasource_title'] + '\',\'' + l['attribute_name'] + '\');" data-placement="top" data-container="body" data-original-title="Edit"><i class="fa fa-2x fa-pencil-square-o"></i></a>';
+                        var tablerow = '<tr><td>'+l['csv_name']+'</td><td>' + l['datasource_title'] + '</td>';
+                        '/bhmodule/datasource-preview/' + l['datasource_id'] + '';
+                        tablerow += '<td class="td-center"><a class="tooltips" data-placement="top" data-container="body" data-original-title="View" onclick = "preView(' + l['datasource_id'] + ');"><i class="fa fa-2x fa-eye"></i></a>' +
+                                '<a class="delete-item tooltips" data-container="body" data-placement="top" data-toggle="modal" data-target="" data-original-title="Delete" onclick="deleteCsvConfig(\''+l['csv_name']+'\',\'' + l['datasource_id'] + '\',\'' + l['datasource_title'] + '\',\'' + l['attribute_name'] + '\');" data-href=""><i class="fa fa-2x fa-trash-o"></i></a></tr>'
+                        table.append(tablerow);
+                    }
+                },
+                error: function (xhr, status, error) {
+                }
+            })
+        }
+
+
+        function preView(datasource_id) {
+            $.ajax({
+                type: 'GET',
+                url: '/bhmodule/datasource-preview/' + datasource_id + '',
+                success: function (data) {
+                    console.log(typeof data);
+                    var tableData = JSON.parse(data).table;
+                    console.log(tableData);
+                    var tableDiv = $('#datasource_view');
+                    tableDiv.html(tableData);
+                    $('#data-preview').modal('show');
+
+
+                },
+                error: function (xhr, status, error) {
+                }
+            })
+        }
+
+
+        function deleteCsvConfig(csv_name,datasource_id, datasource_title, attribute_name) {
+
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/edit/form-csv-config/' + xFormId + '/',
+                data: {
+                    'csv_name':csv_name,
+                    'datasource_name': datasource_id + '@' + datasource_title,
+                    'attribute_name': attribute_name,
+                    'flag': 'delete'
+                },
+                success: function (response) {
+
+                    getFormCsvTable();
+                },
+                error: function (xhr, status, error) {
+
+                }
+            });
+        }
+
+
+        function getInputField(element, checked) {
+            console.log(checked);
+            if (checked) {
+                var secondCol = $("#" + element).find('td').eq(2).html('<input style="" type="text" name="' + element + '@english">');
+                var thirdCol = $("#" + element).find('td').eq(3).html('<input style="" type="text" name="' + element + '@bangla">');
+                var fourthCol = $("#" + element).find('td').eq(4).html('<input style="" type="checkbox" name="' + element + '@sortable">');
+                var fifthCol = $("#" + element).find('td').eq(5).html('<input style="" type="text" name="' + element + '@format">');
+            }
+            else {
+                var secondCol = $("#" + element).find('td').eq(2).html('');
+                var thirdCol = $("#" + element).find('td').eq(3).html('');
+                var fourthCol = $("#" + element).find('td').eq(4).html('');
+                var fifthCol = $("#" + element).find('td').eq(5).html('');
+            }
+            console.log(secondCol);
+        }
+
+
+        function getFilterTable(data_list) {
+
+            var table = $('#filter-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><td></td> <td>Attribute Name</td><td>Filter Title(English)</td> <td>Filter Title(bangla)</td> <td>Filter Type</td> <td>Appearance</td><td>Searchable</td><td>Dependant</td> <td>parent Attribute</td> </tr>'
+            );
+
+            for (var d in data_list) {
+                var l = data_list[d];
+                console.log(l);
+                var tablerow = '<tr id="' + l["column_name"] + '_filter">';
+                tablerow += '<td ><input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputFilter(\'' + l["column_name"] + '_filter\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                tablerow += '<td></td><td></td>'
+                tablerow += '<td></td><td></td><td></td><td></td><td></td>'
+                tablerow += '</tr>';
+                table.append(tablerow);
+            }
+        }
+
+
+        function getFilterdropdown() {
+
+            var optionHtml = ''
+            for (const key in filterType) {
+                var value = filterType[key];
+                //optional check for properties from prototype chain
+                if (filterType.hasOwnProperty(key)) {
+                    optionHtml += "<option value='" + key + "'>" + value + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            return optionHtml;
+        }
+
+
+        function getInputFilter(element, checked) {
+            var own_element = element.replace('_filter', '')
+            console.log(checked);
+            if (checked) {
+
+
+                presentFilter.push(own_element);
+                console.log(own_element);
+                var secondCol = $("#" + element).find('td').eq(2).html('<input style="" type="text" name="' + element + '@english">');
+                var thirdCol = $("#" + element).find('td').eq(3).html('<input style="" type="text" name="' + element + '@bangla">');
+                var fourthCol = $("#" + element).find('td').eq(4).html('<select class="select-picker"  name="' + element + '@type">' + filterTypeHtml + '</select>');
+                var fourthCol = $("#" + element).find('td').eq(5).html('<select class="select-picker"  name="' + element + '@appearnace"><option value="">Select Appearance</option></select>');
+                var fifthCol = $("#" + element).find('td').eq(6).html('<input  type="checkbox" name="' + element + '@searchable">');
+                var fifthCol = $("#" + element).find('td').eq(7).html('<input onclick="var changed_val= $(this).is(\':checked\');getParentFilter(\'' + own_element + '\',changed_val)" type="checkbox" name="' + element + '@dependant">');
+                $('.select-picker').selectpicker();
+            }
+            else {
+                var index = presentFilter.indexOf(own_element);
+                if (index > -1) {
+                    presentFilter.splice(index, 1);
+                }
+                var secondCol = $("#" + element).find('td').eq(2).html('');
+                var thirdCol = $("#" + element).find('td').eq(3).html('');
+                var fourthCol = $("#" + element).find('td').eq(4).html('');
+                var fifthCol = $("#" + element).find('td').eq(5).html('');
+                var fifthCol = $("#" + element).find('td').eq(6).html('');
+                var fifthCol = $("#" + element).find('td').eq(7).html('');
+                $("#" + element).find('td').eq(8).html('');
+            }
+            console.log(secondCol);
+
+
+        }
+
+
+        function getParentFilter(element, checked) {
+            console.log(presentFilter);
+            if (checked) {
+                var options = '';
+                for (var i in presentFilter) {
+                    console.log(presentFilter[i], element);
+                    if (presentFilter[i] !== element) {
+                        options += '<option value="' + presentFilter[i] + '">' + presentFilter[i] + '</option>';
+                    }
+                }
+                if (options !== '') {
+                    var fifthCol = $("#" + element + '_filter').find('td').eq(7).html('<select multiple="multiple" class="multiple-select" name="' + element + '_filter@parent">' + options + '</select>');
+
+                }
+            }
+            else {
+                $("#" + element + '_filter').find('td').eq(8).html('');
+
+            }
+
+            $('.multiple-select').selectpicker();
+        }
+
+
+        function myfunc(ele) {
+
+            var values = new Array();
+            $.each($("input[name='case[]']:checked").closest("td").siblings("td"),
+                    function () {
+                        values.push($(this).text());
+                    });
+
+            alert("val---" + values.join(", "));
+        }
+
+
+        $(document).ready(function () {
+            dataEmbedHtml = $("#data_embed_div_0").html();
+            dataEmbedSerial = 1;
+
+            $('.select-picker').selectpicker();
+            getFormCsvTable();
+
+
+        });
+
+
+        function dataEmbedSubmit() {
+            var source_attribute = $('#source_attribute').val();
+            var datasource = $('#source').val();
+            var destination_attribute = $('#destination_attribute').val();
+
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/forms/data-embed/' + xFormId + '/',
+                data: {'source':source_attribute,'datasource':datasource,'destination_attribute':destination_attribute},
+                success: function (response) {
+                    $('#source_attribute').val('');
+                    $('#source').val('');
+                    $('#destination_attribute').val('');
+                    {% comment %} getFormCsvTable(); {% endcomment %}
+                },
+                error: function (xhr, status, error) {
+
+                }
+            });
+        }
+
+
+        function addMoreSubindicator() {
+
+            var indicator_serial = dataEmbedSerial;
+            var indicator_details_html = dataEmbedHtml.replace(/[_][0]/g, '_' + indicator_serial);
+            $('.data_embed_div').append('<div class="form recordset mpower-section" id="data_embed_div_' + indicator_serial + '" >' + indicator_details_html + '<div class="col-md-1" style="margin: 5px;padding: 20px; "><button onclick="removeSubindicator(' + indicator_serial + ')" class="btn blue pull-right" type="button">Remove</button></div></div>');
+            dataEmbedSerial += 1;
+        }
+
+
+        function removeSubindicator(serial) {
+            $("#data_embed_div_" + serial).remove();
+        }
+
+
+    </script>
+{% endblock %}

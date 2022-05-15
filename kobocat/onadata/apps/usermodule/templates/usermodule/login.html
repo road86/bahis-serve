@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Bahis | LOGIN</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+<link rel="stylesheet" href="/static/css/login/style.css">
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+
+	<div class=" container-fluid login-area">
+    	<div class="row">
+        		<!--<div class="col-lg-12 logo"><img src="/static/images/admin-logo.png"></div>-->
+
+      </div>
+      	<div class="row">
+      		
+            
+
+    	  <div class="modal-dialog">
+
+				<div class="loginmodal-container"><h3 >Welcome to mPower Dashboard!</h3>
+					<p>Please enter Your User ID and Password to Sign In</p><br>
+				  <form id="login_form" method="post" action="/usermodule/login/" class="registration registration--login">
+                      {% csrf_token %}
+                      <p ><h4 style="color:red;">{{ data }}</h4></p>
+					<input type="text" name="username" placeholder="Username">
+					<input type="password" name="password" placeholder="Password">
+					<input type="submit" name="login" class="login loginmodal-submit" value="LOGIN">
+<input type="hidden" id="redirect_url" name="redirect_url" value="{{redirect_url}}"/>
+				  </form>
+				</div>
+			</div>
+            
+            
+            
+      	</div>
+    </div>
+    
+    <div class="container-fluid footer">
+			<div class="col-lg-6 pull-left">Powered by:  mPower Social Enterprises Ltd. </div>
+			<div class="col-lg-6 pull-right"><a href="#"><img src="/static/images/footer-logo.png" alt="footer-logo"></a></div>
+		</div>
+
+</body>
+</html>

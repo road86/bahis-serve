@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.css">
+
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+    <head>
+        <title>
+
+        </title>
+    </head>
+
+{% endblock %}
+
+{% block content %}
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Summary</div>
+        </div>
+        <div class="portlet-body">
+        <div id = "all_geo_id"  hidden></div>
+        
+            <div class="row" {% if all_geo_id.0 != 1 %}hidden {% endif %} >
+        
+        <form id="filter_trends" action="" method="post">
+            {% csrf_token %}
+            <div class="row" style="margin-left: 15px;">
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Division: </label>
+                        <select class="form-control" name="division_id" id="division_id">
+                            <option value="%">Select One</option>
+                            {% for dl in get_division_list %}
+                                <option value="{{ dl.0 }}">{{ dl.1 }}</option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>District: </label>
+                        <select class="form-control" name="district_id" id="district_id"
+                                {% if loc_type > 1 %}readonly{% endif %}>
+                            <option value="%">Select One</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label>Upazila: </label>
+                        <select class="form-control" name="upazila_id" id="upazila_id"
+                                {% if loc_type > 2 %}readonly{% endif %}>
+                            <option value="%">Select One</option>
+
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-3" style="margin-top: 25px;">
+                    <label class="control-label"></label>
+                    <button type="submit"
+                            class="btn btn-primary">Search <span
+                            class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        </div>
+        
+        
+
+            <div id="container"></div>
+            <table id="farm_assessment_table" class="table table-bordered table-striped  nowrap">
+                <thead>
+
+                <tr>
+                    <th class="td-center">Activity</th>
+                    <th class="td-center">This Day</th>
+                    <th class="td-center">This Month</th>
+                    <th class="td-center">This Year</th>
+                    <th class="td-center">Last Year</th>
+                    <th class="td-center">Total</th>
+                </tr>
+                </thead>
+
+                <tbody>
+                {% for each in json_data %}
+                    <tr>
+                        {% for key in col_name %}
+                            <td>
+                                {% if key in each %}
+                                    {{ each | keyvalue:key  }}
+
+                                {% endif %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a info, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <script src="https://cdn.jsdelivr.net/semantic-ui/2.2.10/semantic.min.js"></script>
+    <script type="text/javascript">
+        var division_id = '{{ division_id|safe }}';
+        var district_id = '{{ district_id|safe }}';
+        var upazila_id = '{{ upazila_id|safe }}';
+
+
+        var loc_type = '{{ loc_type|safe }}';
+        var geoid = '{{ geoid|safe }}';
+        if (loc_type == 1) {
+            division_id = geoid;
+        } else if (loc_type == 2) {
+            division_id = geoid.substring(0, 2);
+            district_id = geoid;
+        } else if (loc_type == 3) {
+            division_id = geoid.substring(0, 2);
+            district_id = geoid.substring(0, 4);
+            upazila_id = geoid;
+        }
+
+        $(document).ready(function () {
+            $('#collecion_from_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+            $('#collecion_to_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+            $('#division_id').val(division_id);
+            if (division_id != '%') {
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getDistrict_jq/',
+                    data: {
+                        'division': division_id
+                    },
+                    success: function (data) {
+                        console.log(data);
+                        $('#district_id').find('option').remove();
+                        $('#district_id').append("<option value = '%'> Select Any </option>");
+                        var list = JSON.parse(data);
+                        for (var i = 0; i < list.district_List.length; i++) {
+                            $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                        }
+                        $('#district_id').val(district_id);
+                        if (district_id != '%') {
+                            $.ajax({
+                                type: 'POST',
+                                url: '/reportsmodule/getUpazilas_jq/',
+                                data: {
+                                    'district': district_id
+                                },
+                                success: function (data) {
+                                    console.log(data);
+                                    $('#upazila_id').find('option').remove();
+                                    $('#upazila_id').append("<option value = '%'> Select Any </option>");
+                                    var list = JSON.parse(data);
+                                    for (var i = 0; i < list.upazila_List.length; i++) {
+                                        $('#upazila_id').append('<option value = ' + list.upazila_List[i][0] + '>' + list.upazila_List[i][1] + '</option>')
+                                    }
+                                    $('#upazila_id').val(upazila_id);
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+
+        });
+
+        var division = '%'
+        var district = '%'
+        var upazila = '%'
+        var union = '%'
+        var species = '%'
+        var disease = '%'
+
+        function resetDistrict() {
+            $('#district_id').find('option').remove()
+            $('#district_id').append("<option value = '%'> Select Any </option>")
+
+            district = '%'
+        }
+
+        function resetUpazila() {
+            $('#upazila_id').find('option').remove()
+            $('#upazila_id').append("<option value = '%'> Select Any </option>")
+
+            upazila = '%'
+
+        }
+
+        function resetUnion() {
+            $('#union_id').find('option').remove()
+            $('#union_id').append("<option value = '%'> Select Any </option>")
+
+            union = '%'
+
+        }
+
+
+        $(document).on("change", "#division_id", function () {
+
+            division = $(this).val()
+
+            if (division != null) {
+
+                resetUpazila()
+                resetUnion()
+
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getDistrict_jq/', // link : apps/usermodule/urls.py--
+                    data: {
+
+                        'division': division,
+                    },
+                    success: function (data) {
+                        list = JSON.parse(data)
+
+                        $('#district_id').find('option').remove()
+                        $('#district_id').append("<option value = '%'> Select Any </option>")
+
+                        for (var i = 0; i < list.district_List.length; i++) {
+
+                            $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+
+                        }
+
+                    }
+
+                });
+
+            }
+
+            //______when desect all option of a list
+            else if (division == null) {
+
+                // _____ For Changing the previous selected geo list if any parent is completely empty
+
+                division = '%'
+                resetDistrict()
+                resetUpazila()
+                resetUnion()
+
+            }
+
+        });
+
+
+        $(document).on("change", "#district_id", function () {
+            district = $(this).val()
+
+            if (district != null) {
+
+                resetUnion()
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getUpazilas_jq/', // link : apps/usermodule/urls.py--
+                    data: {
+
+                        'district': district,
+                    },
+                    success: function (data) {
+                        list = JSON.parse(data)
+
+                        $('#upazila_id').find('option').remove()
+                        $('#upazila_id').append("<option value = '%'> Select Any </option>")
+
+                        for (var i = 0; i < list.upazila_List.length; i++) {
+                            $('#upazila_id').append('<option value = ' + list.upazila_List[i][0] + '>' + list.upazila_List[i][1] + '</option>')
+                        }
+
+                        //$('select').multiselect('destroy').removeData().multiselect();
+                    }
+
+                });
+
+            }
+
+            //______when desect all option of a list
+            else if (district == null) {
+
+                // _____ For Changing the previous selected geo list if any parent is completely empty
+                district = '%'
+                resetUpazila()
+                resetUnion()
+
+
+            }
+        });
+
+        $(document).on("change", "#upazila_id", function () {
+            upazila = $(this).val()
+
+            if (upazila != null) {
+
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/reportsmodule/getUnions_jq/', // link : apps/usermodule/urls.py--
+                    data: {
+
+                        'upazila': upazila,
+                    },
+                    success: function (data) {
+                        list = JSON.parse(data)
+
+                        $('#union_id').find('option').remove()
+                        $('#union_id').append("<option value = '%'>Select Any</option>")
+                        for (var i = 0; i < list.union_List.length; i++) {
+                            $('#union_id').append('<option value = ' + list.union_List[i][0] + '>' + list.union_List[i][1] + '</option>')
+                        }
+                        //$('select').multiselect('destroy').removeData().multiselect();
+
+                    }
+
+                });
+
+            }
+
+            //______when desect all option of a list
+            else if (upazila == null) {
+
+                // _____ For Changing the previous selected geo list if any parent is completely empty
+
+                upazila = '%'
+                resetUnion()
+
+            }
+
+        });
+    </script>
+{% endblock %}

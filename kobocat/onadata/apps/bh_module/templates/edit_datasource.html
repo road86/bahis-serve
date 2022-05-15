@@ -1,0 +1,444 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} Create Datasource {% endblock %}
+        </title>
+    </head>
+
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+{% endblock %}
+
+{#{% block additional-javascript %}#}
+{#    <!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->#}
+{#{% endblock %}#}
+
+{% block content %}
+
+    <div class="col-md-offset-3 col-md-6">
+        <div class="portlet box red">
+            <div class="portlet-title">
+                <div class="caption">
+                    <i class="fa fa-reorder"></i> Edit Datasource
+                </div>
+            </div>
+            <div class="portlet-body form">
+                <form class="horizontal-form" id="main-form"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label>Datasource Name:</label>
+                            <input type="text" name="datasource_name" class="form-control"
+                                    {% if datasource_title %}
+                                   value="{{ datasource_title }}" {% endif %}
+                                   required>
+                        </div>
+                        <div class="form-group">
+                            <label>Primary Datasouce Type:</label>
+                            <select id="p_source_type" name="p_source_type" class="form-control" required
+                                    onchange="var changedVal = $(this).val(); hideSourceDropdown(changedVal,'p_source');">
+                                <option value="">Select Type</option>
+                                {% for m,n in datasource_type_choices %}
+                                    <option value="{{ m }}"{% if p_source_type == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select></div>
+                        <div class="form-group" id="p_source_datasource" style="display: none;">
+                            <label>Primary Source:</label>
+                            <select id="p_source" name="p_source" class="form-control" required
+                                    onchange="var changedVal = $(this).val();onChangeDataSource(changedVal,'datasource','p_source') "
+                            >
+                                <option value="">Select Datasource</option>
+                                {% for m,n in datasource_choices %}
+                                    <option value="{{ m }}"{% if p_source == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" id="p_source_table" style="display: none;">
+                            <label>Primary Source:</label>
+                            <select id="p_source" name="p_source" class="form-control" required
+                                    onchange="var changedVal = $(this).val(); onChangeDataSource(changedVal,'table','p_source')"
+                            >
+                                <option value="">Select Table</option>
+                                {% for m,n in table_choices %}
+                                    <option value="{{ m }}"{% if p_source == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" id="p_source_column" style="display: none;"><a onclick="$('#p_source_dialog').modal('show');"><b>Select Primary Source Column</b></a></div>
+                        <div class="form-group" id="p_source_key_parent" style="display: none;">
+
+                        </div>
+                        <div class="form-group" id="joint_type_parent" style="display: none;">
+                            <label>Join Types:</label>
+                            <select id="join_type" name="join_type"
+                                    class="form-control select-picker" required
+                                    onchange="var changedVal = $(this).val();">
+                                <option value=""> Select</option>
+                                {% for m,n in join_type_choices %}
+                                    <option value="{{ m }}"{% if operation_type == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" id="s_source_type_parent" style="display: none;">
+                            <label>Secondary Datasouce Type:</label>
+                            <select id="s_source_type" name="s_source_type" class="form-control select-picker"
+                                    onchange="var changedVal = $(this).val(); hideSourceDropdown(changedVal,'s_source');" required>
+                                <option value="">Select</option>
+                                {% for m,n in datasource_type_choices %}
+                                    <option value="{{ m }}"{% if s_source_type == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" id="s_source_table" style="display: none;">
+                            <label>Secondary Source:</label>
+                            <select id="s_source" name="s_source" class="form-control select-pickerl" required
+                                    onchange="var changedVal = $(this).val(); onChangeDataSource(changedVal,'table','s_source')"
+                            >
+                                <option value="">Select Table</option>
+                                {% for m,n in table_choices %}
+                                    <option value="{{ m }}"{% if s_source == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="s_source_datasource" style="display: none;">
+                            <label>Secondary Source:</label>
+                            <select id="s_source" name="s_source" class="form-control select-picker" required
+                                    onchange="var changedVal = $(this).val(); onChangeDataSource(changedVal,'datasource','s_source')"
+                            >
+                                <option value="">Select Datasource</option>
+                                {% for m,n in datasource_choices %}
+                                    <option value="{{ m }}"{% if s_source == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group" id="s_source_column" style="display: none;"><a onclick="$('#s_source_dialog').modal('show');"><b>See Secondary Source Column</b></a></div>
+
+                        <div class="form-group" id="s_source_key_parent" style="display: none;">
+
+                        </div>
+                    </div>
+                </form>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right" onclick="saveData();">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                            class="btn default pull-right">Cancel
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {#    <div id="p_source_dialog" style="width: 100%;overflow: scroll; align-content: center; height: 649px !Important; margin-top : 20px;">#}
+    {##}
+    {#    <div id="s_source_dialog" style="width: 100%;overflow: scroll; align-content: center; height: 649px !Important; margin-top : 20px;">#}
+
+
+    <div class="modal fade" id="p_source_dialog" tabindex="-1" role="dialog" aria-labelledby="p_source_dialogTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-notify modal-warning" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="p_source_dialogTitle">Please Select Primary Source Column name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+{#                    <button>Select All</button><br>#}
+                    <form id="primary-source-form">
+
+                        <table id="primary-source-table" style="background: white"
+                               class="table table-bordered table-striped">
+                            <tbody>
+
+
+                            </tbody>
+                        </table>
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="s_source_dialog" tabindex="-1" role="dialog" aria-labelledby="s_source_dialogTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-notify modal-warning" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="s_source_dialogTitle">Please Select Secondary Source Column name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="secondary-source-form">
+                        <table id="secondary-source-table" style="background: white"
+                               class="table table-bordered table-striped">
+                            <tbody>
+
+
+                            </tbody>
+                        </table>
+                    </form>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+
+    <script>
+        var pSourceKey = '{{ p_source_key }}';
+        var pSourceType = '{{ p_source_type }}';
+        var sSourceType = '{{  s_source_type }}';
+        var sSourceKey = '{{ s_source_key }}';
+        var pSource = '{{ p_source }}';
+        var sSource = '{{ s_source }}';
+
+        function hideSourceDropdown(changed_val,flag) {
+            console.log(typeof changed_val);
+            if (changed_val === '2') {
+                $('#'+flag+'_datasource').show();
+                $('#'+flag+'_table').hide();
+                $('#'+flag+'_column').hide();
+                $('#'+flag+'_key_parent').hide();
+            }
+            if (changed_val === '1') {
+                $('#'+flag+'_table').show();
+                $('#'+flag+'_datasource').hide();
+                $('#'+flag+'_column').hide();
+                $('#'+flag+'_key_parent').hide();
+            }
+        }
+
+
+        $('#join_type').on('change', function () {
+            var $this = $(this);
+            var value = $this.val();
+            if (value!==''){
+                $('#s_source_type_parent').show();
+            }
+        });
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+
+        function saveData() {
+
+            var primary_source = JSON.stringify($("#primary-source-form").serializeObject());
+            var secondary_source = JSON.stringify($("#secondary-source-form").serializeObject());
+            var main_data = JSON.stringify($("#main-form").serializeObject());
+{#            console.log($('#main-form').serializeArray());#}
+            console.log(main_data);
+            console.log(primary_source);
+            console.log(secondary_source);
+
+
+            var validate = false;
+            $('#primary-source-form input').each(function () {
+                console.log(this.name, $(this).is(':checked'));
+                if ($(this).val() != '' || $(this).is(':checked'))
+                    validate = true;
+            });
+            if (!validate) {
+                alert('Please select at least one filter');
+                return false;
+            }
+            else {
+                console.log(validate);
+            }
+            var parameters = JSON.stringify($('#form_col_def').serializeObject());
+            var basic_info = JSON.stringify($('#form_basic_info').serializeObject());
+
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add-datasource/' ,
+                data: {'main_data': main_data, 'primary_source': primary_source, 'secondary_source': secondary_source},
+                success: function (response) {
+                    console.log(response);
+                },
+                error: function (xhr, status, error) {
+
+                }
+            })
+        }
+
+
+        function getInputField(element, checked) {
+            console.log(checked,element);
+
+            if (checked) {
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('<input value="" style="" type="text" name="' + element + '_rename">');
+
+            }
+            else {
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('');
+            }
+            console.log(secondCol);
+
+        }
+
+
+        function onChangeDataSource(changed_val,datasource_type,flag) {
+
+            console.log(datasource_type);
+            $.ajax({
+                type: 'POST',
+                url: "/bhmodule/get-column-name/",
+                data: {'datasource_name': changed_val,'datasource_type':datasource_type},
+                success: function (data) {
+                    var table;
+                    var data_list = JSON.parse(data);
+                    if (flag === 'p_source'){
+
+                        createDropDown("p_source_key_parent", "Primary", data_list);
+                        $('#p_source_key_parent').show();
+                        if (datasource_type==='table'){
+                            $("#p_source_dialog").modal('show');
+                             $('#p_source_column').show();
+                        }
+                        else{
+                           $("#p_source_dialog").modal('hide');
+                             $('#p_source_column').hide();
+                        }
+                        table = $('#primary-source-table');
+                    }
+                    else{
+
+                        createDropDown("s_source_key_parent", "Secondary", data_list);
+                        $('#s_source_key_parent').show();
+                        if (datasource_type==='table'){
+                            $("#s_source_dialog").modal('show');
+                             $('#s_source_column').show();
+                        }
+                        else{
+                           $("#s_source_dialog").modal('hide');
+                             $('#s_source_column').hide();
+                        }
+                        table = $('#secondary-source-table');
+                    }
+                    table.find("tbody tr").remove();
+                    table.append('<tr><td></td> <td>Column Name</td><td>Column Rename</td> </tr>'
+                    );
+
+                    for (var d in data_list) {
+                        var l = data_list[d];
+                        console.log(l);
+                        var tablerow = '<tr id="' + l["column_name"]+'@'+ flag + '">';
+                        tablerow += '<td ><input name="' +l["column_name"] +'@'+ flag+'" type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + l["column_name"]+'@'+ flag + '\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                        tablerow += '<td></td>'
+                        tablerow += '</tr>';
+                        table.append(tablerow);
+                    }
+
+                },
+                error: function (xhr, status, error) {
+                    $('#del_modal').modal('show');
+
+                }
+            });
+        }
+
+
+        function createDropDown(parent_name, type, data_list) {
+
+            var label = '<label>' + type + ' Source key </label><br>';
+            var element_name = parent_name.replace("_parent", "")
+            var dropdown_html = label + '<select id="'+element_name+'" class = "select-picker form-control" name="'+element_name+'" class="form-control" data-live-search="true" required onchange="var changed_val= $(this).val(); console.log(changed_val); if(changed_val!==\'\'){$(\'#joint_type_parent\').show();} else{$(\'#joint_type_parent\').hide();}"> <option value="">Select</option>';
+
+            if (data_list) {
+                for (var d in data_list) {
+                    var l = data_list[d];
+                    console.log(l["column_name"]);
+                    select_initial = '';
+                    dropdown_html += '<option ' + select_initial + '    value="' + l["column_name"] + '">' + l["column_name"] + '</option>';
+                    select_initial = '';
+                }
+            }
+            dropdown_html += '</select>';
+            $("#" + parent_name).html(dropdown_html);
+            $('.select-picker').selectpicker();
+        }
+
+
+        $(document).ready(function () {
+            $('.select-picker').selectpicker();
+            hideSourceDropdown(pSourceType,'p_source');
+            hideSourceDropdown(sSourceType,'s_source');
+            if (pSourceType==='1'){
+                onChangeDataSource(pSource,'table','p_source');
+
+                $('#p_source_key').selectpicker("val", pSourceKey);
+
+            }
+            else {
+                onChangeDataSource(pSource,'datasource','p_source');
+            }
+
+            if (sSourceType==='1'){
+                onChangeDataSource(sSource,'table','s_source');
+                $('#s_source_key').val(sSourceKey);
+                $('#s_source_key option[value="'+sSourceKey+'"]').prop('selected', true);
+
+            }
+            else {
+                onChangeDataSource(sSource,'datasource','s_source');
+                $('#s_source_key').val(sSourceKey);
+                $('#s_source_key option[value="'+sSourceKey+'"]').prop('selected', true);
+
+            }
+{#            $('#p_source_key').selectpicker("val", [pSourceKey]);#}
+        });
+
+
+    </script>
+{% endblock %}
+

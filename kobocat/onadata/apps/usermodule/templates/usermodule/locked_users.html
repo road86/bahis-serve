@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% load i18n %}
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+ {% block content %}
+  <head>
+    {% comment %}{% load compress %}{% endcomment %}
+    {% load staticfiles %}
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>mPower Form Builder </title>
+
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{csrf_token}}">
+
+    <link rel="icon" type="image/x-icon" href="{% static 'img/favicon.ico' %}" />
+    <!-- iPhone + iPad icons -->
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="{% static 'img/apple-touch-icon-114x114.png' %}">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="{% static 'img/apple-touch-icon-72x72-precomposed.png' %}">
+    <link rel="apple-touch-icon-precomposed" href="{% static 'img/apple-touch-icon-precomposed.png' %}">
+    <link rel="apple-touch-icon" href="{% static 'img/apple-touch-icon.png' %}">
+
+    {% comment %}{% compress css %}{% endcomment %}
+    <link rel="stylesheet" href="{% static 'css/jquery-ui-1.10.4.custom.css' %}">
+    <link rel="stylesheet" href="{% static 'components/fontawesome/css/font-awesome.css' %}" media="all">
+    <link rel="stylesheet" href="{% static 'kobo.compiled/kobo.css' %}" media="all">
+    {% comment %}{% endcompress %}{% endcomment %}
+
+    <script src="{% static 'kobo.compiled/modernizr.js' %}"></script>
+
+    {% if DEBUG %}
+    <script src="{% static 'components/jquery/dist/jquery.js' %}"></script>
+    {% else %}
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    {% endif %}
+    
+    <style>
+      [hidden] { display: none; }
+    </style>
+
+  </head>
+
+    <body>
+        
+        <section id="data-view">
+            <!--<span class="span12">-->
+                <div class="data-table-container table table-striped table-hover">
+                    {% if user.is_authenticated %}
+                    <div class="alert alert-danger" id="alert-message" role="alert" hidden></div>
+                        {% if message %}
+                            <p> {{message}} </p>
+                        {% else %}
+                        <h1>Locked Out Users</h1>
+                          <table border="1">
+                            <tr>
+                              <th>Username</th>
+                              <th>Email</th>
+                              <th>Operation</th>
+                            </tr>
+                          {% for user in users %}
+                            <tr id="row{{user.user.id}}">
+                              <td>{{user.user.username}}</td>
+                              <td>{{user.user.email}}</td>
+                              {# <td><a href="/usermodule/edit/{{user.user.id}}">Unlock</a><br /></td> #}
+                              <td><a class="unlocker" data-id="{{user.user.id}}" href="#">Unlock</a><br /></td>
+                            </tr>
+                            <br />
+                          {% endfor %}
+                          </table>
+                        {% endif %}
+                    {% else %}
+                      You are not not logged in please <a href="/usermodule/login/">login</a>
+                    {% endif %}
+                    <div style="clear: both;"></div>
+                </div>
+            <!--</span>-->
+
+        </section>
+
+    </body>
+
+
+<script type="text/javascript">
+
+$.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+            var csrftoken = getCookie('csrftoken');
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+        }
+    }
+});
+
+
+$(".unlocker").click(function() {
+   var locked_user_id = $(this).attr("data-id");
+   var div = $("#alert-message");  
+   $.ajax({
+      type: "POST",
+       url:"/usermodule/unlock/",
+      data: {id: locked_user_id},
+      success: function(data){
+          var response = data["message"];
+          div.html("User unlocked")
+          div.removeClass( "alert alert-danger" );
+          div.addClass( "alert alert-success" );
+          div.slideDown(1000).slideUp(1000);
+          
+          if(response == 'User unlocked'){
+            $("#row"+locked_user_id).remove();
+          }
+      },
+      error: function(){
+          div.addClass( "alert alert-danger" );
+          div.removeClass( "alert alert-success" );
+          div.html("An Error occured")
+          div.slideDown(1000).slideUp(1000);
+      }
+   }) // end-ajax
+
+});
+
+function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = jQuery.trim(cookies[i]);
+            // Does this cookie string begin with the name we want?
+            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+}
+
+
+
+</script>
+
+{% endblock %}
+</html>

@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Organization Management {% endblock %}
+    </title>
+</head>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+<style type="text/css">
+        .highlight { background-color: #D9EDF7; }
+</style>
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+<script type="text/javascript" src="/static/js/organization_access.js"></script>
+
+<script type="text/javascript">
+        $(document).ready(function(){
+
+        $('#organizations-table').dataTable({
+                // set the initial value
+                "iDisplayLength": 10,
+                "sPaginationType": "bootstrap",
+                "aLengthMenu": [
+                    [10, 20, 50, -1],
+                    [10, 20, 50, "All"] // change per page values here
+                ],
+                "aoColumnDefs": [{
+                        'bSortable': false,
+                        'aTargets': [2]
+                    }
+                ]
+            });
+
+        $('#organizations-table_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+            $('#organizations-table_wrapper .dataTables_length select').addClass("form-control input-xsmall"); // modify table per page dropdown
+
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+        });
+
+        $('.delete-user-item').on('click', function(e) {
+            var criteria_id = $(this).attr("data-href");
+            console.log(criteria_id);
+            $('.btn-ok').attr("href",criteria_id);
+        });
+
+
+</script>
+{% endblock %}
+
+
+{% block content %}
+    {% if can_conf == True %}
+<form action="/usermodule/add-organization">
+    <input type="submit" class="btn red pull-right" value="Add Organization" style="margin-bottom:15px;">
+</form>
+    {% endif %}
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-sitemap"></i>Organization List</div>
+    </div>
+    <div class="portlet-body">
+        <table id="organizations-table" class="table table-bordered table-striped table-condensed flip-content">
+            <thead class="flip-content">
+            <tr>
+                <th>Organization</th>
+                <th>Parent</th>
+                <th class="td-center">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for organization in all_organizations %}
+            <tr>
+                <td><a class="organization" org-name="{{ organization.oraganization }}"
+                       data-id="organization-{{ organization.id }}" href="#">{{ organization }}</a></td>
+                <td>{{ organization.parent_organization }}</td>
+                <td class="td-center">
+                    {% if can_conf == True %}
+                    <a class="tooltips" data-placement="top" data-original-title="Edit Organization"
+                       href="/usermodule/edit-organization/{{ organization.id }}"><i
+                            class="fa fa-2x fa-pencil-square-o"></i></a>
+                    <a class="delete-user-item tooltips" data-placement="top" data-original-title="Delete Organization"
+                       href="#"
+                       data-href="/usermodule/organization-delete/{{ organization.id}}" data-toggle="modal"
+                       data-target="#confirm-delete"><i class="fa fa-2x fa-trash-o"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="portlet box red partner-box" style="display:none;">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-sitemap"></i>Partner Organizations List</div>
+    </div>
+    <div class="portlet-body">
+    </div>
+</div>
+<!--<section id="data-view">
+    {% if org_del_message %}
+        <div class="alert alert-danger" role="alert">
+            {{org_del_message}}
+        </div>
+        <div class="alert alert-danger" role="alert">
+            {{org_del_message2}}
+        </div>
+
+    {% endif %}
+    {% if message %}
+
+        {% if alert == "alert-success" %}
+            <div id="message" class="alert alert-success" role="alert">
+        {% elif alert == "alert-warning" %}
+            <div id="message" class="alert alert-warning" role="alert">
+        {% else %}
+            <div id="message" >
+        {% endif %}
+            <span id="message" class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+          {{ message }}
+        </div>
+    {% endif %}
+    <h1>Organization Management</h1>
+    <form action="/usermodule/add-organization">
+        <input type="submit" class="btn btn-success" value="Add Organization">
+    </form>
+    &lt;!&ndash; <a href="/usermodule/organization-mapping">Add a mapping</a><br /> &ndash;&gt;
+    <div id='tables' style="display:table !important;" class="data-table-container table">
+        <table id="organizations-table" border="1" id="organization-list">
+          <tr>
+            <th style="text-align:center" >Organization</th>
+            <th style="text-align:center" >Parent</th>
+            <th style="text-align:center" >Edit</th>
+            <th style="text-align:center" >Delete</th>
+          </tr>
+
+        {% for organization in all_organizations %}
+
+          <tr>
+            <td style="text-align:center" ><a class="organization" org-name="{{ organization.oraganization }}" data-id="organization-{{ organization.id }}" href="#">{{ organization }}</a></td>
+            <td style="text-align:center" >{{ organization.parent_organization }}</a></td>
+            <td style="text-align:center" ><a href="/usermodule/edit-organization/{{ organization.id }}"><i class="fa fa-pencil-square-o"></i></a></td>
+            &lt;!&ndash; <td><a href="/usermodule/organization-delete/{{ organization.id}}"><i class="fa fa-trash-o"></a></td> &ndash;&gt;
+            <td style="text-align:center" ><a href="#" data-href="/usermodule/organization-delete/{{ organization.id}}" data-toggle="modal" data-target="#confirm-delete" class="delete-user-item"><i class="fa fa-trash-o"></a></td>
+
+          </tr>
+        {% endfor %}
+        </table>
+    </div>-->
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a Organization or it's, access mapping. This procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--</section>-->
+{% endblock %}

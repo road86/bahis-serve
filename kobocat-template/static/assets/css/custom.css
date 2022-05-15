@@ -1,0 +1,44 @@
+/* here you can put your own css to customize and override the theme */
+.nav-title-custom{
+    color: #fff;
+    font-size: 20px;
+    margin-left: 7%;
+    margin-top: -3px;
+}
+.td-center{
+    text-align: center;
+}
+.fa-2x {
+  display: inline-block;
+  margin-top: 1px;
+  font-size: 1.5em;
+  margin-right: .3em;
+  line-height: 14px;
+  color: #212121;
+}
+.help-block {
+    color: #b94a48;
+}
+.crop-both-side{
+    margin-left: 15px !important;
+    margin-right: 15px !important;
+}
+.top-buffer { margin-top:20px; }
+.top-buffer-min { margin-top:10px; }
+.bold-label{
+    font-weight: 600;
+}
+.click-link{
+    text-decoration:underline;
+    cursor:pointer;
+}
+.custom-align-left
+{
+    text-align:left !important;
+}
+
+.header-column-custom{
+    background-color: #f9f9f9;
+    font-weight:bold;
+    /*text-align:center;*/
+}

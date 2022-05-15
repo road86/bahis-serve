@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Add Module {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="col-md-offset-2 col-md-8">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Add Module
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="/bhmodule/add-module/{{ parent_id }}/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label >Module Name (English):</label>
+                        <input type="text" name="module_name_english" class="form-control" {% if module_name_english %} value="{{ module_name_english }}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <label >Module Name (Bangla):</label>
+                        <input type="text" name="module_name_bangla" class="form-control" {% if module_name_bangla %} value="{{ module_name_bangla }}" {% endif %} required>
+                    </div>
+                    <div class="form-group"  id = "parent_module_div" >
+                        <label>Parent Module</label>
+                        <input readonly type="text" name="parent_module" class="form-control" {% if parent_module_name %} value="{{ parent_module_name }}" {% endif %} required>
+
+                    </div>
+                    <div class="form-group">
+                        <label >Module Type:</label>
+                        <select id="module_type" name="module_type" class="form-control" required>
+                                    <option value="">Select Type</option>
+                                    {% for m,n in module_type_choices %}
+                                    <option value="{{ m }}"{% if module_type == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                        </select>
+                    </div>
+                    <div id="xform_id_div"class="form-group" style="display:None;">
+                        <label >Form:</label>
+                        <select id="xform_id" name="xform_id" class="form-control">
+                                    <option value="">Select Form</option>
+                                    {% for m,n in form_choices %}
+                                    <option value="{{ m }}"{% if form_id == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label >Module Applicable For:</label>
+                        <select id="applicable_for" name="applicable_for" class="form-control" required>
+                                     <option value="">Select</option>
+                                    {% for m,n in module_applicable_choices %}
+                                    <option value="{{ m }}"{% if applicable_for == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <input type="file" name="module_icon" accept="image/*" value="{{ icon }}">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label >Order:</label>
+                        <input type="text"  name="module_order" class="form-control" {% if order != None %} value="{{ order}}" {% endif %} required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block additional-javascript %}
+<!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->
+
+    <script>
+    $('#module_type').on('change', function () {
+            var $this = $(this);
+            var value = $this.val();
+            if (value==='1'){
+                $('#xform_id_div').show();
+                $('#xform_id').prop('required',true);
+
+            }
+            else{
+                $('#xform_id_div').hide();
+                $('#xform_id').prop('required',false);
+            }
+        });
+
+    </script>
+{% endblock %}

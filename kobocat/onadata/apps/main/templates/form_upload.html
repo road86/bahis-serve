@@ -1,0 +1,73 @@
+
+
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Edit form {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+{% block additional-javascript %}
+<!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->
+    <script>
+    $('input[type="checkbox"]').on('change', function() {
+    $('input[name="' + this.name + '"]').not(this).prop('checked', false);
+});
+</script>
+{% endblock %}
+
+{% block content %}
+    <!--<section id="data-view">
+        <h1>Role Management</h1>
+        <span class="span12">
+            <div class="data-table-container table table-striped table-hover">
+                {% if is_added_role %}
+                    <strong>Added Successfully!</strong>
+                {% else %}
+                    <strong>Add Role</strong><br />
+                    <form id="menu_form" method="post" action="/usermodule/add-role/">
+
+                        {% csrf_token %}
+                        {{ role_form.as_p }}
+                        &lt;!&ndash; Provide a button to click to submit the form. &ndash;&gt;
+                        <input type="submit" class="btn btn-primary btn-lg" name="submit" value="Save" />
+                    </form>
+                {% endif %}
+                <div style="clear: both;"></div>
+            </div>
+        </span>
+
+    </section>-->
+<div class=" col-md-12">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Reload Form
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <div class="container-fluid container__wide projects__advanced">
+
+    <div class="projects__advanced-xls hidden-form">
+      <form action="." method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="uploadform" id="url" >
+          <table class="uploadform__table" >
+            <p style="padding-left: 10px;width: 300px"><label for="id_xls_file">XLS File:</label> <input id="id_xls_file" name="xls_file" type="file" /></p>
+
+          <input type="hidden" value = "{{ url_param }}" name = "url_param" >
+
+          </table>
+          <input style="margin: 10px;" type="submit" class="uploadform__publish" value="Publish" />
+        </div>
+      </form>
+    </div>
+  </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -1,0 +1,56 @@
+<!--A Design by W3layouts
+Author: W3layout
+Author URL: http://w3layouts.com
+License: Creative Commons Attribution 3.0 Unported
+License URL: http://creativecommons.org/licenses/by/3.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link href="/static/css/error_style.css" rel="stylesheet" type="text/css" media="all"/>
+<link href='http://fonts.googleapis.com/css?family=Fenix' rel='stylesheet' type='text/css'>
+</head>
+<body>
+  <div class="wrap">
+	 <div class="main">
+		{# <h3>Company Name</h3> #}
+		<h1>Oops Something Went Wrong!!!</h1>
+		{% if message %}
+			<p>{{message}}.<br>
+			<span>Contact Site Admin</span></p>	
+		{% else %}	
+		<p>There's a lot of reasons why this page is<span class="error"> 404</span>.<br>
+			<span>Don't waste your time enjoying the look of it</span></p>
+		{% endif %}
+			{% comment %}
+				
+			<div class="search">
+				<form>
+					<input type="text" onfocus="this.value = '';" onblur="if (this.value == '') {this.value = 'Enter ur email';}" value="Enter ur email">
+					<input type="submit" value="Submit">		
+				</form>
+			</div>
+			{% endcomment %}
+		<div class="icons">
+	    </div>
+		{% comment %}
+			
+		<p>Follow us on:</p>
+		  <ul>
+		  	 <li><a href="#"><img src="web/images/img1.png"></a></li>
+		     <li><a href="#"><img src="web/images/img2.png"></a></li>
+		     <li><a href="#"><img src="web/images/img3.png"></a></li>
+		     <li><a href="#"><img src="web/images/img4.png"></a></li>
+		     <li><a href="#"><img src="web/images/img5.png"></a></li>
+		  </ul>	
+	    {% endcomment %}
+   </div>
+	<div class="footer">
+		
+    </div>
+  </div>
+</body>
+</html>
+

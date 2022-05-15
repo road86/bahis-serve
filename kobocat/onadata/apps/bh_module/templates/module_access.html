@@ -1,0 +1,319 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+<style>
+    .table tbody tr.has-history > td:first-child {
+        position: relative;
+    }
+
+    .table tr.has-history span.collapse-icon {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        color: white;
+        text-align: center;
+        font-weight: bold;
+        position: absolute;
+        left: -20px;
+        background: #f09d18;
+        border-radius: 5px 0 0 5px;
+        cursor: pointer;
+        font-size: 1.5em;
+        line-height: 1em;
+    }
+
+    .table tr.has-history span.collapse-icon:before {
+        content: "-";
+    }
+
+    .table tr.has-history.open span.collapse-icon {
+        background: #eee;
+        color: #000;
+        border: 1px solid #ccc;
+    }
+
+    .table tr.has-history.open span.collapse-icon:before {
+        content: "+";
+    }
+
+    /*.table{*/
+        /*margin:20px;*/
+        /*padding: 10px;*/
+
+/*}*/
+
+</style>
+
+
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+{% endblock %}
+
+
+{% block content %}
+
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i>Module Access</div>
+    </div>
+    <div class="portlet-body">
+        <form id="module_access_form" method="post" action="." enctype="multipart/form-data">
+                {% csrf_token %}
+            <!-- <div class="row">
+                <div class="col-md-12">
+                    <a href="/bhmodule/add-module/">
+                        <button type="submit" class="btn btn-info pull-left" id="add_new" data-original-title=""
+                                title="">Add New
+                        </button>
+                    </a>
+                </div>
+            </div> -->
+            <div class="row">
+                <div id = "checkbox-div" class="col-md-12" style="margin:10px;">
+                    <table id="all_info_table" class=" table-bordered table-striped table table-condensed flip-content nowrap">
+                        <tr>
+                            <th class="td-center"></th>
+                            {% for role in roles %}
+                            <th class="td-center">{{role.role}}</th>
+                            {% endfor%}
+                        </tr>
+
+                        <tr>
+                            <td class="header-column-custom td-center">{{ module_dict.module_name_english }}</td>
+                            {% for role in roles %}
+                            <td class="td-center"><label>
+                                            <span><input name="access_id" type="checkbox" value="{{ role.id }}" {% if role.id in access_dict %}checked{% endif %}/></span>
+                                        </label></td>
+                            {% endfor%}
+                        </tr>
+
+                    </table>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12" style="margin:10px;">
+
+                    <div class="form-actions">
+                            <button onclick="" type="submit" class="btn red pull-right">Submit</button>
+                            <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a branch info, this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+
+<script>
+    var table;
+    var roles = {{roles|safe}};
+    console.log(roles);
+    var root_list = {{ root_dict|safe }};
+    var module_dict = {{ module_dict|safe }};
+    var access_dict = {{ access_dict|safe }};
+    var header_class= 'has-history';
+
+
+    $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+
+                    o[this.name].push(this.value || '');
+
+                } else {
+                    if (this.name.includes('[]')){
+                       o[this.name] = [] ;
+                       o[this.name].push(this.value || '');
+                    }
+                    else{
+                      o[this.name] = this.value || '';
+
+                    }
+                }
+            });
+            return o;
+        };
+
+
+    $(document).ready(function () {
+        populateTreeTable(root_list);
+        $(".table tbody tr.has-history td:first-child").append('<span class="collapse-icon"></span>');
+    });
+
+
+    function populateTreeTable(module_list){
+        tbody= '<tbody>';
+         for (var idx in module_list) {
+            var mi= module_list[idx];
+            tbody+= getRow(mi,roles,true);
+             if (mi.children.length>0){
+                tbody+=getChildTree(mi.children,roles)
+            }
+        }
+        tbody+='</tbody>';
+
+        $('#all_info_table').html(tbody);
+        var parent =  module_list[0].name;
+        for (var idr in roles){
+            var label = roles[idr].role;
+            $("#"+parent.replace('module_','')+"_"+label).attr("disabled", false);
+        }
+
+        var selected = [];
+
+        $('div#checkbox-div input[type=checkbox]').each(function() {
+           if ($(this).is(":checked")) {
+               var Id = $(this).attr('id');
+               selected.push(Id);
+               {#console.log(Id);#}
+               var res = Id.split("_");
+               var children = module_dict['module_'+res[0]]['children'];
+               for (var i in children) {
+                   var mi = module_dict[children[i]].id;
+                   $("#" + mi + "_" + res[1]).attr("disabled", false);
+               }
+           }
+        });
+        console.log(selected);
+
+
+    }
+
+
+    function getChildTree(children,label){
+
+        var trbody = '';
+        for (var i in children){
+            var mi = children[i];
+            trbody+= getRow(mi,label,'');
+            if (mi.children.length>0){
+                trbody+=getChildTree(mi.children,label)
+            }
+        }
+        var tempTable ='<tr><td colspan="'+(roles.length+1)+'"><div style="padding: .5cm;"><table  class="table-bordered table-striped table table-condensed flip-content nowrap" > '+trbody+'</table></div> </td></tr>';
+        return tempTable;
+    }
+
+
+    $(document).on("click", ".collapse-icon", function () {
+
+        $(this).parents(".has-history").next().slideToggle();
+        $(this).parents(".has-history").toggleClass("open");
+    });
+
+
+    $('.delete-user-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+    });
+
+
+
+    function getRow(module, label,expandable){
+        var trbody = '';
+        var header_class= '';
+        var span = '';
+        if (expandable){
+            header_class= 'has-history';
+            span = '<span class="collapse-icon"></span>';
+        }
+        else{
+            if (module.children.length>0){
+                header_class= 'has-history';
+                span = '<span class="collapse-icon"></span>';
+            }
+        }
+        trbody+='<tr class="'+header_class+'" id="'+module.name+'"><td>'+module.module_name_english+' </td> ';
+            for (var idr in label){
+                var checked = '';
+                var disabled = 'disabled';
+                if (label[idr].id in access_dict){
+                    var module_list = access_dict[label[idr].id];
+                    if (module_list.includes(module.id)){
+                        console.log(module.id);
+                        console.log("checked")
+                        checked = 'checked';
+                        disabled = ''
+                    }
+                }
+                trbody+='<td class="td-center"><div class="form-check"><label class="form-check-label">'+label[idr].role+'<input class="form-check-input" id = "'+module.id+'_'+label[idr].role+'" name="module_id[]" type="checkbox" value="'+label[idr].id+'__'+module.id+'" '+disabled+' onclick="var changed_val= $(this).is(\':checked\');getChildEnabled(\''+module.name+'\',changed_val,\''+label[idr].role+'\')"/ '+checked+'></label></div></td>'
+            }
+            trbody+='</tr>';
+
+        return trbody;
+    }
+
+
+    function getChildEnabled(module_name, value, role){
+        console.log(module_name);
+        console.log(value);
+        var children = module_dict[module_name]['children'];
+        var flag = true;
+        if (value) {
+            flag = false;
+        }
+        console.log(flag);
+        for (var i in children){
+            var mi = module_dict[children[i]].id;
+            $("#"+mi+"_"+role).prop( "checked", false )
+            $("#"+mi+"_"+role).attr("disabled", flag);
+        }
+    }
+
+
+    $('.role-checkbox').on('change', function (e) {
+        var id = $(this).attr('id');
+        console.log(id);
+    });
+
+
+    if ($('.alert-block').is(':visible')) {
+        window.setTimeout(function () {
+            $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                $(this).remove();
+            });
+        }, 5000);
+    }
+</script>
+{% endblock %}

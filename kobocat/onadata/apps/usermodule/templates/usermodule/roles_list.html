@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Role Management {% endblock %}
+    </title>
+</head>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+<!--<style >
+.data-table-container table {
+    clear: both;
+    display: table !important;
+    overflow-x: auto;
+    width: 98% !important;
+}
+
+.table th, .table td {
+    border: 1px solid #dddddd !important;
+}
+</style>-->
+{% endblock %}
+
+{% block content %}
+<!--<section id="data-view">
+    {% if org_del_message %}
+        <div class="alert alert-danger" role="alert">
+            {{org_del_message}}
+        </div>
+    {% endif %}
+    {% if message %}
+
+        {% if alert == "alert-success" %}
+            <div id="message" class="alert alert-success" role="alert">
+        {% elif alert == "alert-warning" %}
+            <div id="message" class="alert alert-warning" role="alert">
+        {% else %}
+            <div id="message" >
+        {% endif %}
+            <span id="message" class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+          {{ message }}
+        </div>
+    {% endif %}
+    <h1>Role Management</h1>
+    <form action="/usermodule/add-role/">
+        <input type="submit" class="btn btn-success" value="Add Role">
+    </form>
+    &lt;!&ndash; <a href="/usermodule/organization-mapping">Add a mapping</a><br /> &ndash;&gt;
+    <div id='tables' style="display:table !important;" class="data-table-container table table-striped table-hover">
+        <table id="organizations-table" border="1" id="organization-list">
+          <tr>
+            <th style="text-align:center" >Organization</th>
+            <th style="text-align:center" >Role</th>
+            <th style="text-align:center" >Edit</th>
+            <th style="text-align:center" >Delete</th>
+          </tr>
+
+        {% for role in all_roles %}
+
+          <tr>
+            <td style="text-align:center" >{{ role.organization }}</td>
+            <td style="text-align:center" >{{ role.role }}</td>
+            <td style="text-align:center" ><a href="/usermodule/edit-role/{{ role.id }}"><i class="fa fa-pencil-square-o"></i></a></td>
+            <td style="text-align:center" ><a class="delete-item" data-toggle="modal" data-target="#confirm-delete" href="#" data-href="/usermodule/delete-role/{{ role.id}}"><i class="fa fa-trash-o"></a></td>
+          </tr>
+        {% endfor %}
+        </table>
+    </div>
+</section>-->
+    {% if can_conf == True %}
+<form action="/usermodule/add-role/">
+    <input type="submit" class="btn red pull-right" value="Add Role" style="margin-bottom:15px;">
+</form>
+    {% endif %}
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-users"></i>Role Management</div>
+    </div>
+    <div class="portlet-body">
+        <table id="role_table" class="table table-bordered table-striped table-condensed flip-content">
+            <thead class="flip-content">
+            <tr>
+                <th>Organization</th>
+                <th>Role</th>
+                <th>Parent role</th>
+                <th class="td-center">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for role in all_roles %}
+            <tr>
+                <td>{{ role.organization }}</td>
+                <td>{{ role.role }}</td>
+                <td>{{ role.parent_role |default_if_none:'' }}</td>
+                <td class="td-center">
+                    {% if can_conf == True %}
+                    <a class="tooltips" data-placement="top" data-original-title="Edit Role"
+                       href="/usermodule/edit-role/{{ role.id }}"><i class="fa fa-2x fa-pencil-square-o"></i></a>
+                    <a class="tooltips delete-item" data-placement="top" data-original-title="Delete Role" href="#"
+                       data-href="/usermodule/delete-role/{{ role.id}}" data-toggle="modal"
+                       data-target="#confirm-delete"
+                       class="delete-user-item"><i class="fa fa-2x fa-trash-o"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Action</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a Role, this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+<script>
+    $('.delete-item').on('click', function(e) {
+        var criteria_id = $(this).attr("data-href");
+        $('.btn-ok').attr("href",criteria_id);
+    });
+
+    $(document).ready(function(){
+        $('#role_table').dataTable({
+        // set the initial value
+        "iDisplayLength": 10,
+        "sPaginationType": "bootstrap",
+        "aLengthMenu": [
+            [10, 20, 50, -1],
+            [10, 20, 50, "All"] // change per page values here
+        ],
+        "aoColumnDefs": [{
+                'bSortable': false,
+                'aTargets': [2]
+            }
+        ]
+    });
+
+$('#role_table_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+$('#role_table_wrapper .dataTables_length select').addClass("form-control input-xsmall"); // modify table per page dropdown
+
+if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+});
+
+</script>
+{% endblock %}

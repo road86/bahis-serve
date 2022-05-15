@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+    {% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} User Role Management {% endblock %}
+        </title>
+    </head>
+        <style >
+        .fa-check-square {
+          color: green;
+        }
+
+        .fa-minus-circle {
+          color: red;
+        }
+    </style>
+    {% endblock %}
+    
+    {% block additional-javascript %}
+    $(document).ready(function(){
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+    });
+
+    {% endblock %}
+    
+
+
+{% block content %}
+    {% if can_conf == True %}
+<form action="/usermodule/adjust-user-role-map/{{id}}">
+    <input type="submit" class="btn red pull-right" value="Edit User Roles" style="margin-bottom:15px;">
+</form>
+    {% endif %}
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-sitemap"></i>User-Role Management</div>
+        </div>
+        <div class="portlet-body">
+            <table id="organizations-table" class="table table-bordered table-striped table-condensed flip-content" id="organization-list">
+              <tr>
+                <th class="td-center">Username</th>
+                {% for role in roles %}
+                <th class="td-center">{{role}}</th>
+                {% endfor%}
+              </tr>
+
+            {% for user in users %}
+
+              <tr>
+                <td class="td-center">{{user.user.username}}</td>
+                {% for role in roles %}
+                {% if user.user_id|get_roles:role %}
+                    <td class="td-center"><i class="fa fa-check-square"></a></td>
+                {% else %}
+                    <td class="td-center"><i class="fa fa-minus-circle"></a></td>
+                {% endif %}
+                {% endfor%}
+
+
+              </tr>
+            {% endfor %}
+            </table>
+        </div>
+    </div>
+{% endblock %}

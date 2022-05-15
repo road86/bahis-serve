@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+   <link href="/static/css/bootstrap-datepicker.css" rel="stylesheet" type="text/css"/>
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> TL Pin Form
+            </div>
+        </div>
+
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="" method="post" action="/usermodule/add-tlpin/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label > Code: </label>
+                                <input type="text"  minlength="2" maxlength="2" class="form-control" name="tlpin_code" id="tlpin_code" required>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >AC Area: </label>
+                                <select class="form-control" name="acarea_id" id="acarea_id" required>
+                                        <option value="">Select One</option>
+                                        {% for acarea_id,acarea_name in acarea_list %}
+                                            <option value="{{ acarea_id }}">{{ acarea_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit</button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <script>
+
+        $(function(){
+          $("input[name='tlpin_code']").on('input', function (e) {
+            $(this).val($(this).val().replace(/[^0-9]/g, ''));
+          });
+        });
+    </script>
+
+{% endblock %}

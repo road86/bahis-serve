@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load humanize %}
+{% load app_filters %}
+{% block content %}
+{% comment %}
+<a href="#" class="ajax_flag" data-toggle="modal" data-target="#myModal"><i class="fa fa-cog"></i></a>
+{% endcomment %}
+
+    
+
+
+<section id="data-view">
+    <h1>{{xform.title}} Permissions</h1>
+        {% if message %} 
+            <div class="alert alert-success" role="alert">
+                {{message}}
+            </div>    
+            
+        {% endif %}
+        <div id='tables' style="display:table !important;" class="data-table-container table">
+            <table border="1">
+                <tr>
+                    <th>User</th>
+                    <th>Can View</th>
+                    <th>Can Edit</th>
+                    <th>Can Submit</th>
+                </tr>
+
+                <form id="menu_form" method="post" >
+
+                {% csrf_token %}
+                {{permisssion_form_set.management_form}}
+                {% for permisssion_form in permisssion_form_set %}
+                <tr>
+                    <td>
+                    {{ permisssion_form.user.errors }}
+                    {{ permisssion_form.user }}
+                    <b>{{ permisssion_form.initial.username|capfirst }}</b>
+                    </td>
+                    
+                    {% for choice in permisssion_form.perm_type.field.choices %}
+                    <td>    
+                        <label for="">
+                        {% if choice.0|get_checked_string:permisssion_form.initial.perm_type %}
+                        <input type="checkbox" name="perm-{{forloop.parentloop.counter}}" value="{{choice.0}}" checked="checked">
+                        {% else %}
+                        <input type="checkbox" name="perm-{{forloop.parentloop.counter}}" value="{{choice.0}}">
+                        {% endif %}  
+                        </label>
+                    </td>    
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+                <input type="submit" class="btn btn-primary btn-lg" name="submit" value="Save" />
+                </form>
+            <div style="clear: both;"></div>
+            </div>
+        </span>
+
+    </section>
+{% comment %}
+
+    
+<!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            <h4 class="modal-title" id="myModalLabel">Projects</h4>
+          </div>
+          <div class="modal-body">
+            <input type="text" id="search" placeholder="Search...">
+            <table id="projects-table" class="table" border="1">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>PROJECTS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                {% if all_forms or forms_shared_with %}
+                    {% for xform_list in xforms_list %}
+                        {% for xform in xform_list.xforms %}
+                        <tr class="clickable-row" data-id="{{ xform.id }}">
+                            <td>{{ xform.id }}</td>
+                            <td>{{ xform.title }}</td>
+                        </tr>
+                        {% endfor %}    
+                    {% endfor %}
+                {% endif %}
+                <tbody>
+            </table>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endcomment %}
+
+{% endblock %}
+
+{% block additional-headers %}
+    <style >
+    .data-table-container table {
+        clear: both;
+        display: table !important;
+        overflow-x: auto;
+        width: 98% !important;
+    }
+
+    .highlight { background-color: #D9EDF7; }
+
+    .table th, .table td {
+        border: 1px solid #dddddd !important;
+        text-align:center;
+    }
+
+    .alert-block{
+        display: none !important;
+    }
+    
+    </style>
+    
+{% endblock %}

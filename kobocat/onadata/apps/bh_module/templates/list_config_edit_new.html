@@ -1,0 +1,1056 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} Module List Settings {% endblock %}
+        </title>
+    </head>
+    <style>
+        .panel {
+            margin-bottom: 20px;
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-group .panel {
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        .panel-group .panel + .panel {
+            margin-top: 0;
+        }
+
+        .panel-default {
+            border: none;
+        }
+
+        .panel-heading {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .panel-default > .panel-heading {
+            color: #333;
+            background: none;
+            border-top: 1px solid #ddd;
+        }
+
+        .panel-default > .panel-heading + .panel-collapse > .panel-body {
+            border: none;
+            background: white;
+        }
+
+        .panel-sub-body {
+            padding: 10px;
+            background: white;
+        }
+
+        .panel-heading .accordion-toggle:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading .accordion-toggle.collapsed:after {
+            content: "\e080";
+        }
+
+#sortable { list-style-type: none; margin: 0; padding: 0; width: 60%; }
+  #sortable li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1.4em; height: 18px; }
+  #sortable li span { position: absolute; margin-left: -1.3em; }
+
+
+    </style>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/alertify.min.css" media="all"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/themes/semantic.min.css"
+          media="all"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/plugins/select2/select2_metro.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+
+    <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
+         rel = "stylesheet">
+{% endblock %}
+
+{% block content %}
+
+
+    {#    <form action="/usermodule/register">#}
+    {#        <input type="submit" class="btn red pull-right" value="Register User" style="margin-bottom:15px;">#}
+    {#    </form>#}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Module List Settings</div>
+        </div>
+
+        <div class="portlet-body">
+            <form id="form_basic_info">
+                <div class="panel-sub-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label>List Title (Bangla)</label>
+                            <input class="form-control" type="text" name="list_name_bangla" required {% if list_name %}
+                                   value="{{ list_name.Bangla }}"{% endif %}/>
+                        </div>
+                        <div class="col-md-3">
+                            <label>List Title (English)</label>
+                            <input class="form-control" type="text" name="list_name_english" {% if list_name %}
+                                   value="{{ list_name.English }}"{% endif %}/>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Data Source Type</label>
+                            <select name="datasource_type" class="form-control select-picker" id="datasource_type"
+                                    onchange="var changed_val= $(this).val();changeSourceDropdown(changed_val);"
+                                    required>
+                                <option value="">Select</option>
+                                {% for m,n in datasource_type_choices %}
+                                    <option value="{{ m }}"{% if datasource_type == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label>Select Data Source</label>
+                            <select name="list_datasource" class="form-control select-picker" id="list_datasource"
+                                    onchange="var changed_val= $(this).val();onChangeDataSource(changed_val);" required>
+
+
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+            </form>
+            <div class="panel-group" id="accordion">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseTwo">
+                                List Definition
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form id="form_col_def">
+                                <div id="czContainer">
+                                    <div id="first" style="padding-top: 20px;  height:400px;overflow:scroll;">
+                                        <table id="format-table" style="background: white"
+                                               class="table table-bordered table-striped">
+                                            <tbody>
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </form>
+                        
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                                   href="#collapseSix">
+                                    LookUp Function
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseSix" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <form id="lookup-form">
+                                    <div class="form-body">
+                                        <div class="row">
+                                            <div class="col-md-2"><input class="form-control" type="text" name="lookup_title_english" placeholder="Column Title(English)"></div>
+                                            <div class="col-md-2"><input class="form-control" type="text" name="lookup_title_bangla" placeholder="Column Title(Bangla)"></div>
+                                            <div class="col-md-3">
+                                                <select name="lookup_datasource" class="form-control" id="lookup_datasource"
+                                                onchange="var changed_val= $(this).val();onChangeLookUpDatasource(changed_val);" required>
+                                                    <option value="">Select Datasource</option>
+                                                    {% for m in datasource %}
+                                                        <option value="{{ m.id }}"{% if datasource_type == m %} selected {% endif %}>{{ m.title}}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <select name="lookup_return_column" class="form-control" id="lookup_return_column" onchange="var changed_val= $(this).val();onChangeDataSource(changed_val);" required>
+                                                    <option value=""> Select Return Column</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <div style="text-align: right; position: fixed" class="input-group-btn float-filter">
+                                                    <button type="button" class="btn btn-secondary red"><i class="fa fa-search"></i></button>
+                                                    <button onclick="conditionDivHide();" data-toggle="dropdown" aria-haspopup="true" type="button" class="btn btn-secondary red dropdown-toggle dropdown-toggle-split" aria-expanded="false">
+                                                    <i class="fa fa-caret-left" id="icon_caret_right_6" aria-hidden="true" style="display: block;"></i> <i class="fa fa-times" style="display: none" id="icon_cross_right_6" aria-hidden="true"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="lookup_condition_div" style="padding-top: 20px; display:None;">
+                                          
+                                            <div class="row" id="lookup_condition_row_0">
+                                                <div class="col-md-2">
+                                                    <select name="lookup_source_column" class="form-control" id="lookup_source_column"
+                                                    onchange="var changed_val= $(this).val();" required>
+
+                                                        <option value="">Select Source Column</option>
+                                                        
+                                                    </select>                  
+                                                </div>
+                    
+                                                <div class="col-md-2">
+                                                    <select name="lookup_condition_type" class="form-control" id="lookup_condition_type"
+                                                    onchange="var changed_val= $(this).val();onChangeDataSource(changed_val);" required>
+                                                        <option value="">Select Type</option>
+                                                        <option value="static">static</option>
+                                                        <option value="list">list</option>
+                                                    </select>                  
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <select name="lookup_datasource" class="form-control" id="lookup_datasource"
+                                                    onchange="var changed_val= $(this).val();onChangeDataSource(changed_val);" required>
+
+                                                        <option value="">Select List Column</option>
+                                                        
+                                                    </select>                  
+                                                </div>
+                                                
+                                            
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="form-actions">
+                                    
+                                    <button type="submit" class="btn red pull-right" style="margin-right:10px;"
+                                            onclick="dataEmbedSubmit();">Submit
+                                    </button>
+                                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                                            class="btn default pull-right">Cancel
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseThree">
+                                Filter Defination
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseThree" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form id="form_filter_def">
+                                <div id="">
+                                    <div id="first" style="padding-top: 20px;  height:600px;overflow:scroll;">
+                                        <table id="filter-table" style="background: white"
+                                               class="table table-bordered table-striped">
+                                            <tbody>
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                                   href="#collapseFour">
+                                    WorkFlow
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseFour" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <a href="">
+                                            <button class="btn btn-info pull-left" id="add_new"
+                                                    data-original-title=""
+                                                    title="">Add Workflow
+                                            </button>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6" id="" style="padding: 20px;">
+                                        <div class="form-body" id="second" style="padding-top: 20px;background: white">
+                                            <form id="form_csv_config">
+                                                <div class="form-group" id="p_source_datasource" >
+                                                    <label>Form Name *</label>
+                                                    <select id="xform_id" name="xform_id" class="form-control" required onchange="var changedVal= $(this).val();onChangeActionForm(changedVal)">
+                                                        <option value="">Select</option>
+                                                        {% for m in form_choices %}
+                                                            <option value="{{ m.0 }}">{{ m.1 }}
+                                                            </option>
+                                                        {% endfor %}
+                                                    </select>
+                                                </div>
+                                                <div class="form-group"  style="">
+                                                    <label>Workflow Label Bangla</label>
+                                                    <input class="form-control" name="workflow_label_bangla" id="workflow_label_bangla" type="text">
+                                                </div>
+                                                <div class="form-group" id="" style="">
+                                                    <label>Workflow Label English</label>
+                                                    <input class="form-control" name="workflow_label_english" id="workflow_label_english" type="text">
+                                                </div>
+                                                <div id="data_embedding" class="form-group">
+                                                    <table id="worflow-table" class="table table-bordered table-striped"  style="background: white">
+                                                        <tbody>
+
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </form>
+                                            <div class="form-actions">
+                                                <button type="submit" class="btn btn-info pull-right" id="update_csv"
+                                                        onclick="saveWorkFlow();"
+                                                        title="">Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+                                    <div class="col-md-8" id="">
+                                        <div id="first" style="padding-top: 20px;">
+                                            <table id="workflow-table" style="background: white"
+                                                   class="table table-bordered table-striped">
+                                                <tbody>
+
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                                   href="#collapseFive">
+                                    Publish
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseFive" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="checkbox" id="first" style="padding-top: 20px;">
+                                            <label><input name="list_publish" id="list_publish" type="checkbox">Publish
+                                                The
+                                                List</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                <div class="col-md-12" >
+                                            <button class="btn btn-info pull-left" id="add_new"
+                                                    type="submit" onclick="showColumnList();"
+                                                    title="">Order List Column
+                                            </button>
+                                        </div>
+                            </div>
+                            <div class="row" ><div class="col-md-3" style="padding-top: 20px;" id="order_div"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h4 class="panel-title">
+                                <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                                   href="#collapseSix">
+                                    Status
+                                </a>
+                            </h4>
+                        </div>
+                        <div id="collapseSix" class="panel-collapse collapse">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="checkbox" id="first" style="padding-top: 20px;">
+                                            <label><input name="list_status" id="list_status" type="checkbox">Inactive
+                                                Module</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn pull-right" onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                    class="btn default">Cancel
+            </button>
+            <button onclick="saveData();" type="submit" class="btn red pull-right">Save</button>
+
+        </div>
+        {#        <button type="submit" onclick="saveData();">Save</button>#}
+
+    </div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a user, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+    {% comment %} <script src = "https://code.jquery.com/jquery-1.10.2.js"></script> {% endcomment %}
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script>
+
+        var module_id = {{ module_id }};
+        var filterType = {{ filter_type|safe}};
+        var filterTypeHtml;
+        var multipleFieldParent;
+        var datasource_choices = {{ datasource_choices|safe }};
+        var table_choices = {{ table_choices|safe }};
+        var list_id = {{ list_id }};
+        var presentFilter = [];
+        var presentColumn = [];
+        var datasourceName = '{{ datasource_name }}';
+        var filterDef = {{ filter_def|safe }};
+        var columnDef = {{ column_def|safe }};
+        var columnTypeHtml;
+        var columnType = {{ column_data_type|safe }};
+        var formColumnHtml;
+        var actionFormColumn;
+        var presentLookUpDatasource;
+
+        function getWorkflowTable(){
+
+        }
+
+        function showColumnList(){
+            
+      
+            
+            ulHtml = '';
+            for (var d in presentColumn){
+                ulHtml+='<li class="ui-state-default" id="'+presentColumn[d]+'"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>'+presentColumn[d]+'</li>';
+            }
+            ulHtml = '<ul id="sortable-1" class="list">'+ulHtml+'</ul';
+
+            $('#order_div').html(ulHtml);
+
+            $( "#sortable-1" ).sortable({
+               update: function(event, ui) {
+                  var productOrder = $(this).sortable('toArray');
+                  console.log(productOrder);
+               }
+            });
+            console.log($("#sortable-1").sortable('toArray'));
+        }
+
+
+        $('.delete-user-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+
+        function saveData() {
+            var filterDef = JSON.stringify($("#form_filter_def").serializeObject());
+            var parameters = JSON.stringify($('#form_col_def').serializeObject());
+            console.log(parameters);
+            var basic_info = JSON.stringify($('#form_basic_info').serializeObject());
+            var publish_info = JSON.stringify($('#publish_form').serializeObject());
+            var list_publish = $('#list_publish').is(':checked');
+            var list_status = $('#list_status').is(':checked');
+            var sortedList = $("#sortable-1").sortable('toArray');
+            console.log(list_status);
+
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add/module-list-config/' + module_id + '/',
+                data: {
+                    'list_id': list_id,
+                    'col_def': parameters,
+                    'filter_def': filterDef,
+                    'basic_info': basic_info,
+                    'publish': list_publish,
+                    'status': list_status,
+                    'sort_list': sortedList,
+                },
+                success: function (response) {
+                    console.log(response);
+                    window.location.href = response;
+                },
+                error: function (xhr, status, error) {
+                }
+            })
+
+        }
+
+
+        function getInputField(element, checked) {
+            console.log(checked);
+            if (checked) {
+                presentColumn.push(element);
+                console.log(element);
+                var secondCol = $("#" + element).find('td').eq(2).html('<input class="form-control" style="" type="text" name="' + element + '@english">');
+                var thirdCol = $("#" + element).find('td').eq(3).html('<input class="form-control" type="text" name="' + element + '@bangla">');
+                var thirdCol = $("#" + element).find('td').eq(4).html('<select class="form-control" name="' + element + '@data_type"><option value="">Select</option>' + columnTypeHtml + '</select>');
+                var fourthCol = $("#" + element).find('td').eq(5).html('<input  type="checkbox" name="' + element + '@sortable">');
+                var fifthCol = $("#" + element).find('td').eq(6).html('<input class="form-control" type="text" name="' + element + '@format">');
+            }
+            else {
+                var index = presentColumn.indexOf(element);
+                if (index > -1) {
+                    presentColumn.splice(index, 1);
+                }
+                var secondCol = $("#" + element).find('td').eq(2).html('');
+                var thirdCol = $("#" + element).find('td').eq(3).html('');
+                var fourthCol = $("#" + element).find('td').eq(4).html('');
+                var fifthCol = $("#" + element).find('td').eq(5).html('');
+                var fifthCol = $("#" + element).find('td').eq(6).html('');
+            }
+            {#            console.log(secondCol);#}
+        }
+
+
+        
+
+        function onChangeDataSource(changed_val) {
+
+             if(changed_val!==''){ 
+
+            var datasource = $('#datasource_type').val();
+            var datasource_type = ((datasource === '2') ? 'datasource' : 'table');
+            $.ajax({
+                    type: 'POST',
+                    url: "/bhmodule/get-column-name/",
+                    data: {'datasource_name': changed_val, 'datasource_type': datasource_type},
+                    success: function (data) {
+                        console.log("here"+changed_val);
+                        console.log(data);
+                        var data_list = JSON.parse(data);
+                        var table = $('#format-table');
+                        table.find("tbody tr").remove();
+                        table.append('<tr><td></td> <td>Attribute Name</td><td>Column Title(English)</td> <td>Column Title(bangla)</td> <td>Column Type</td> <td>Sortable</td> <td>Format</td> </tr>'
+                        );
+                        for (var d in data_list) {
+                            var l = data_list[d];
+                            console.log(l);
+                            var tablerow = '<tr id="' + l["column_name"] + '">';
+                            tablerow += '<td ><input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + l["column_name"] + '\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                            tablerow += '<td></td><td></td>'
+                            tablerow += '<td></td><td></td>'
+                            tablerow += '<td></td></tr>';
+                            table.append(tablerow);
+                        }
+                        getFilterTable(data_list);
+                        if (datasourceName === changed_val) {
+                            populateColumnTable();
+                            console.log(filterDef);
+                            for (var j = 0; j < filterDef.length; j++) {
+                                var element = filterDef[j].name;
+                                $('#' + element + '_filter').find('td').eq(0).find(':checkbox').prop("checked", true).trigger("change");
+
+                            }
+                            populateFilterTable();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        $('#del_modal').modal('show');
+                    }
+                });
+             }
+             else{
+            
+                        $('#format-table').find("tbody tr").remove();
+                        $('#filter-table').find("tbody tr").remove();
+            }
+
+        }
+
+
+        function changeSourceDropdown(changedVal) {
+            var option = '';
+            console.log("Here");
+            console.log(changedVal);
+            if (changedVal === '1') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in table_choices) {
+                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                }
+            }
+            else if (changedVal === '2') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in datasource_choices) {
+                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                }
+            }
+
+            $('#list_datasource').html(option);
+            $('.select-picker').selectpicker('refresh');
+            $('#list_datasource').trigger('change');
+        }
+
+
+        function getWorkFlowTable(actionFormColumn){
+            var table = $('#worflow-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><td></td><td>Source Column</td> <td>Destination Column</td></tr>'
+            );
+            for (var d in actionFormColumn) {
+                var l = actionFormColumn[d];
+                 {#                console.log(l);#}
+                var tablerow = '<tr id="' + l + '@data_embed">';
+                tablerow += '<td ><input type="checkbox" onchange="var changed_val= $(this).is(\':checked\');getFormColumnDropdown(\'' + l + '@data_embed\',changed_val)"></td><td>' + l+ '</td>';
+                tablerow += '<td></td>'
+                tablerow += '</tr>';
+                table.append(tablerow);
+            }
+        }
+
+
+        function getFormColumnDropdown(element, checked) {
+            if (checked) {
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('<select class="form-control"  type="text" name="' + element + '_form">' + formColumnHtml + '</select>');
+            }
+            else
+                {
+                    var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('');
+            }
+        }
+
+
+        function onChangeActionForm(xform_id) {
+            console.log("hello here");
+            $.ajax({
+                type: 'GET',
+                url: "/bhmodule/get-form-column/"+xform_id+"/",
+                success: function (data) {
+                    console.log(presentColumn);
+                    actionFormColumn = JSON.parse(data);
+                    formColumnHtml = getFormcolumnOption();
+                    getWorkFlowTable(presentColumn);
+                },
+                error: function (xhr, status, error) {
+                    $('#del_modal').modal('show');
+
+                }
+            });
+        }
+
+
+        function saveWorkFlow(){
+            var formConfig = JSON.stringify($('#form_csv_config').serializeObject());
+            console.log("Here I am in workflow");
+            console.log(formConfig);
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add/list-workflow/' + list_id + '/',
+                data: {
+                    'form_info': formConfig,
+                },
+                success: function (response) {
+                    console.log(response);
+                    window.location.href = response;
+                },
+                error: function (xhr, status, error) {
+                }
+            })
+        }
+
+
+        function getFormcolumnOption(){
+            var optionHtml = '<option value="">Select</option>'
+            for (const key in actionFormColumn) {
+{#                console.log(key);#}
+                var value = actionFormColumn[key];
+                console.log(value);
+                //optional check for properties from prototype chain
+                                    optionHtml += "<option value='" + value['field_name']+ "'>" + value['field_name'] + "</option>"
+
+{#                if (actionFormColumn.hasOwnProperty(value)) {#}
+{#                } else {#}
+{#                    //property from protytpe chain#}
+{#                }#}
+            }
+            return optionHtml;
+        }
+
+
+        function getFilterTable(data_list) {
+
+            var table = $('#filter-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><td></td> <td>Attribute Name</td><td>Filter Title(English)</td> <td>Filter Title(bangla)</td> <td>Filter Type</td> <td>Appearance</td><td>Searchable</td><td>Dependant</td> <td>parent Attribute</td> </tr>'
+            );
+
+            for (var d in data_list) {
+                var l = data_list[d];
+                console.log(l);
+                var tablerow = '<tr id="' + l["column_name"] + '_filter">';
+                tablerow += '<td ><input  type="checkbox" onchange="var changed_val= $(this).is(\':checked\');getInputFilter(\'' + l["column_name"] + '_filter\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                tablerow += '<td></td><td></td>'
+                tablerow += '<td></td><td></td><td></td><td></td><td></td>'
+                tablerow += '</tr>';
+                table.append(tablerow);
+            }
+        }
+
+
+        function columnTypeDropdown() {
+            var optionHtml = '';
+            for (const key in columnType) {
+                var col = columnType[key];
+                //optional check for properties from prototype chain
+                if (col.length > 0) {
+                    optionHtml += "<option value='" + col[0] + "'>" + col[1] + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            console.log(optionHtml);
+            return optionHtml;
+        }
+
+
+        function getFilterTypeDropdown() {
+
+            var optionHtml = ''
+            for (const key in filterType) {
+                var value = filterType[key];
+                //optional check for properties from prototype chain
+                if (filterType.hasOwnProperty(key)) {
+                    optionHtml += "<option value='" + key + "'>" + value + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            return optionHtml;
+        }
+
+
+        function getInputFilter(element, checked) {
+            var own_element = element.replace('_filter', '')
+            console.log(checked);
+            if (checked) {
+                presentFilter.push(own_element);
+                console.log(own_element);
+                var secondCol = $("#" + element).find('td').eq(2).html('<input style="" type="text" id="' + element + '@english" name="' + element + '@english">');
+                var thirdCol = $("#" + element).find('td').eq(3).html('<input style="" type="text" id="' + element + '@bangla" name="' + element + '@bangla">');
+                var fourthCol = $("#" + element).find('td').eq(4).html('<select class="select-picker" id="' + element + '@type" name="' + element + '@type">' + filterTypeHtml + '</select>');
+                var fourthCol = $("#" + element).find('td').eq(5).html('<select class="select-picker" id="' + element + '@appearnace" name="' + element + '@appearnace"><option value="">Select Appearance</option></select>');
+                var fifthCol = $("#" + element).find('td').eq(6).html('<input type="checkbox" id="' + element + '@searchable" name="' + element + '@searchable">');
+                var fifthCol = $("#" + element).find('td').eq(7).html('<input onchange="var changed_val= $(this).is(\':checked\');getParentFilter(\'' + own_element + '\',changed_val)" type="checkbox" id="' + element + '@dependant" name="' + element + '@dependant">');
+                $('.select-picker').selectpicker();
+            }
+            else {
+                var index = presentFilter.indexOf(own_element);
+                if (index > -1) {
+                    presentFilter.splice(index, 1);
+                }
+                var secondCol = $("#" + element).find('td').eq(2).html('');
+                var thirdCol = $("#" + element).find('td').eq(3).html('');
+                var fourthCol = $("#" + element).find('td').eq(4).html('');
+                var fifthCol = $("#" + element).find('td').eq(5).html('');
+                var fifthCol = $("#" + element).find('td').eq(6).html('');
+                var fifthCol = $("#" + element).find('td').eq(7).html('');
+                $("#" + element).find('td').eq(8).html('');
+            }
+            adjustParentDropdown();
+        }
+
+
+        function adjustParentDropdown() {
+            for (var i in presentFilter) {
+                var element = presentFilter[i];
+                console.log("Adjust filter" + element);
+                var flag = $('#' + element + CSS.escape('_filter@dependant')).is(":checked");
+                var values = $('#' + element + CSS.escape('_filter@parent')).val();
+                if (flag) {
+                    var populateFlag = getParentFilter(element, flag);
+                    if (populateFlag) {
+                        $('#' + element + CSS.escape('_filter@parent')).selectpicker("val", values);
+                    }
+                }
+
+            }
+        }
+
+
+        function populateFilterTable() {
+            for (var j = 0; j < filterDef.length; j++) {
+                var filter = filterDef[j]
+                var element = filter.name;
+                var appearance = filter.appearance;
+                var label = filter.label;
+                document.getElementById(element + '_filter@english').setAttribute('value', label['English']);
+                document.getElementById(element + '_filter@bangla').setAttribute('value', label['Bangla']);
+                $('#' + element + CSS.escape('_filter@type')).selectpicker("val", filter.type);
+                if ('searchable' in appearance) {
+                    $('#' + element + CSS.escape('_filter@searchable')).prop("checked", true).trigger("change");
+                }
+                if (filter.dependency) {
+                    $('#' + element + CSS.escape('_filter@dependant')).prop("checked", true);
+                    var flag = getParentFilter(element, true);
+                    if (flag) {
+                        $('#' + element + CSS.escape('_filter@parent')).selectpicker("val", [filter.dependency]);
+                    }
+                }
+            }
+        }
+
+
+        function getParentFilter(element, checked) {
+            console.log(presentFilter);
+            if (checked) {
+                var options = '';
+                for (var i in presentFilter) {
+                    console.log(presentFilter[i], element);
+                    if (presentFilter[i] !== element) {
+                        options += '<option value="' + presentFilter[i] + '">' + presentFilter[i] + '</option>';
+                    }
+                }
+                if (options !== '') {
+                    var fifthCol = $("#" + element + '_filter').find('td').eq(7).html('<select multiple="multiple" class="multiple-select" id="' + element + '_filter@parent" name="' + element + '_filter@parent">' + options + '</select>');
+                    $('.multiple-select').selectpicker();
+                    return true;
+                }
+                else {
+                    $("#" + element + '_filter').find('td').eq(8).html('');
+                }
+            }
+            else {
+                $("#" + element + '_filter').find('td').eq(8).html('');
+            }
+            return false;
+
+        }
+
+
+        $(document).ready(function () {
+            $('.select-picker').selectpicker();
+            filterTypeHtml = getFilterTypeDropdown();
+            columnTypeHtml = columnTypeDropdown();
+            changeSourceDropdown('{{ datasource_type }}');
+            if (datasourceName !== '') {
+                $('#list_datasource').selectpicker("val", datasourceName);
+                console.log(datasourceName);
+                onChangeDataSource(datasourceName);
+            }
+            for (var i = 0; i < columnDef.length; i++) {
+                //
+                presentColumn.push(columnDef[i].field_name);
+
+            }
+            populateColumnTable();
+            var publish = '{{ publish }}';
+            var status = '{{ status }}';
+            if (publish === '1') {
+                $("#list_publish").prop("checked", true);
+            }
+            if (status === '0') {
+                $("#list_status").prop("checked", true);
+            }
+        });
+
+
+        function getUllist(){
+            const listItems = document.querySelectorAll('.list li');
+for (let i = 0; i < listItems.length; i++) {
+  alert (listItems[i].textContent);
+}
+        }
+
+
+        function populateColumnTable() {
+
+            for (var i = 0; i < columnDef.length; i++) {
+                //
+{#                presentColumn.push(columnDef[i].field_name);#}
+                var element = columnDef[i].field_name;
+                console.log(element);
+                var checked = '';
+                var label = columnDef[i].label;
+                var local = label['Bangla'];
+                var english = label['English'];
+                var sortable = columnDef[i].sortable;
+                var format = columnDef[i].format;
+                var data_type = columnDef[i].data_type;
+
+                $("#" + element).find('td').eq(0).html('<input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + element + '\',changed_val)" checked>')
+                var secondCol = $("#" + element).find('td').eq(2).html('<input class="form-control" style="" type="text" name="' + element + '@english" value="' + english + '"> ');
+                var thirdCol = $("#" + element).find('td').eq(3).html('<input class="form-control" style="" type="text" name="' + element + '@bangla" value="' + local + '"> ');
+                var thirdCol = $("#" + element).find('td').eq(4).html('<select class="form-control" id = "' + element + '@data_type" name="' + element + '@data_type"><option value="">Select</option>' + columnTypeHtml + '</select>');
+                $('#' + element + CSS.escape('@data_type')).val(data_type);
+                if (sortable)
+                    checked = 'checked';
+                var fourthCol = $("#" + element).find('td').eq(5).html('<input  style="" type="checkbox" name="' + element + '@sortable" ' + checked + '> ');
+                var fifthCol = $("#" + element).find('td').eq(6).html('<input class="form-control" style="" type="text" name="' + element + '@format" value="' + format + '">');
+            }
+            {#            populateFilterTable();#}
+        }
+      
+
+        function onChangeLookUpDatasource(changedVal){
+
+            if (changedVal!==''){
+                $.ajax({
+                        type: 'POST',
+                        url: "/bhmodule/get-column-name/",
+                        data: {'datasource_name': changedVal, 'datasource_type':'datasource'},
+                        success: function (data) {
+                            console.log("here"+changedVal);
+                            console.log(data);
+                            var data_list = JSON.parse(data);
+                            presentLookUpDatasource = data_list;
+                            optionHtml = '<option> Select Return Column</option>'
+                            for (var i in data_list){
+                                optionHtml+='<option>'+data_list[i]['column_name']+'</option>'
+                            }
+                            $('#lookup_return_column').html(optionHtml);
+                        },
+                        error: function (xhr, status, error) {
+                            $('#del_modal').modal('show');
+                        }
+                    });
+            }
+             else{
+                  $('#lookup_return_column').html('');      
+                }
+        }
+
+        
+        {% comment %} function generate {% endcomment %}
+
+        function conditionDivHide(){
+            if($('#lookup_condition_div').css('display') === 'none')
+                {
+                    //do something
+                    $("#lookup_condition_div").css('display', 'block');
+                }
+            else
+                {
+                    //something else
+                    $("#lookup_condition_div").css('display', 'none');
+                }
+        }
+
+                /***
+        * Navigation Filter Option OPEN onclick
+        * @param nav
+        * @param main
+        */
+        {% comment %} function openNav(nav, main) {
+            current_width = $("#" + nav).width();
+            if (current_width == "0") {
+                $("#" + nav).css('display', 'block');
+                
+                $("#icon_cross_" + nav).css('display', 'block');
+                $("#icon_caret_" + nav).css('display', 'none');
+                $("#" + nav).css('padding', 10);
+
+            }
+            $(main).attr('onClick', 'closeNav("' + nav + '", this);');
+        }
+
+
+        /***
+        * Navigation Filter Option CLOSE onclick
+        * @param nav
+        * @param main
+        */
+
+        function closeNav(nav, main) {
+            $("#" + nav).css('padding', 0);
+            $("#" + nav).css('width', 0);
+            $(main).attr('onClick', 'openNav("' + nav + '", this);');
+            $("#icon_cross_" + nav).css('display', 'none');
+            $("#icon_caret_" + nav).css('display', 'block');
+            $("#" + nav).css('display', 'none');
+        } {% endcomment %}
+    </script>
+{% endblock %}

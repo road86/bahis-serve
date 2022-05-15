@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Edit Role {% endblock %}
+    </title>
+</head>
+{% endblock %}
+{% block content %}
+<div class="col-md-offset-3 col-md-6">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Edit Rode
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="user_form" method="post" action="/usermodule/edit-role/{{id}}/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label>Organization:</label>
+                                <select id="{{ role_form.organization.id_for_label }}"
+                                        name="{{ role_form.organization.name }}" class="form-control" required>
+                                    {% for m,n in role_form.fields.organization.choices %}
+                                    <option value="{{ m }}" {% if role_form.organization.value == m %} selected{% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ role_form.organization.errors.as_text }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ role_form.role.id_for_label }}">Role:</label>
+                        <input type="text" name="{{ role_form.role.name }}" class="form-control" value="{{ role_form.role.value }}" required>
+                        <span class="help-block">{{ role_form.role.errors.as_text }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ role_form.role.id_for_label }}">Parent Role:</label>
+                        <select id="{{ role_form.parent_role.id_for_label }}"
+                                        name="{{ role_form.parent_role.name }}" class="form-control" >
+                                    {% for m,n in role_form.fields.parent_role.choices %}
+                                    <option value="{{ m }}" {% if role_form.parent_role.value == m %} selected{% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+
+                    </div>
+                    <div class="form-group">
+                            <label class=""></label>
+                            <div class="checkbox-list">
+                                <label>
+                                    <input name="{{ role_form.can_configure.name }}" type="checkbox" {% if role_form.can_configure.value == True %}checked{% endif %}> Can Configure
+                                </label>
+                            </div>
+                        </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

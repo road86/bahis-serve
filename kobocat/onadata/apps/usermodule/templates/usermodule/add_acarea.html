@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+   <link href="/static/css/bootstrap-datepicker.css" rel="stylesheet" type="text/css"/>
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> AC Area Form
+            </div>
+        </div>
+
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="" method="post" action="/usermodule/add-acarea/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label > Name: </label>
+                                <input type="text" class="form-control" name="acarea_name" id="acarea_name" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Code: </label>
+                                <input type="text" class="form-control" name="acarea_code" id="acarea_code" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Union: </label>
+                                <select class="form-control" name="union_id" id="union_id" required>
+                                        <option value="">Select One</option>
+                                        {% for union_id,union_name in union_list %}
+                                            <option value="{{ union_id }}">{{ union_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit</button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <script></script>
+
+{% endblock %}

@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <style>
+
+        .container {
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Geo Definition
+            </div>
+        </div>
+        <div class="portlet-body">
+            <form class="horizontal-form" id="" method="post" action="/usermodule/geo_definition/" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="Node Name">Node Name:</label>
+                                <input required type="text" name="node_name" class="form-control" id="node_name"
+                                       placeholder="Node Name">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="Node Parent">Node Parent:</label>
+                                <select class="form-control" name="node_parent" id="node_parent" required>
+                                    <option value="">Select One</option>
+                                    <option value="0">Root</option>
+                                    {% for node_id,node_val in node %}
+                                        <option value="{{ node_id }}">{{ node_val }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type = "submit" class="btn btn-danger pull-left" id="submit" name="submit" data-original-title=""
+                                    title="">Submit
+                            </button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}

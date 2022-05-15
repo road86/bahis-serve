@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> User Create File Upload
+            </div>
+        </div>
+
+        <div class="portlet-body">
+            <form action="/usermodule/upload/csv/" method="POST" enctype="multipart/form-data"
+                  class="form-horizontal">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="name" class="col-md-3 col-sm-3 col-xs-12 control-label">File: </label>
+                    <div class="col-md-8">
+                        <input type="file" name="csv_file" id="csv_file" required="True" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-3 col-sm-3 col-xs-12 col-md-offset-3" style="margin-bottom:10px;">
+                        <button class="btn btn-primary"><span class="glyphicon glyphicon-upload"
+                                                              style="margin-right:5px;"></span>Upload
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block additional-javascript %}
+    <script>
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+        list = [];
+        j = 0;
+        var response, objet;
+
+
+        function load1(obj) {
+            ajaxcall();
+            objet = Number(obj.value);
+            $.ajax({
+                url: '/usermodule/tree/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'objet': objet},
+                success: function (result) {
+                    response = result.response_record
+                    $("#parent_id").val(result.parent_id);
+                    $(".field_parent").html("");
+                    if (Object.keys(response).length)
+                        load(parseInt(Object.keys(response)[0]));
+
+                }
+            });
+        }
+
+
+        html_code = "";
+
+        function load(obj) {
+            ajaxcall();
+            var field_type = obj;
+            $.ajax({
+                url: '/usermodule/form_drop/', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'json', // request type html/json/xml
+                data: {'field_type': field_type},
+                success: function (result) {
+                    html_code = "<label class=\"control-label\" id=\"field_parent_" + field_type + "\" >" + result.field_type_name + "</label>";
+                    html_code += "<select required class=\"form-control\" name=\"field_parent_" + field_type + "\" id=\"field_parent_" + field_type + "\" onchange = \"filtering(this," + response[field_type] + ")\" >";
+                    html_code += "<option  value=\"\">Select One</option>";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    $(".field_parent").append(html_code);
+                }
+            });
+        }
+
+
+        function filtering(filter, field_type_id) {
+            var start = field_type_id;
+            while (start != objet) {
+                // console.log("field_parent_" + start + "");
+                $("#field_parent_" + start + "").remove();
+                $("#field_parent_" + start + "").remove();
+                start = response[start];
+            }
+            var field_parent_id = Number(filter.value);
+            $.ajax({
+                url: '/usermodule/filtering/', // form action url
+                type: 'POST', // form submit method get/post
+                dataType: 'json', // request type html/json/xml
+                data: {'field_parent_id': field_parent_id, 'field_type_id': field_type_id},
+                success: function (result) {
+                    //console.log("field_type "+ result.field_type);
+                    html_code = "<label class=\"control-label\" id=\"field_parent_" + field_type_id + "\">" + result.field_type + "</label>";
+                    html_code += "<select align=\"center\" required class=\"form-control\" name =\"field_parent_" + field_type_id + "\"  id=\"field_parent_" + field_type_id + "\" onchange = \"filtering(this," + response[field_type_id] + ")\" >";
+                    html_code += "<option value=\"\" >Select One</option>";
+                    for (i = 0; i < result.field_name.length; i++) {
+                        html_code += "<option value=\"" + result.field_id[i] + "\">" + result.field_name[i] + "</option>";
+                    }
+                    html_code += "</select>";
+                    if (field_type_id != objet)
+                        $(".field_parent").append(html_code);
+
+                }
+            });
+        }
+
+
+    </script>
+{% endblock %}

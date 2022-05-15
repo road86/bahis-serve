@@ -1,0 +1,965 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Create Datasource {% endblock %}
+    </title>
+</head>
+
+<link rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+<link rel="stylesheet" href="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.css"/>
+<style>
+        .action-border {
+            padding: 10px;
+            margin: 5px;
+            border-style: groove;
+        }
+
+
+</style>
+{% endblock %}
+
+{#{% block additional-javascript %}#}
+{#    <!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->#}
+{#{% endblock %}#}
+
+{% block content %}
+
+<div class="">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Create Datasource
+            </div>
+        </div>
+        <div class="portlet-body">
+
+
+            <form class="horizontal-form" id="main-form"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-offset-4 col-md-4">
+                            <div class="form-group">
+                                <label>Datasource Name:</label>
+                                <input type="text" id="datasource_name" name="datasource_name" class="form-control"
+                                       {% if module_name_english %}
+                                       value="{{ module_name_english }}" {% endif %}
+                                       required>
+                                <span class="help-block" id="datasource_name_error"><span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row action-border">
+                        <div class="col-md-5">
+                            <div class="col-md-12"><h4>Primary Datasource</h4></div>
+                            <div class="col-md-12">
+                                <div id="primary_source" class="form-group">
+
+                                    <label class="radio-inline"><input type="radio" id="p_source_type"
+                                                                       name="p_source_type" value="1"
+                                                                       onchange="var changedVal = $(this).val(); hideSourceDropdown(changedVal,'p_source');">Table</label>
+                                    <label class="radio-inline"><input type="radio" id="p_source_type"
+                                                                       name="p_source_type" value="2"
+                                                                       onchange="var changedVal = $(this).val(); hideSourceDropdown(changedVal,'p_source');">Datasource</label>
+
+                                    <span class="help-block" id="p_source_type_error"><span>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group" id="p_source_datasource" style="display: none;">
+                                    <label>Primary Source:</label>
+                                    <select id="p_source" name="p_source" class="select-picker form-control"
+                                            data-live-search="true" required
+                                            onchange="var changedVal = $(this).val();onChangeDataSource(changedVal,'datasource','p_source') ">
+                                        <option value="">Select Datasource</option>
+                                        {% for m,n in datasource_choices %}
+                                        <option value="{{ m }}" {% if module_type == m %}
+                                                selected {% endif %}>{{ n }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group" id="p_source_table" style="display: none;">
+                                    <label>Primary Source:</label>
+                                    <select id="p_source" name="p_source" class="form-control select-picker"
+                                            data-live-search="true" required
+                                            onchange="var changedVal = $(this).val(); onChangeDataSource(changedVal,'table','p_source')">
+                                        <option value="">Select Table</option>
+                                        {% for m,n in table_choices %}
+                                        <option value="{{ m }}" {% if module_type == m %}
+                                                selected {% endif %}>{{ n }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <span class="help-block" id="p_source_error"></span>
+                                <span class="help-block" id="p_source_column_error"></span>
+                            </div>
+
+
+                            <div class="col-md-12" style="height:300px; overflow: scroll;display:none;"
+                                 id="primary_table_div">
+                                <form id="primary-source-form">
+                                    <table id="primary-source-table" style="background: white"
+                                           class="table table-bordered table-striped custom-datatable">
+                                        <tbody>
+
+
+                                        </tbody>
+                                    </table>
+                                </form>
+                            </div>
+
+                        </div>
+                        <div class="col-md-2">
+                            <div class="form-group" id="joint_type_parent">
+                                <label>Join Types:</label>
+                                <select id="join_type" name="join_type"
+                                        class="form-control select-picker" required
+                                        onchange="var changedVal = $(this).val(); presentJoinType=changedVal;">
+                                    <option value=""> Select</option>
+                                    {% for m,n in join_type_choices %}
+                                    <option value="{{ m }}" {% if module_type == m %}
+                                            selected {% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block" id="join_type_error"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-5" id="secondary_source_parent_div" style="display:None;">
+                            <div class="col-md-12"><h4>Secondary Datasource</h4></div>
+                            <div class="col-md-12">
+                                <div id="secondary_source" class="form-group">
+
+                                        <label class="radio-inline"><input type="radio" id="s_source_type"
+                                                                           name="s_source_type" value="1"
+                                                                           onchange="var changedVal = $(this).val(); hideSourceDropdown(changedVal,'s_source');">Table</label>
+                                        <label class="radio-inline"><input type="radio" id="s_source_type"
+                                                                           name="s_source_type" value="2"
+                                                                           onchange="var changedVal = $(this).val(); hideSourceDropdown(changedVal,'s_source');">Datasource</label>
+
+                                    <span class="help-block" id="s_source_type_error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group" id="s_source_table" style="display: none;">
+                                    <label>Secondary Source:</label>
+                                    <select id="s_source" name="s_source" class="form-control select-picker"
+                                            data-live-search="true" required
+                                            onchange="var changedVal = $(this).val(); onChangeDataSource(changedVal,'table','s_source')">
+                                        <option value="">Select Table</option>
+                                        {% for m,n in table_choices %}
+                                        <option value="{{ m }}" {% if module_type == m %}
+                                                selected {% endif %}>{{ n }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <div class="form-group" id="s_source_datasource" style="display: none;">
+                                    <label>Secondary Source:</label>
+                                    <select id="s_source" name="s_source" class="form-control select-picker"
+                                            data-live-search="true" required
+                                            onchange="var changedVal = $(this).val(); onChangeDataSource(changedVal,'datasource','s_source')">
+                                        <option value="">Select Datasource</option>
+                                        {% for m,n in datasource_choices %}
+                                        <option value="{{ m }}" {% if module_type == m %}
+                                                selected {% endif %}>{{ n }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-12">
+                                <span class="help-block" id="s_source_error"></span>
+                                <span class="help-block" id="s_source_column_error"></span>
+                            </div>
+                            <div class="col-md-12" id="secondary_table_div"
+                                 style="height:300px; overflow: scroll;display:none;">
+
+                                <table id="secondary-source-table" style="background: white"
+                                       class="table table-bordered table-striped">
+                                    <tbody>
+
+
+                                    </tbody>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6" style="padding: 5px; margin: 10px; display:None;" id="join_button">
+                            <a class="btn blue pull-left" onclick="initiateAction();">Join On</a>
+                        </div>
+                        {% comment %}
+                        <div class="col-md-6" style="padding: 5px; margin: 10px; display:none;" id="condition_button">
+                            <a class="btn blue pull-left" onclick="$('#condition_div_parent').show();">Add Condition</a>
+                        </div>
+                        {% endcomment %}
+                    </div>
+
+                    <div class="row action-border" id="join_key_div_parent" style="display:None;">
+                        <div id="join_key_div" style="background: antiquewhite;">
+                            {% comment %}
+                            <div class="col-md-12"><span class="help-block" id="join_key_div_0_error"></span></div>
+                            {% endcomment %}
+                            <div class="col-md-12"><h4>Join On key</h4> <span class="help-block"
+                                                                              id="join_key_div_0_error"></span></div>
+                            <div id="join_key_0">
+                                <div class="col-md-12"><span class="help-block" id="join_key_0_error"></span></div>
+                                <div class="col-md-4">
+                                    <div class="col-md-12">
+                                        <div class="form-group" id="p_source_key_parent" style="">
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-2"><h3 align="center">With</h3></div>
+                                <div class="col-md-4">
+                                    <div class="col-md-12">
+                                        <div class="form-group" id="s_source_key_parent" style="">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-12" style="padding: 5px; margin: 5px;">
+                            <button type="button" onclick="addMoreSubindicator();"
+                                    class="btn red pull-right"><i
+                                    class="fa fa-2x fa-plus-square-o"></i>Add More
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12" style="padding: 5px; margin: 10px; display:None;" id="condition_button">
+                            <a class="btn blue pull-left" onclick="$('#condition_div_parent').show();">Add Condition</a>
+                        </div>
+                    </div>
+                    <div class="row action-border" id="condition_div_parent" style="display:None;">
+                        <div class="row"  ><div class="col-md-12"><button type="button" class="btn btn-secondary blue pull-right" onclick="addMoreCondition();"><i class="fa fa-plus"></i></button></div></div>
+                        <div class="row" id="condition_div_0">
+                            <div class="col-md-3">
+                                <div id="condition_source" class="form-group">
+                                    <label> Column Source</label>
+                                    <select id="condition_source_type_0" name="condition@source_type[]"
+                                            class="form-control"
+                                            onchange="var changedVal = $(this).val(); $('#condition_row_0').show(); showCondition(changedVal,'condition_column_0','condition_row_0');">
+                                        <option value=""> Select One</option>
+                                        <option value="1">Primary</option>
+                                        <option value="2">Secondary</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="" id="condition_row_0" style="display:None;">
+                                <div class="col-md-3">
+                                    <label>Column Name</label>
+                                    <select class="form-control" id="condition_column_0" name="condition@column[]"
+                                            onchange="var changedVal = $(this).val();  showColumnType(changedVal,'condition_column_type_div_0','column_type_0')"></select>
+                                </div>
+                                <div class="col-md-3" id="condition_column_type_div_0" style="display:None;">
+                                    <label>Column Type</label>
+                                    <select class="form-control" id="column_type_0" name="condition@column_type[]"
+                                            onchange="var changedVal = $(this).val(); showConditionType(changedVal,'condition_type_0','condition_type_div_0')">
+                                        <option value="">Select</option>
+                                        {% for m,n in data_type_choices %}
+                                        <option value="{{ m }}" {% if module_type == m %}
+                                                selected {% endif %}>{{ n }}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-3" id="condition_type_div_0" style="display:None;">
+                                    <label>Condition Clause</label>
+                                    <select id="condition_type_0" name="condition@type[]" class="form-control"
+                                            onchange="var changedVal = $(this).val(); showConditionInput(changedVal,'condition_input1_div_0','condition_input2_div_0')">
+                                        <option value=""> Select</option>
+                                        <option value="">Select
+                                        <option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" id="condition_input1_div_0" style="display:None;">
+                                    <label>Condition Input1</label>
+                                    <input class="form-control" id="condition_input1_0" name="condition@input1[]"
+                                           type="text"/>
+                                </div>
+                                <div class="col-md-2" id="condition_input2_div_0" style="display:None;">
+                                    <label>Condition Input2</label>
+                                    <input class="form-control" id="condition_input2_0" name="condition@input2[]"
+                                           type="text"/>
+                                </div>
+                            </div>
+
+                            </div>
+                        </div>
+
+
+                    </div>
+                    {#                    #}
+                </form>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right" onclick="saveData();">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                            class="btn default pull-right">Cancel
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    {#    <div id="p_source_dialog" style="width: 100%;overflow: scroll; align-content: center; height: 649px !Important; margin-top : 20px;">#}
+    {##}
+    {#    <div id="s_source_dialog" style="width: 100%;overflow: scroll; align-content: center; height: 649px !Important; margin-top : 20px;">#}
+
+
+    <div class="modal fade" id="p_source_dialog" tabindex="-1" role="dialog" aria-labelledby="p_source_dialogTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-notify modal-warning" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="p_source_dialogTitle">Please Select Primary Source Column name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {#                    <button>Select All</button><br>#}
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="s_source_dialog" tabindex="-1" role="dialog" aria-labelledby="s_source_dialogTitle"
+         aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable modal-notify modal-warning" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="s_source_dialogTitle">Please Select Secondary Source Column name</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+
+<script>
+        var filterTypeHtml;
+        var multipleFieldParent;
+        var presentFilter = [];
+        var dataEmbedSerial = 1;
+        var primaryColumn = [];
+        var secondaryColumn = [];
+        var primarySource = '';
+        var secondarySource = '';
+        var primaryJoinKey = [];
+        var secondaryJoinKey = [];
+        var numberClauseList = ['=','<','>','<=','>=','!=','between','not between'];
+        var stringClauseList = ['like','='];
+        var dateClauseList = ['=','between'];
+        var presentJoinKey;
+        var conditionSerial,conditionHtml;
+
+
+        function hideSourceDropdown(changed_val, flag) {
+            if (changed_val === '2') {
+                
+                $('#' + flag + '_datasource').show();
+                $('#' + flag + '_table').hide();
+                var i = $('#' + flag + '_table select');
+                i.selectpicker('val', '');
+                i.trigger('change');
+
+            }
+            if (changed_val === '1') {
+                
+                $('#' + flag + '_table').show();
+                $('#' + flag + '_datasource').hide();
+                var i = $('#' + flag + '_datasource select');
+                i.selectpicker('val', '');
+                i.trigger('change');
+
+            }
+            if (flag ==='p_source'){
+                primaryColumn = [];
+            }
+            else if (flag === 's_source'){
+                secondaryColumn = [];
+            }
+            
+            removeOtherDiv();
+            {% comment %} hideJoinDiv(); {% endcomment %}
+        }
+
+        function showColumnType(changedVal,parent_element,element){
+                console.log("Changed happen"+element);
+                if(changedVal!==''){
+                    $('#'+parent_element).show();
+                    $('#'+element).val('');
+                    $('#'+element).trigger('change');
+                }
+                else{
+                    $('#'+element).val('');
+                    $('#'+element).trigger('change');
+                    $('#'+parent_element).hide();
+                    
+                }
+        }
+
+        function showConditionType(changedVal,element,parent_element){
+            var dropdown_html = '<option value="">Select</option>';
+
+            if(changedVal!==''){
+                
+                if(changedVal==='number'){
+                    var data_list = numberClauseList;
+
+                }
+                else if(changedVal ==='text'){
+                    var data_list = stringClauseList;
+                }
+                else if(changedVal === 'date'){
+                    var data_list = dateClauseList;
+                }
+
+                for (var d in data_list) {
+                        var l = data_list[d];
+                        console.log(l);
+                        select_initial = '';
+                        dropdown_html += '<option ' + select_initial + '    value="' + l + '">' + l + '</option>';
+                        select_initial = '';
+                }
+                $('#'+element).html(dropdown_html);
+                $('#'+parent_element).show();
+            }
+            else{
+                $('#'+element).html(dropdown_html);
+                $('#'+element).val("").trigger('change');
+               $('#'+parent_element).hide(); 
+            }
+        }
+
+
+
+        function showConditionInput(changedVal,element1,element2){
+            if(changedVal!==''){
+                    $('#'+element1).show();
+                    if(changedVal==='between'){
+                       $('#'+element2).show(); 
+                    }
+                    else{
+                         $('#'+element2).hide(); 
+                    }
+            }
+            else{
+                 $('#'+element2).hide(); 
+                  $('#'+element1).hide(); 
+            }
+        }
+
+
+        $('#join_type').on('change', function () {
+            var $this = $(this);
+            var value = $this.val();
+            if (value !== '') {
+                $('#join_button').show();
+                $('#secondary_source_parent_div').css('display','block');
+                
+            }
+            else {
+                $('#join_button').hide();
+                                $('#secondary_source_parent_div').css('display','none');
+
+            }
+        });
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            console.log(a);
+            $.each(a, function () {
+                console.log("here in serialize");
+                console.log(this.name);
+                console.log(this.value);
+                if (o[this.name] !== undefined) {
+
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                                         console.log("undefined");
+                    if (this.name.includes('[]')){
+                       o[this.name] = [] ;
+                       o[this.name].push(this.value || '');
+                    }
+                    else{
+                      o[this.name] = this.value || '';
+
+                    }
+                }
+            });
+            return o;
+        };
+
+        //this function is for populating column for condition
+        function showCondition(sourceType,next_element,parent_element) {
+            {% comment %} var sourceType = source.value; {% endcomment %}
+            var dropdown_html = '<option value="">Select</option>';
+            console.log("here in showCondition");
+            console.log(sourceType);
+            if (sourceType!==''){
+
+                if(sourceType==='1'){
+                    if (primaryColumn) {
+                        data_list= primaryColumn;
+                    }
+                }
+                else if (sourceType==='2'){
+                    if (secondaryColumn) {
+                        data_list= secondaryColumn;
+                    }
+                }
+            
+                for (var d in data_list) {
+                            var l = data_list[d];
+                            console.log(l);
+                            select_initial = '';
+                            dropdown_html += '<option ' + select_initial + '    value="' + l + '">' + l + '</option>';
+                            select_initial = '';
+                }
+
+                $('#'+next_element).html(dropdown_html);
+                $('#'+parent_element).show();
+                $('#'+next_element).trigger("change");
+            }
+            else{
+                $('#'+next_element).html('');
+                $('#'+parent_element).hide();
+                $('#'+next_element).trigger("change");
+            }
+            
+        }
+
+
+        function saveData() {
+            if (validation() && joinValidation()){
+    
+            var primary_source = JSON.stringify($("#primary-source-form").serializeObject());
+            var secondary_source = JSON.stringify($("#secondary-source-form").serializeObject());
+            var main_data = JSON.stringify($("#main-form").serializeObject());
+            console.log(main_data);
+
+            var primarySourceKey = $('#p_source_key').val();
+            var secondarySourceKey = $('#s_source_key').val();
+            var parameters = JSON.stringify($('#form_col_def').serializeObject());
+            var basic_info = JSON.stringify($('#form_basic_info').serializeObject());
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add-datasource/',
+                data: {'main_data': main_data, 'primary_source': primary_source, 'secondary_source': secondary_source},
+                success: function (response) {
+                    window.location.href = response;
+                },
+                error: function (xhr, status, error) {
+                }
+            })
+            }
+            
+        }
+        
+
+        function removeOtherDiv(){
+            console.log("inside remove div");
+            if (primaryColumn.length < 1 || secondaryColumn.length < 1) {
+                console.log("inside remove div");
+                 $('#join_key_div_parent').hide();
+                 {% comment %} $('#condition_button').hide();
+                 $('#condition_div_parent').hide(); {% endcomment %}
+            }
+        }
+
+
+        function hideJoinDiv(){
+            $('#join_key_div_parent').hide();
+                $('#p_source_key_parent').html('');
+                $('#s_source_key_parent').html('');
+                $('#condition_button').hide();
+
+                while(dataEmbedSerial-1>0){
+                    
+                    removeSubindicator((dataEmbedSerial-1).toString());
+                    dataEmbedSerial--;
+                }
+        }
+
+        
+        function initiateAction() {
+            $('#join_key_div_parent').hide();
+                $('#p_source_key_parent').html('');
+                $('#s_source_key_parent').html('');
+                $('#condition_button').hide();
+
+                while(dataEmbedSerial-1>0){
+                    
+                    removeSubindicator((dataEmbedSerial-1).toString());
+                    dataEmbedSerial--;
+                }
+            if (validation()) {
+                var serial_string = 'serial_'+dataEmbedSerial.toString();
+                $('#join_key_div_parent').show();
+                createDropDown("p_source_key_parent", "Primary", primaryColumn,"var changedVal = $(this).val();  addJoinColumn(changedVal,'p_source','"+serial_string+"')");
+                createDropDown("s_source_key_parent", "Secondary", secondaryColumn,"var changedVal = $(this).val();  addJoinColumn(changedVal,'s_source','"+serial_string+"')");
+                $('#condition_button').show();
+            } 
+            
+        }
+
+
+        function addJoinColumn(changedVal, sourceType,serial_string){
+
+            var serial= Number(serial_string.replace('serial_',''))-1; 
+            if (sourceType==='p_source'){
+                primaryJoinKey[serial] = changedVal;
+                console.log(primaryJoinKey);
+            }
+            else if(sourceType==='s_source'){
+                secondaryJoinKey[serial] = changedVal; 
+                console.log(secondaryJoinKey);
+            }
+        }
+
+
+        function validation() {
+            var errorFlag = true;
+            var errorMessage = '<p>This field is required *</p>';
+            if ($('#datasource_name').val() === '') {
+                $('#datasource_name_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#datasource_name_error').html('');
+                
+            }
+            if($('#p_source_type').val() === ''){
+                $('#p_source_type_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#p_source_type_error').html('');
+            }
+
+            if (primarySource === ''){
+                $('#p_source_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#p_source_error').html('');
+               
+            }
+            if (primaryColumn.length < 1 && primarySource !== ''){
+                $('#p_source_column_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#p_source_column_error').html('');
+             
+            }
+            
+            
+
+            console.log("in validation");
+            console.log(errorFlag);
+            return errorFlag;
+        }
+        
+        
+        function joinValidation(){
+            var errorFlag = true;
+            var errorMessage = '<p>This field is required *</p>';
+
+            {% comment %} if($('#join_type').val() === ''){
+                $('#join_type_error').html(errorMessage);
+                errorFlag = false;
+            }
+            
+
+              {% endcomment %}
+            if($('#join_type').val() !== ''){
+
+                    if($('#s_source_type').val() === ''){
+                        $('#s_source_type_error').html(errorMessage );
+                        errorFlag = false;
+                    }
+                    else{
+                        $('#s_source_type_error').html('');
+                        
+                    }
+                    if (secondarySource === ''){
+                        $('#s_source_error').html(errorMessage );
+                        errorFlag = false;
+                    }
+                    else{
+                        $('#s_source_error').html('');
+                        
+                    }
+                    if (secondaryColumn.length < 1 && secondarySource !== ''){
+                        $('#s_source_column_error').html(errorMessage );
+                        errorFlag = false;
+                    }
+                    else{
+                        $('#s_source_column_error').html('');
+                        
+                    }
+
+                    if((primaryJoinKey.length===0 || secondaryJoinKey.length===0) || (primaryJoinKey.length!==secondaryJoinKey.length)){
+                        $('#join_key_div_0_error').html('<p>Please select join key properly</p>');
+                        errorFlag=false;
+                    }
+                    else{
+                    $('#join_key_div_0_error').html('');
+                    }
+
+            }
+            else{
+                $('#join_type_error').html('');
+            }
+            
+            
+            console.log("in join validation");
+            console.log(errorFlag);
+                        return errorFlag;
+
+        }
+
+
+        function getInputField(element, checked, flag) {
+            console.log(checked, element);
+            console.log(primaryColumn);
+            console.log(secondaryColumn);
+            var elementName = element.replace('@' + flag, '');
+            if (checked) {
+                if (flag === 'p_source') {
+                    primaryColumn.push(elementName)
+                }
+                else if (flag === 's_source') {
+                    secondaryColumn.push(elementName)
+                }
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('<input value="" style="" type="text" name="' + element + '_rename">');
+
+            }
+            else {
+                if (flag === 'p_source') {
+                    var index = primaryColumn.indexOf(elementName);
+                    if (index > -1) {
+                        primaryColumn.splice(index, 1);
+                    }
+                }
+                else if (flag === 's_source') {
+                    var index = secondaryColumn.indexOf(elementName);
+                    if (index > -1) {
+                        secondaryColumn.splice(index, 1);
+                    }
+                }
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('');
+            }
+            showConditionButton();
+            {% comment %} hideJoinDiv(); {% endcomment %}
+        }
+        
+
+        function showConditionButton(){
+
+             $('#condition_div_parent').hide(); 
+             if(primaryColumn.length>0){
+                {% comment %} $('#condition_source_type_0').prop("checked",false); {% endcomment %}
+                 $('#condition_source_type_0').val('').trigger('change');
+                $('#condition_button').show();
+             }
+             else{
+                                 $('#condition_button').hide();
+
+             }
+        }
+
+
+        function onChangeDataSource(changed_val, datasource_type, flag) {
+            if(changed_val===''){
+                var table;
+                var parent_div;
+                if (flag === 'p_source'){
+                    table = $('#primary-source-table');
+                    parent_div = $('#primary_table_div');
+                    primarySource = changed_val;
+                    primaryColumn = [];
+                }
+                else {
+                    table = $('#secondary-source-table');
+                    parent_div = $('#secondary_table_div');
+                    secondarySource = changed_val;
+                    secondaryColumn = [];
+                }
+                {% comment %} initiateAction(); {% endcomment %}
+                table.find("tbody tr").remove();
+                parent_div.hide();
+            }
+            else {console.log(datasource_type);
+            $.ajax({
+                type: 'POST',
+                url: "/bhmodule/get-column-name/",
+                data: {'datasource_name': changed_val, 'datasource_type': datasource_type},
+                success: function (data) {
+                    var table;
+                    var data_list = JSON.parse(data);
+                    if (flag === 'p_source') {
+                        {#                        createDropDown("p_source_key_parent", "Primary", data_list,'');#}
+                        $('#p_source_key_parent').show();
+                        if (datasource_type === 'table') {
+                            $('#p_source_column').show();
+                        }
+                        else {
+                            $('#p_source_column').hide();
+                        }
+                        table = $('#primary-source-table');
+                        $('#primary_table_div').show();
+                        primarySource = changed_val;
+                        primaryColumn = [];
+                    }
+                    else {
+                        {#                        createDropDown("s_source_key_parent", "Secondary", data_list,'');#}
+                        $('#s_source_key_parent').show();
+                        if (datasource_type === 'table') {
+                            $('#s_source_column').show();
+                        }
+                        else {
+                            $('#s_source_column').hide();
+                        }
+                        table = $('#secondary-source-table');
+                        $('#secondary_table_div').show();
+                        secondarySource = changed_val;
+                        secondaryColumn = [];
+                    }
+
+                    table.find("tbody tr").remove();
+                    table.append('<tr><td></td> <td>Column Name</td><td>Column Rename</td> </tr>'
+                    );
+
+                    for (var d in data_list) {
+                        var l = data_list[d];
+                        var tablerow = '<tr id="' + l["column_name"] + '@' + flag + '">';
+                        tablerow += '<td ><input name="' + l["column_name"] + '@' + flag + '" type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + l["column_name"] + '@' + flag + '\',changed_val,\'' + flag + '\')"></td><td>' + l["column_name"] + '</td>';
+                        tablerow += '<td></td>'
+                        tablerow += '</tr>';
+                        table.append(tablerow);
+                    }
+                    console.log("before everything");
+                },
+                error: function (xhr, status, error) {
+                    $('#del_modal').modal('show');
+
+                }
+            });
+            }
+            
+        }
+
+
+        function createDropDown(parent_name, type, data_list,onchange) {
+            var label = '<label>' + type + ' Source key </label><br>';
+            var element_name = parent_name.replace("_parent", "")
+            var dropdown_html = label + '<select class = "form-control" id= "' + element_name + '" name="' + element_name + '" class="form-control" data-live-search="true" required onchange="'+onchange+'"> <option value="">Select</option>';
+            if (data_list) {
+                for (var d in data_list) {
+                    var l = data_list[d];
+                    console.log(l);
+                    select_initial = '';
+                    dropdown_html += '<option ' + select_initial + '    value="' + l + '">' + l + '</option>';
+                    select_initial = '';
+                }
+            }
+            dropdown_html += '</select>';
+            $("#" + parent_name).html(dropdown_html);
+            $('.select-picker').selectpicker();
+        }
+
+
+        $(document).ready(function () {
+            $('.select-picker').selectpicker();
+            conditionSerial = 1;
+            conditionHtml = $("#condition_div_0").html();
+
+
+        });
+
+
+        function addMoreCondition() {
+            var indicator_serial = conditionSerial;
+            var indicator_details_html = conditionHtml.replace(/[_][0]/g, '_' + indicator_serial);
+            $('#condition_div_parent').append('<div class="row" id="condition_div_' + indicator_serial + '" >' + indicator_details_html + '<div class="col-md-1" style="margin: 5px;padding: 20px; "><button onclick="removeSubCondition(' + indicator_serial + ')" class="btn blue pull-right" type="button"><i class="fa fa-minus"></i></button></div></div>');
+            conditionSerial += 1;
+        }
+
+
+        function removeSubCondition(serial) {
+            $("#condition_div_" + serial).remove();
+        }
+
+
+        function addMoreSubindicator() {
+            dataEmbedHtml = $("#join_key_0").html();
+            var indicator_serial = dataEmbedSerial;
+            var indicator_details_html = dataEmbedHtml.replace(/[_][0]/g, '_' + indicator_serial);
+            $('#join_key_div').append('<div class="form recordset mpower-section" id="join_key_' + indicator_serial + '" >' + indicator_details_html + '<div class="col-md-1" style="margin: 5px;padding: 20px; "><button onclick="removeSubindicator(' + indicator_serial + ')" class="btn blue pull-right" type="button">Remove</button></div></div>');
+            dataEmbedSerial += 1;
+        }
+
+
+        function removeSubindicator(serial) {
+            $("#join_key_" + serial).remove();
+        }
+
+    </script>
+{% endblock %}
+

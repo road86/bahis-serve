@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+<head>
+
+    <title>
+        {% block title %} Beneficiary Profile {% endblock %}
+    </title>
+</head>
+     <style type="text/css">
+      #map {
+        position:absolute; overflow: inherit; width:100%;
+    }
+     .mapboxgl-map{
+         overflow-x: auto;
+         overflow-y: auto;
+         position: absolute;
+     }
+.panel-default>.panel-heading {
+
+    background-color: #35AA47;
+}
+
+
+     .multiselect_class button{
+        height: 50px; !important;
+        font-size: 14px;
+        font-weight: 400;
+        color: #000000;!important;
+        background: #fafafa;
+        border: none;
+        box-shadow: none;
+        border-radius: 0;
+        padding-left: 15px;
+    }
+    .multiselect_class button{
+        background-color:#53297D;
+        height: 42px;
+    }
+    </style>
+
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/bootstrap-multiselect.css" type="text/css"/>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class ="row">
+    <div class = "col-md-12">
+   <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Assign  {% if data.role == 'FD' %}Sector : {% endif %}{% if data.role == 'TLI' %} TLpin : {% endif %}{% if data.role == 'AC' %} Area : {% endif %}</div>
+        </div>
+            <div class="portlet-body1">
+
+                    <span class="left-padding">
+                        <strong>Username : </strong> {{ data.username }} |
+                        <strong>Name : </strong> {{ data.name }} |
+                        <strong>Role : </strong> {{ data.role }}
+                    </span>
+
+                    <form class="horizontal-form" id="map_form" method="post" action=""
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                    <input type = "hidden" value = "{{ data.userid }}" name = "userid">
+                <div class="form-body">
+                    <div class="form-group">
+                        <label>{% if data.role == 'FD' %}Sector:{% endif %}{% if data.role == 'TLI' %}TLpin:{% endif %}{% if data.role == 'AC' %}Area:{% endif %}</label>
+                                <select id="entty" style="width:300px;"   name="entity" class="form-control multiselect_class" required>
+                                    {% for d in   dataset.total_ids %}
+                                    <option value ="{{ d.id }}">{{ d.entity_name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block"></span>
+                    </div>
+
+
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+
+                </div>
+                    <!--<div class="slimScrollBar" style="width: 7px; position: absolute; top: 0px; opacity: 0.4; display: block; border-radius: 7px; z-index: 99; right: 1px; height: 90.9091px; background: rgb(161, 178, 189);"></div><div class="slimScrollRail" style="width: 7px; height: 100%; position: absolute; top: 0px; display: none; border-radius: 7px; opacity: 0.2; z-index: 90; right: 1px; background: yellow;"></div></div>-->
+            </div>
+        </div>
+    </div>
+        </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-multiselect.js"></script>
+
+<script>
+    var existed_id = {{ dataset.existed_id }}
+        //console.log(existed_id)
+    $(document).ready(function () {
+         $('.multiselect_class').multiselect({
+                onDropdownHidden: function(event) {
+                //alert('Dropdown closed.');
+                multiselect_class = $('.multiselect_class').val();
+                },
+                enableFiltering: true,
+                buttonWidth: '40%',
+                numberDisplayed: 2,
+                includeSelectAllOption: true,
+            });
+        data_arr = []
+        data_arr = existed_id
+        $('#entty').val(data_arr);
+        $("#entty").multiselect("refresh");
+
+
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+    }); //ready ended
+
+
+</script>
+{% endblock %}

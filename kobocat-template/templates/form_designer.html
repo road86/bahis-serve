@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+    <style>
+
+        #loop {
+            background-color: #EEE;
+            padding: 10px;
+            margin-bottom: 11px;
+        }
+
+    </style>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder">UI Based Formbuilder</i>
+            </div>
+        </div>
+        <div class="portlet-body">
+            <div class=".form-body"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+    <script>
+        //form_designer_server = '{{ form_designer_server | safe}}'
+        load_designer_page('{{ username }}');
+
+        function load_designer_page(username) {
+            let url = 'http://form-designer.dev.mpower-social.com/?username='+username
+            $('.portlet-body').html('<iframe src="' + url + '" style="width:100%;height:500px;"></iframe>');
+        }
+
+    </script>
+
+{% endblock %}

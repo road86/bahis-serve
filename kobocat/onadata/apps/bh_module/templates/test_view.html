@@ -1,0 +1,320 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block additional-headers %}
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}js/DataTables/datatables.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/datepicker.css" rel="stylesheet">
+{#    <link rel="stylesheet" type="text/css" href="/static/css/datepicker.css" rel="stylesheet">#}
+    <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" />
+
+
+    <link rel="stylesheet" type="text/css"
+          href="{{ STATIC_URL }}css/style_unicef_dashboard.css">
+    <style>
+        p {
+            margin: 10px 0;
+            padding: 5px;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .mpower-section {
+            margin: 10px;
+            padding: 5px;
+            border: 1px solid #999;
+            background-color: #eee;
+        }
+
+        .input-section {
+            padding: 5px;
+
+        }
+    </style>
+
+{% endblock %}
+
+
+{% block content %}
+    <div class="col-md-12">
+        <div class="portlet box red">
+            <div class="portlet-title">
+                <div class="caption">
+                    <i class="fa fa-list-alt"></i> Outcome Indicator Target
+                </div>
+            </div>
+            <div class="portlet-body">
+                <div><p><b><span style="color:#00ADEF;">{{ indicator_name }}</span></b></p></div>
+
+                <form class="horizontal-form" id="menu_form" method="post"
+                      action="/unicef/set-outcome-indicator-target/{{ outcome_indicator_id }}/"
+                      enctype="multipart/form-data">
+                    {#                 novalidate#}
+
+                    {% csrf_token %}
+                    <div class="form" style=" display:block;" id="main_target">
+                        <div class="form-body">
+                            <p><b>Baseline</b></p>
+                            <div class="row mpower-section">
+                                <div class="form-group col-md-3">
+                                    <label>Baseline :</label>
+                                    <input type="text" name="baseline" value="{{ baseline }}"
+                                           class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Baseline Year:</label>
+                                    <input type="text" id="baseline_year" name="baseline_year" value="{{ baseline_year }}"
+                                           class="form-control datepicker" required>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Means of Verification:</label>
+                                    <select class="form-control" name="baseline_mov" required>
+                                        <option value="0">Select Means of Verification</option>
+                                        {% for mov in mov_list %}
+                                            <option value="{{ mov.id }}">{{ mov.mov_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Comment Box:</label>
+                                    <input type="text" name="baseline_comment" value="{{ baseline_comment }}"
+                                           class="form-control" required>
+                                </div>
+                            </div>
+
+                            <p><b>Target</b></p>
+                            <div class="row mpower-section">
+                                <div class="form-group col-md-3">
+                                    <label>Target :</label>
+                                    <input type="text" name="target" value="{{ target }}"
+                                           class="form-control" required>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Target Year:</label>
+                                    <input class="form-control datepicker" type="text" name="target_year" value="{{ target_year }}"
+                                            required>
+
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Means of Verification:</label>
+                                    <select class="form-control" name="target_mov" required>
+                                        <option value="0">Select Means of Verification</option>
+                                        {% for mov in mov_list %}
+                                            <option value="{{ mov.id }}">{{ mov.mov_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Comment Box:</label>
+                                    <input type="text" name="target_comment" value="{{ target_comment }}"
+                                           class="form-control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="czContainer" style="display: none;">
+                        <div class="sub_indicator_div">
+                            <div class="form recordset mpower-section" id="sub_indicator_div_0">
+                                <div class="form-body">
+                                    <div class="row input-section">
+                                        <div class="form-group col-md-12">
+                                            <label><b>Sub-Indicator:</b></label>
+                                            <input type="text" name="subindicator_name[]" id="subindicator_name_0"
+                                                   value=""
+                                                   class="form-control" >
+                                        </div>
+                                    </div>
+                                    <p><b>Baseline</b></p>
+                                    <div class="row mpower-section">
+                                        <div class="form-group col-md-3">
+                                            <label>Baseline :</label>
+                                            <input type="text" name="sub_baseline[]" id="sub_baseline_0"
+                                                   value="{{ baseline }}"
+                                                   class="form-control" >
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Baseline Year:</label>
+                                            <input type="text" name="sub_baseline_year[]" id="sub_baseline_year_0"
+                                                   value="{{ baseline_year }}"
+                                                   class="form-control datepicker" >
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Means of Verification:</label>
+                                            <select class="form-control" name="sub_baseline_mov[]"
+                                                    id="sub_baseline_mov_0" >
+                                                <option value="0">Select Means of Verification</option>
+                                                {% for mov in mov_list %}
+                                                    <option value="{{ mov.id }}">{{ mov.mov_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Comment Box:</label>
+                                            <input type="text" name="sub_baseline_comment[]" id="sub_baseline_comment_0"
+                                                   value="{{ baseline_comment }}"
+                                                   class="form-control " >
+                                        </div>
+                                    </div>
+
+                                    <p><b>Target</b></p>
+                                    <div class="row mpower-section">
+                                        <div class="form-group col-md-3">
+                                            <label>Target :</label>
+                                            <input type="text" name="sub_target[]" id="sub_target_0"
+                                                   value="{{ target }}"
+                                                   class="form-control" >
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Target Year:</label>
+                                            <input type="text" name="sub_target_year[]" id="sub_target_year_0"
+                                                   value="{{ target_year }}"
+                                                   class="form-control datepicker" >
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Means of Verification:</label>
+                                            <select class="form-control" name="sub_target_mov[]" id="sub_target_mov_0"
+                                                    >
+                                                <option value="0">Select Means of Verification</option>
+                                                {% for mov in mov_list %}
+                                                    <option value="{{ mov.id }}">{{ mov.mov_name }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group col-md-3">
+                                            <label>Comment Box:</label>
+                                            <input type="text" name="sub_target_comment[]" id="sub_target_comment_0"
+                                                   value="{{ target_comment }}"
+                                                   class="form-control" >
+                                        </div>
+
+                                    </div>
+
+                                    {#                                <button type="button" onclick=""#}
+                                    {#                                    class="btn red pull-left"><i#}
+                                    {#                                    class="fa fa-2x fa-plus-square-o"></i>Remove#}
+                                    {#                            </button>#}
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <div style="margin: 10px;padding-bottom: 25px; ">
+                            <button type="button" onclick="addMoreSubindicator();"
+                                    class="btn red pull-left"><i
+                                    class="fa fa-2x fa-plus-square-o"></i>Add More
+                            </button>
+
+                        </div>
+
+
+
+                    </div>
+{#                    <div style="margin:5px; padding-bottom: 25px">#}
+{#                            <button id = "subindicator" type="button" onclick="display_subindicator('czContainer','main_target');"#}
+{#                                class="btn red pull-right"><i#}
+{#                                    class="fa fa-2x fa-plus-square-o"></i>Sub Indicator#}
+{#                        </button>#}
+{#                        </div>#}
+                    <div class="form-actions">
+                        <button id="sub_indicator" type="button" onclick="display_subindicator('czContainer','main_target');"
+                                class="btn red pull-right">Sub Indicator
+                        </button>
+                        <button type="submit" class="btn red pull-right" style="margin-right:10px;">Submit</button>
+                        <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                                class="btn default pull-right">Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+{% block additional-javascript %}
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.16.0/jquery.validate.min.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/scripts/jquery.formset.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/bootstrap-datepicker.js"></script>
+{#    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>#}
+    <script type="text/javascript" charset="utf8" src="{{ STATIC_URL }}js/DataTables/datatables.js"></script>
+    <script src="//code.jquery.com/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery-cookie/1.4.1/jquery.cookie.min.js"></script>
+<script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+{#    <script src="{{ STATIC_URL }}js/czMore/jquery.czMore-1.5.3.2.js"></script>#}
+
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            $('.datepicker').datepicker({
+            format: 'yyyy',
+            viewMode: "years",
+            minViewMode: "years"
+        });
+
+
+        });
+
+        function toggole_required() {
+            $('#main_target').find('input:text, input:password, input:file, select, textarea')
+                        .each(function (i, child) {
+                            console.log(child.required);
+                            if (child.required) {
+                                child.required = false;
+                            }
+                            else
+                                child.required = true;
+                        });
+
+            $('[id*="sub_indicator_div_"]').each(function (i, item) {
+                $('#' + item.id).find('input:text, input:password, input:file, select, textarea')
+                        .each(function (i, child) {
+                            console.log(child.required);
+                            if (child.required) {
+                                child.required = false;
+                            }
+                            else
+                                child.required = true;
+                        });
+            });
+        }
+
+        function display_subindicator(main, sub) {
+            var e = document.getElementById(sub);
+            var m = document.getElementById(main);
+            if (e.style.display == 'block') {
+                e.style.display = 'none';
+                m.style.display = 'block';
+                $('#sub_indicator').attr('value', 'Sub-Indicator');
+                toggole_required();
+            }
+            else {
+                m.style.display = 'none';
+                e.style.display = 'block';
+                toggole_required();
+                $('#sub_indicator').val('Outcome Indicator');
+            }
+        }
+
+        function addMoreSubindicator() {
+
+            {#            document.getElementById("city").required = false;#}
+            var indicator_serial = $('[id*="sub_indicator_div_"]').length;
+            console.log(indicator_serial);
+            var indicator_details_html = $("#sub_indicator_div_0").html().replace('_0', '_' + indicator_serial);
+            $('.sub_indicator_div').append('<div class="form recordset mpower-section" id="sub_indicator_div_' + indicator_serial + '" >' + indicator_details_html + '<div style="margin-left: 5px;margin-bottom: 5px;"><button onclick="removeSubindicator(' + indicator_serial + ')" class="btn btn-md" type="button">Remove</button></div></div>');
+            {#            $(".sowing_date").datepicker({#}
+            {#                autoclose: true,#}
+            {#                startDate: new Date(),#}
+            {#                format: 'dd/mm/yyyy'#}
+            {#            });#}
+        }
+
+        function removeSubindicator(serial) {
+            $("#sub_indicator_div_" + serial).remove();
+        }
+
+
+    </script>
+{% endblock %}

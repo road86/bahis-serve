@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Add Category{% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="col-md-offset-2 col-md-8">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i>{% if category_id %} Edit {%else%}Add{%endif%} Category
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" 
+            action="{% if category_id %}/bhmodule/master-data-category/edit/{{category_id}}/{% else %}/bhmodule/master-data-category/add/{% endif %}"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label >Category Name:</label>
+                        <input type="text" name="category_name" class="form-control" {% if category_name %} value="{{ category_name }}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <label >Category Parent:</label>
+                        <select id="module_type" name="category_parent" class="form-control" >
+                                    <option value="">Select Parent Category</option>
+                                    {% for m, n in category_list %}
+                                    <option value="{{ m }}"{% if category_parent == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                    {% endfor %}
+                        </select>
+                    </div>
+                    
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block additional-javascript %}
+<!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->
+
+    <script>
+    $('#module_type').on('change', function () {
+            var $this = $(this);
+            var value = $this.val();
+            if (value==='1'){
+                $('#xform_id_div').show();
+                $('#xform_id').prop('required',true);
+
+            }
+            else{
+                $('#xform_id_div').hide();
+                $('#xform_id').prop('required',false);
+            }
+        });
+
+    </script>
+{% endblock %}

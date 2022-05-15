@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block content %}
+
+<div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Branch Form
+            </div>
+        </div>
+
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="" method="post" action="/usermodule/update_branch_form/"
+                  enctype="multipart/form-data">
+            <input type="hidden" id="branch_id" name="branch_id" >
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Branch Name: </label>
+                                <input type="text" class="form-control" name="branch_name" id="branch_name" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Organization: </label>
+                                <select class="form-control" name="organization_id" id="organization_id" required>
+                                        <option value="">Select One</option>
+                                        {% for m,n in organization %}
+                                            <option value="{{ m }}" {% if set_organization_id == m %}selected {% endif %}>{{ n }}</option>
+                                        {% endfor %}
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Branch Code: </label>
+                                <input type="text" class="form-control" name="branch_code" id="branch_code">
+                            </div>
+                        </div>
+                    </div>
+
+                <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >Address: </label>
+                                <textarea class="form-control" name="address" id="address" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit</button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <script type="text/javascript">
+        var data = {{ data|safe }};
+        $('#branch_id').val(data['branch_id']);
+        $('#branch_name').val(data['branch_name']);
+        $('#address').val(data['address']);
+        $('#branch_code').val(data['branch_code']);
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+        function load_upazila(dist_object) {
+            ajaxcall();
+            dist = parseInt(dist_object.value)
+            console.log(dist);
+            if (isNaN(parseFloat(dist))) {
+                $('#upazila').html("<option value=\"\">Select One</option>");
+            }
+            else {
+
+                $.ajax({
+                    url: '/planmodule/getUpazilas/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'dist': dist},
+                    {#                    beforeSend: function () {#}
+                    {#                        $("#all_info_table").html('<div class="alert alert-success">Please Wait...loading....</div>');#}
+                    {#                    },#}
+                    success: function (result) {
+                        console.log(result);
+                        var html_code = "<option value=\"\">Select One</option>";
+
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].field_name + "</option>";
+                        }
+                        $('#upazila').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+
+        function load_union(upz_object) {
+            ajaxcall();
+            upz = parseInt(upz_object.value)
+            console.log(upz);
+            if (isNaN(parseFloat(upz))) {
+                $('#union').html("<option value=\"\">Select One</option>");
+            }
+            else {
+
+                $.ajax({
+                    url: '/planmodule/getUnions/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'upz': upz},
+                    {#                    beforeSend: function () {#}
+                    {#                        $("#all_info_table").html('<div class="alert alert-success">Please Wait...loading....</div>');#}
+                    {#                    },#}
+                    success: function (result) {
+                        console.log(result);
+                        var html_code = "<option value=\"\">Select One</option>";
+
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].field_name + "</option>";
+                        }
+                        $('#union').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+
+        $(function () {
+            $('#registration_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+
+        });
+
+        function getDesiredDate(n) {
+            var today = new Date();
+            var n_month_before_today = new Date(today);
+            n_month_before_today.setMonth((today.getMonth() + 1) - n);
+            var dd = n_month_before_today.getDate();
+            var mm = n_month_before_today.getMonth() + 1;
+
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            var yyyy = n_month_before_today.getFullYear();
+            formatted_date = yyyy + '-' + mm + '-' + dd;
+            return formatted_date;
+        }
+
+    </script>
+
+{% endblock %}

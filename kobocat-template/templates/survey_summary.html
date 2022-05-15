@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}{{ head_title }}{% endblock %}
+
+{% block additional-javascript %}
+
+<script src="https://code.highcharts.com/highcharts.js"></script>
+<script src="https://code.highcharts.com/modules/drilldown.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}js/survey_summary.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+<script type="text/javascript">
+    {% if surveyObj  %}
+    
+                var counter = 0;
+                {% for data in surveyObj %}
+
+                      createTableRow('{{data.id_string}}','{{data.num_of_submissions}}','{{ surveydata|safe }}','{{data.title}}','{{ ownership|safe }}','{{ permission |safe }}');
+                {% endfor %}
+            {% endif %}
+
+
+
+</script>
+<script type="text/javascript">
+
+    $(document).ready(function(){
+
+
+           $("#sendMessage").click(function(){
+            showpopup();
+           });
+           $("#close_submit").click(function(){
+            hidepopup();
+           });
+
+           $('#tg-xY4Sf').dataTable({
+            "aoColumns": [
+          null,null,null,null
+        ]
+           });
+
+        });
+    
+
+
+
+</script>
+{% endblock %}
+
+{% block additional-headers %}
+<link rel="stylesheet" href="{{STATIC_URL}}css/style.css">
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+{% endblock %}
+
+{% block content %}
+<!--<button class="btn" type="button" onclick="window.location.href='/{{ user.username }}/querychart'">See Query Report</button>-->
+<!--<button class="btn" id="sendMessage" type="button" hidden>Send Message to Subscribers</button>-->
+
+<center>
+  <!--  <div id="msgform">
+
+        <form method="post" onsubmit="return popupEnterMessage()">
+            {% csrf_token %}
+            <p>Enter Message to Send and Subscriber ID</p>
+
+            <input type="image" id="close_submit">
+            <input type="text" id="subscribeid" placeholder="Subscriber Id" name="subid">
+            <input type="text" id="msg" name="message" placeholder="enter your Text Here">
+            <input type="submit" id="dosubmit" value="submit">
+        </form>
+
+    </div>-->
+
+</center>
+<!--
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-bar-chart-o"></i>Submissions</div>
+    </div>
+    <div class="portlet-body">
+        <!--<div id="submissions_statistics_loading">
+            <img src="{{STATIC_URL}}assets/img/loading.gif" alt="loading"/>
+        </div>-->
+<!--        <div id="site_statistics_content" class="">
+            <div id="submissions_statistics" class="chart"></div>
+        </div>
+    </div>
+</div>
+-->
+
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-tasks"></i>Forms</div>
+    </div>
+    <div class="portlet-body">
+        <div class="row">
+                <div class="col-md-12">
+                    <a href="/{{ username }}/form_publish/">
+                        <button type="submit" class="btn btn-info pull-right" id="add_new" data-original-title=""
+                                title="">Add New
+                        </button>
+                    </a>
+                </div>
+            </div>
+	 <div class="row">
+                <div class="col-md-12">
+        <table id="tg-xY4Sf" class="table table-bordered summary_table" name="summary_table">
+            <thead>
+                <th class="">Forms</th>
+                <th>Responses</th>
+
+            </thead>
+        </table>
+	</div>
+            </div>
+    </div>
+</div>
+
+{% endblock %}
+

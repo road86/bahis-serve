@@ -1,0 +1,171 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<link href="{{ STATIC_URL }}css/datepicker.css" rel="stylesheet">
+
+<head>
+    <title>
+        {% block title %} Add Project {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="col-md-offset-2 col-md-8">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Add Project
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="/bhmodule/project-add/"
+                enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label>Project Name (English):</label>
+                        <input type="text" name="module_name_english" class="form-control" {% if module_name_english %}
+                            value="{{ module_name_english }}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Name (Bangla):</label>
+                        <input type="text" name="module_name_bangla" class="form-control" {% if module_name_bangla %}
+                            value="{{ module_name_bangla }}" {% endif %} required>
+                    </div>
+                    <div class="form-group" id="parent_module_div">
+                        <label>Starting Year:</label>
+                        <input onkeypress="return false;" onchange="checkDate()"  type="text" id="starting_year" name="starting_year"
+                            class="form-control datepicker" {% if parent_module_name %} value="{{ parent_module_name }}"
+                            {% endif %} required>
+
+                    </div>
+                    <div class="form-group">
+                        <label>Ending Year:</label>
+                        <input onchange="checkDate()" id="ending_year" onkeypress="return false;" type="text" name="ending_year"
+                            class="form-control datepicker" {% if parent_module_name %} value="{{ parent_module_name }}"
+                            {% endif %} required>
+                        <span id="date-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <textarea type="text" name="description" class="form-control" {% if parent_module_name %}
+                            value="{{ parent_module_name }}" {% endif %}>
+                        </textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Icon:</label>
+                        <input type="file" name="module_icon" accept="image/*" value="{{ icon }}">
+                    </div>
+
+
+                    <div class="form-group">
+                        <label>Order:</label>
+                        <input type="text" name="module_order" class="form-control" {% if order != None %}
+                            value="{{ order}}" {% endif %} required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                        class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{ STATIC_URL }}/js/bootstrap-datepicker.js"></script>
+
+<script>
+
+
+    $('.datepicker').datepicker({
+        format: 'yyyy-mm-dd',
+        startDate: '-3d'
+    });
+
+
+    $(document).ready(function () {
+        // $("#starting_year").datepicker({
+        //     minDate: 0,
+        //     maxDate: "+60D",
+        //     format: 'yyyy-mm-dd',
+        //     onSelect: function (selected) {
+        //         console.log("ending year select" + selected)
+        //         $("#ending_year").datepicker("option", "minDate", selected)
+        //     }
+        // }).on('changeDate', function (e) {
+        //     console.log(e.date);
+        //     // var formatedValue = e.date.format(e.date._f)
+
+        //     var start_time = new Date($('#starting_year').val());
+        //     $('#ending_year').datepicker("option", "minDate", start_time);
+        // });
+
+        // $("#ending_year").datepicker({
+        //     minDate: 0,
+        //     maxDate: "+60D",
+        //     format: 'yyyy-mm-dd',
+        //     onSelect: function (selected) {
+        //         $("#starting_year").datepicker("option", "maxDate", selected)
+        //     }
+        // }).on('changeDate', function (e) {
+        //     console.log(e);
+        //     var formatedValue = e.date.format(e.date._f)
+
+
+        //     $('#starting_year').datepicker("option", "maxDate", formatedValue);
+        // });
+    });
+
+        function checkDate() {
+            var start_time = new Date($('#starting_year').val());
+            console.log(start_time);
+
+            var end_time = new Date($('#ending_year').val());
+            console.log(end_time);
+            console.log("change Date"+start_time+" - "+end_time);
+
+            if(new Date(start_time) >= new Date(end_time))
+                {
+                    $('date-error').html('<p>Starting Year must be Before Ending Year</p>')
+                }
+        }
+
+        $('#starting_year').datepicker().on('changeDate', function(e) {
+            var start_time = new Date($('#starting_year').val());
+            console.log(start_time);
+
+            var end_time = new Date($('#ending_year').val());
+            console.log(end_time);
+            console.log("change Date"+start_time+" - "+end_time);
+
+            if(start_time >= end_time)
+            {
+                    $('date-error').html('<p>Starting Year must be Before Ending Year</p>')
+            }
+        });
+
+        $('#ending_year').datepicker().on('changeDate', function(e) {
+            var start_time = new Date($('#starting_year').val());
+            console.log(start_time);
+
+            var end_time = new Date($('#ending_year').val());
+            console.log(end_time);
+            console.log("change Date"+start_time+" - "+end_time);
+
+            if(start_time >= end_time){
+                    $('date-error').html('<p>Starting Year must be Before Ending Year</p>')
+            }
+        });
+
+</script>
+{% endblock %}

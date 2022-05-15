@@ -1,0 +1,80 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Add Access {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+{% block additional-javascript %}
+<!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->
+{% endblock %}
+
+{% block content %}
+<div class="col-md-offset-3 col-md-6">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Add Access Control
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="/usermodule/add-role-menu-map/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label>Role:</label>
+                        <select id="{{ role_form.role.id_for_label }}"
+                                name="{{ role_form.role.name }}" class="form-control">
+                            {% for m,n in role_form.fields.role.choices %}
+                            <option value="{{ m }}">{{ n }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <span class="help-block">{{ role_form.organization.errors.as_text }}</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Menu:</label>
+                        <select id="{{ role_form.menu.id_for_label }}"
+                                name="{{ role_form.menu.name }}" class="form-control">
+                            {% for m,n in role_form.fields.menu.choices %}
+                            <option value="{{ m }}">{{ n }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <span class="help-block">{{ role_form.menu.errors.as_text }}</span>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<!--<section id="data-view">
+    <h1>Access Control</h1>
+    <span class="span12">
+        <div class="data-table-container table table-striped table-hover">
+            {% if is_added_role %}
+                <strong>Added Successfully!</strong>
+            {% else %}
+                <strong>Add Access</strong><br />
+                <form id="menu_form" method="post" action="/usermodule/add-role-menu-map/">
+
+                    {% csrf_token %}
+                    {{ role_form.as_p }}
+                    &lt;!&ndash; Provide a button to click to submit the form. &ndash;&gt;
+                    <input type="submit" class="btn btn-primary btn-lg" name="submit" value="Save" />
+                </form>
+            {% endif %}
+            <div style="clear: both;"></div>
+        </div>
+    </span>
+
+</section>-->
+{% endblock %}

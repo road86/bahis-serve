@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+   <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/alertify.min.css"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.13.1/build/css/themes/bootstrap.min.css"/>
+    <style>
+    .grey{
+        color:#606567;
+    }
+    </style>
+{% endblock %}
+
+
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Datasource List</div>
+        </div>
+        <div class="portlet-body">
+            <div class="row">
+                <div class="col-md-12">
+                    {% if can_conf == True %}
+                    <a href="/bhmodule/create-datasource/">
+                        <button type="submit" class="btn btn-info pull-left" id="add_new" data-original-title=""
+                                title="">Add New
+                        </button>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <br>
+            <table id="all_info_table" class="table table-bordered table-striped table-condensed flip-content nowrap">
+                <thead class="flip-content">
+                <tr>
+                    <th>Datasource Name</th>
+                    <th>Join Type</th>
+                    <th>Username</th>
+                    <th>Created On</th>
+                    <th class="td-center">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a datasource</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+
+    <script>
+    var table;
+    $(document).ready(function () {
+
+        table = $('#all_info_table').DataTable({
+            "scrollX": true, "ordering": false,
+            deferRender: true
+        });
+        });
+
+        var tbody = '';
+        var module_list = {{ datasource_list|safe }};
+        console.log(module_list);
+
+        for (var idx in module_list) {
+            console.log(module_list[idx]);
+            var settings_href = ''
+            if (module_list[idx].module_type === 'List'){
+                settings_href = '/bhmodule/module-list-config/'+module_list[idx].id+'/'
+            }
+            var edit_href = "/bhmodule/edit-datasource/"+module_list[idx].id+"/"
+            var edit_html = '<a class="tooltips" data-placement="top" data-container="body" data-original-title="Edit" href="'+edit_href+'"><i class="fa fa-2x fa-pencil-square-o"></i></a><a class="delete-item tooltips" data-container="body" data-placement="top" data-toggle="modal" data-target="#confirm-delete" data-original-title="Delete" href="#" data-href=""><i class="fa fa-2x fa-trash-o"></i></a>';
+     
+
+            var preview_href = '/bhmodule/datasource-view/'+module_list[idx].id+'/';
+{#            settings = '<a class="tooltips" data-placement="top" data-container="body" data-original-title="Settings" href="'+settings_href+'"><i class="fa fa-2x fa-gear"></i></a>';#}
+            tbody += '<tr id="dsrow_' + module_list[idx].id + '"><td>' + module_list[idx].title + '<br><br><span class="grey">' + module_list[idx].p_source + ' - ' + module_list[idx].s_source + '<span></td><td></td><td></td><td>' + module_list[idx].created_at + '</td>'
+            tbody += '<td class="td-center"><a class="tooltips" data-placement="top" data-container="body" data-original-title="View" href="' + preview_href + '"><i class="fa fa-2x fa-eye"></i></a>{% if can_conf == True %}<a style="cursor: pointer;" onclick="removeDatasource(' + module_list[idx].id + ');" class="tooltips" data-placement="top" data-container="body" data-original-title="Delete"><i class="fa fa-2x fa-trash"></i></a>{% endif %}</td></tr>';
+        }
+
+        $("#all_info_table").find('tbody').html(tbody);
+
+        $('.delete-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+        function removeDatasource(datasource_id) {
+            alertify.confirm("Are you sure to delete this datasource?",
+                function () {
+                    $.ajax({
+                        url: '/bhmodule/delete-datasource/',
+                        type: 'POST',
+                        dataType: 'json',
+                        data: {'datasource_id': datasource_id},
+                        success: function (result) {
+                            alertify.alert(result['message']);
+                            if (result['deleted'] == 1) {
+                                var rowid = '#dsrow_' + datasource_id;
+                                $("#all_info_table tbody").find(rowid).remove();
+                            }
+                        }
+                    })
+                },
+                function () {
+                    alertify.error('Cancel');
+                }).setHeader('<em> Delete Datasource </em> ');
+        }
+    </script>
+{% endblock %}

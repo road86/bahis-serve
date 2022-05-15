@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+<link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}css/BootSideMenu.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}css/select-picker.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}css/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}assets/css/card.css" rel="stylesheet">
+<link href="{{ STATIC_URL }}assets/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+{% comment %} <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous"> {% endcomment %}
+
+
+<style>
+ 
+
+.panel-body img{
+    
+    width: 50px;
+    height: 60px;
+    display:block;
+    margin:auto;
+    
+   }
+</style>
+
+{% endblock %}
+
+
+{% block content %}
+
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i>{{module.module_name_english}}</div>
+        <div class="tools"> 
+            <a class="tooltips" href="/bhmodule/edit-module/{{ module_id }}/" data-original-title="Edit"><i class="fa fa-2x fa-pencil-square-o" ></i></a>
+            <a class="tooltips" href="/bhmodule/module/catchment-tree/{{ module_id }}/" data-original-title="Catchment"><i class="fa fa-2x fa fa-globe" ></i></a>
+            <a class="tooltips" {% if module.module_type == '2' %} href="/bhmodule/module-list-config/{{ module_id }}/" 
+            {% elif module.module_type == '1' %} href="/bhmodule/module-entry-config/{{ module_id }}/" 
+            {% else %} href="/bhmodule/module-container-config/{{ module_id }}/"
+             {% endif %} 
+            data-original-title="Settings"><i class="fa fa-2x fa-gear" ></i></a>
+            <a class="tooltips" href="/bhmodule/module-access/{{ module_id }}/" data-original-title="Access"><i class="fa fa-2x fa-adn"></i></a>
+            </div>
+
+    </div>
+    <div class="portlet-body">
+
+        <div class="row">
+            {% for each in child_module_list %}
+
+            <div class="col-md-2" > 
+                <div class="panel panel-default" >
+                    <div class="panel-heading">
+                        <h3 class="panel-title">
+                            {{ each.module_name_english }} <small></small>
+                            <div class="btn-group pull-right navbar-right">
+                            <!-- <button class="btn btn-link dropdown-toggle" data-toggle="dropdown"><i class="fa fa-ellipsis-v"></i></button>
+                            <ul class="dropdown-menu">
+                                <li><a href="#"><i class="fa fa-wrench"></i> Settings</a></li>
+                                <li><a href="#"><i class="fa fa-pencil"></i> Edit</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#"><i class="fa fa-trash-o"></i> Delete</a></li>
+                            </ul> -->
+                            </div>
+                        </h3>
+                    </div>
+                    <div class="panel-body">
+                        <img {% if each.icon %} src="/{{ each.icon }}" 
+                             {% else %} 
+                                {% if each.module_type == '1' %} src="{{ STATIC_URL }}assets/img/bahis_icon/form_icon.png" 
+                                {% elif each.module_type == '2' %} src="{{ STATIC_URL }}assets/img/bahis_icon/list_icon.png" 
+                                {% else %} src="{{ STATIC_URL }}assets/img/bahis_icon/container.png" 
+                                {% endif %}
+                            {% endif %} >
+                    </div>
+                    <div class="panel-footer">
+                
+                        <div class="pull-right">
+                            <a class="btn btn-info"  href="/bhmodule/module-profile/{{ each.id }}/">Profile </a>
+                            {% if each.module_type == '1' %} <a class="btn btn-success"  href="/formmodule/get-form/{{each.xform_id|safe}}/" >View</a>
+                            {% elif each.module_type == '2' %} <a class="btn btn-success"  href="/bhmodule/list-view/generate/{{each.list_def_id|safe}}/"  >View</a>
+                            {% endif %}
+                           
+                        </div>
+                        <div class="clearfix">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            
+            {% endfor %}
+        </div>
+        <div class="row"> 
+            <div class="col-md-offset-8 col-md-4">
+                <a href="/bhmodule/add-module/{{ module_id }}/" class="btn red pull-right"><i class="fa fa-plus" aria-hidden="true"></i></a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a branch info, this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block additional-javascript %}
+<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+<script language="javascript" type="text/javascript" src="{{ STATIC_URL }}node_modules/data-forge/dist/web/index.js"></script>
+<script src="{{ STATIC_URL }}js/BootSideMenu.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/filter.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/select-picker.js" type="text/javascript"></script>
+
+
+<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/jquery/latest/jquery.min.js"></script>-->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script src="{{ STATIC_URL }}js/Date-Range-Picker-For-Twitter-Bootstrap/date.js" type="text/javascript"></script>
+<script src="{{ STATIC_URL }}js/Date-Range-Picker-For-Twitter-Bootstrap/daterangepicker.js" type="text/javascript"></script>
+<!--<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>-->
+{% comment %} <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script> {% endcomment %}
+
+
+<script>
+ 
+
+</script>
+{% endblock %}

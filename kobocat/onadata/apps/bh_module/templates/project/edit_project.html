@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<link href="{{ STATIC_URL }}css/datepicker.css" rel="stylesheet">
+
+<head>
+    <title>
+        {% block title %} Edit Project {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="col-md-offset-2 col-md-8">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i>Edit Project 
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="/bhmodule/project-edit/{{ project_id }}/?next={{redirect_url}}"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label>Project Name (English):</label>
+                        <input type="text" name="module_name_english" class="form-control" {% if project_data.module_name_english %} value = "{{project_data.module_name_english}}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <label>Project Name (Bangla):</label>
+                        <input type="text" name="module_name_bangla" class="form-control" {% if project_data.module_name_bangla %} value="{{ project_data.module_name_bangla }}" {% endif %} required>
+                    </div>
+                    <div class="form-group"  id = "parent_module_div" >
+                        <label>Starting Year:</label>
+                        <input onkeypress="return false;" type="text" name="starting_year" class="form-control datepicker" {% if project_data.starting_year %} value="{{ project_data.starting_year }}" {% endif %} required>
+                 
+                    </div>
+                    <div class="form-group"   >
+                        <label>Ending Year:</label>
+                        <input onkeypress="return false;" type="text" name="ending_year" class="form-control datepicker" {% if project_data.ending_year %} value="{{  project_data.ending_year }}" {% endif %} required>
+                 
+                    </div>
+                    <div class="form-group"   >
+                        <label>Description:</label>
+                        <textarea  type="text" name="description" class="form-control" required>{% if project_data.description %}{{ project_data.description }}{% endif %}</textarea>
+                    </div>
+                    
+                    <!-- <div class="form-group">
+                        <label>Icon:</label>
+                        {% if  project_data.icon or project_data.icon != 'None'  %}
+
+                        <input type="file" name="module_icon" accept="image/*" value="{{ icon }}">
+                        {% endif %}
+                    </div> -->
+                    
+                    
+                    <div class="form-group">
+                        <label >Order:</label>
+                        <input type="text"  name="module_order" class="form-control" {% if project_data.module_order%} value="{{ project_data.module_order  }}" {% endif %} required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{ STATIC_URL }}/js/bootstrap-datepicker.js"></script>
+
+    <script>
+   
+
+        $('.datepicker').datepicker({
+    format: 'yyyy-mm-dd',
+    startDate: '-3d'
+});
+
+    </script>
+{% endblock %}

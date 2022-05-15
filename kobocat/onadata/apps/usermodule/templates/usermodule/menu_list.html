@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+    {% block additional-headers %}
+
+    {% endblock %}
+
+{% block content %}
+    <form action="/usermodule/add-menu/">
+    <input type="submit" class="btn red pull-right" value="Add Menu Item" style="margin-bottom:15px;">
+</form>
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-list-alt"></i>Menu Management</div>
+    </div>
+    <div class="portlet-body">
+        <table id="organizations-table" class="table table-bordered table-striped table-condensed flip-content">
+            <thead class="flip-content">
+            <tr>
+                <th>Menu</th>
+                <th class="td-center">Icon</th>
+                <th class="td-center">Sort Order</th>
+                <th class="td-center">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for menu in all_menu %}
+            <tr>
+                <td>{{ menu.title }}</td>
+                <td class="td-center"><i class="{{ menu.icon_class }}"></i></td>
+                <td class="td-center">{{ menu.sort_order }}</td>
+                <td class="td-center">
+                    <a class="tooltips" data-placement="top" data-original-title="Edit Menu Item"
+                       href="/usermodule/edit-menu/{{ menu.id }}"><i
+                            class="fa fa-2x fa-pencil-square-o"></i></a>
+                    <a class="delete-item tooltips" data-placement="top" data-original-title="Delete Menu Item"
+                       href="#"
+                       data-href="/usermodule/delete-menu/{{ menu.id}}" data-toggle="modal"
+                       data-target="#confirm-delete"><i class="fa fa-2x fa-trash-o"></i></a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+    <!--<section id="data-view">
+        {% if org_del_message %} 
+            <div class="alert alert-danger" role="alert">
+                {{org_del_message}}
+            </div>    
+        {% endif %}
+        {% if message %}
+
+            {% if alert == "alert-success" %}
+                <div id="message" class="alert alert-success" role="alert">
+            {% elif alert == "alert-warning" %}
+                <div id="message" class="alert alert-warning" role="alert">
+            {% else %}                    
+                <div id="message" >
+            {% endif %}    
+                <span id="message" class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+              {{ message }}
+            </div>
+        {% endif %}
+        <h1>Menu Management</h1>
+        <form action="/usermodule/add-menu/">
+            <input type="submit" class="btn btn-success" value="Add Menu Item">
+        </form>
+        &lt;!&ndash; <a href="/usermodule/organization-mapping">Add a mapping</a><br /> &ndash;&gt;
+        <div id='tables' style="display:table !important;" class="data-table-container table table-striped table-hover">
+            <table id="organizations-table" border="1" id="organization-list">
+              <tr>
+                <th>Menu</th>
+                <th>Icon</th>
+                <th>Sort Order</th>
+                <th>Edit</th>
+                <th>Delete</th>
+              </tr>
+
+            {% for menu in all_menu %}
+
+              <tr>
+                <td>{{ menu.title }}</td>
+                <td><i class="{{ menu.icon_class }}"></i></td>
+                <td>{{ menu.sort_order }}</td>
+                <td><a href="/usermodule/edit-menu/{{ menu.id }}"><i class="fa fa-pencil-square-o"></i></a></td>
+                <td><a class="delete-item" data-toggle="modal" data-target="#confirm-delete" href="#" data-href="/usermodule/delete-menu/{{ menu.id}}"><i class="fa fa-trash-o"></a></td>
+              </tr>
+            {% endfor %}
+            </table>
+        </div>
+    </section>-->
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h4 class="modal-title" id="myModalLabel">Confirm Action</h4>
+                    </div>
+                
+                    <div class="modal-body">
+                        <p>You are about to delete a Menu item, this procedure is irreversible.</p>
+                        <p>Do you want to proceed?</p>
+                        <p class="debug-url"></p>
+                    </div>
+                    
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                        <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+        
+        
+{% endblock %}
+
+{% block additional-javascript %}
+<script>
+    $('.delete-item').on('click', function(e) {
+        var criteria_id = $(this).attr("data-href");
+        $('.btn-ok').attr("href",criteria_id);
+    });
+</script>
+{% endblock %}
+

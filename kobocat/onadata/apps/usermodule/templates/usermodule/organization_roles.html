@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{% load i18n %}
+
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Organization Roles {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+{% block additional-javascript %}
+
+{% endblock %}
+
+
+{% block content %}
+<div class=" col-md-12">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-sitemap"></i>Organizations</div>
+        </div>
+        <div class="portlet-body">
+            <table id="organizations-table" class="table table-bordered table-striped table-condensed flip-content">
+                <thead class="flip-content">
+                <tr>
+                    <th class="td-center">Organization</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for organization in all_organizations %}
+                <tr>
+                    <td class="td-center"><a class="organization" org-name="{{ organization.oraganization }}" data-id="organization-{{ organization.id }}"
+                                             href="/usermodule/user-role-map/{{ organization.id}}">{{ organization }}</a></td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!--<section id="data-view">
+    <h1>Organizations</h1>
+    {% if message %}
+        <div class="alert alert-danger" role="alert">
+            {{message}}
+        </div>
+    {% endif %}
+    <div id='tables' style="display:table !important;" class="data-table-container table">
+        <table id="organizations-table" border="1" id="organization-list">
+          <tr>
+            <th style="text-align:center">Organization</th>
+          </tr>
+
+        {% for organization in all_organizations %}
+
+        <tr>
+            <td style="text-align:center"><a class="organization" org-name="{{ organization.oraganization }}" data-id="organization-{{ organization.id }}" href="/usermodule/user-role-map/{{ organization.id}}">{{ organization }}</a></td>
+        </tr>
+        {% endfor %}
+        </table>
+    </div>
+</section>-->
+{% endblock %}

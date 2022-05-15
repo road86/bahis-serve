@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Module Properties {% endblock %}
+    </title>
+</head>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="col-md-offset-2 col-md-8">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Module Properties
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form"  method="post" action="/bhmodule/module-properties/{{ module_id }}/" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="form-group">
+                        <label >Module Name (English):</label>
+                        <input type="text" readonly name="module_name_english" class="form-control" {% if module_name != None %} value="{{ module_name }}" {% endif %} required>
+                    </div>
+                    <div class="form-group">
+                        <input type="file" name="module_icon" accept="image/*" value="{{ icon }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Node parent</label>
+                        <select id="node_parent" name="node_parent" class="form-control" required
+                                    onchange="var changedVal = $(this).val(); onChangeNodeParent(changedVal)">
+                                <option value="">Select</option>
+                                <option value="0" {% if node_parent == None %} Selected {% endif %}>Root</option>
+                                <option value="1" {% if node_parent != None %} Selected {% endif %}>Child</option>
+                        </select>
+                    </div>
+                    <div class="form-group"  id = "parent_module_div" style="display: None;">
+                        <label>Module</label>
+                        <select id="parent_module" name="parent_module" class="form-control">
+                                <option value="">Select Module</option>
+                                {% for m,n in module_list %}
+                                    <option value="{{ m }}"{% if node_parent == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label >Order:</label>
+                        <input type="text"  name="module_order" class="form-control" {% if order != None %} value="{{ order}}" {% endif %} required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                    <button onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default pull-right">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+
+    <script>
+        var filterTypeHtml;
+        var multipleFieldParent;
+        var presentFilter = [];
+
+        var nodeParent = '{{ node_parent }}';
+
+        function onChangeNodeParent(changed_val){
+            if (changed_val === '0'){
+               $('#parent_module_div').hide();
+               $("#parent_module").prop('required',false);
+            }
+            else if (changed_val === '1') {
+                $('#parent_module_div').show();
+                $("#parent_module").prop('required',true);
+            }
+
+        }
+
+        $(document).ready(function () {
+            $('.select-picker').selectpicker();
+            console.log(nodeParent);
+            if (nodeParent!=='None'){
+                $('#parent_module_div').show();
+                $("#parent_module").prop('required',true);
+            }
+        });
+
+
+    </script>
+{% endblock %}

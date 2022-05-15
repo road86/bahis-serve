@@ -1,0 +1,632 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} Module List Settings {% endblock %}
+        </title>
+    </head>
+
+    <style>
+
+
+        .panel {
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: none;
+            border-radius: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-group .panel {
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        .panel-group .panel + .panel {
+            margin-top: 0;
+        }
+
+        .panel-default {
+            border: none;
+        }
+
+        .panel-heading {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .panel-default > .panel-heading {
+            color: #333;
+            background: none;
+            border-top: 1px solid #ddd;
+        }
+
+        .panel-default > .panel-heading + .panel-collapse > .panel-body {
+            border: none;
+            background: white;
+        }
+
+        .panel-sub-body {
+            padding: 10px;
+            background: white;
+        }
+
+        .panel-heading .accordion-toggle:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading .accordion-toggle.collapsed:after {
+            content: "\e080";
+        }
+
+
+    </style>
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/alertify.min.css" media="all"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/themes/semantic.min.css"
+          media="all"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/plugins/select2/select2_metro.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+
+{% endblock %}
+
+{% block content %}
+
+
+    {#    <form action="/usermodule/register">#}
+    {#        <input type="submit" class="btn red pull-right" value="Register User" style="margin-bottom:15px;">#}
+    {#    </form>#}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Module List Settings</div>
+        </div>
+        <div class="portlet-body">
+            <form id="form_basic_info">
+                <div class="panel-sub-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            <label>List Title (Bangla)</label>
+                            <input class="form-control" type="text" id = "list_name_bangla" name="list_name_bangla" required/>
+                            <span class="help-block" id="list_name_bangla_error"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label>List Title (English)</label>
+                            <input class="form-control"  type="text" id = "list_name_english" name="list_name_english" required/>
+                            <span class="help-block" id="list_name_english_error"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Data Source Type</label>
+                            <select class="form-control select-picker"  name="datasource_type"  id ="datasource_type" data-live-search = "true"
+                                    onchange="var changed_val= $(this).val();changeSourceDropdown(changed_val);" required>
+                                <option value="">Select</option>
+                                {% for m,n in datasource_type_choices %}
+                                    <option value="{{ m }}"{% if p_source_type == m %} selected {% endif %}>{{ n }}
+                                    </option>
+                                {% endfor %}
+
+                            </select>
+                            <span class="help-block" id="datasource_type_error"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label>Data Source</label>
+                            <select name="list_datasource" class=" form-control select-picker" id = "list_datasource" data-live-search = "true"
+                                    onchange="var changed_val= $(this).val();onChangeDataSource(changed_val);" required>
+                            </select>
+                        </div>
+                        <span class="help-block" id="list_datasource_error"></span>
+                    </div>
+                </div>
+            </form>
+            <div class="panel-group" id="accordion">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseTwo">
+                                List Definition
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseTwo" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form id="form_col_def">
+                                <div id="czContainer">
+                                    <div id="first" style="padding-top: 20px; height:600px;overflow:scroll;">
+                                        <table id="format-table" style="background: white"
+                                               class="table table-bordered table-striped">
+                                            <tbody>
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseThree">
+                                Filter Definition
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseThree" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <form id="form_filter_def">
+                                <div id="">
+                                    <div id="first" style="padding-top: 20px; height:400px;overflow:scroll;">
+                                        <table id="filter-table" style="background: white"
+                                               class="table table-bordered table-striped">
+                                            <tbody>
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12"><span class="help-block" id="list_definition_error"></span></div>
+        </div>
+        <div class="form-actions">
+           <button class="btn pull-right" onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                    class="btn default">Cancel
+            </button>
+            <button onclick="saveData();" type="submit" class="btn red pull-right">Save</button>
+
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a user, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+
+    <script>
+
+        var module_id = {{ module_id }};
+        var filterType = {{ filter_type|safe}};
+        var filterTypeHtml;
+
+        var datasource_choices = {{ datasource_choices|safe }};
+        var table_choices = {{ table_choices|safe }};
+        var columnTypeHtml;
+        var columnType = {{ column_data_type|safe }};
+        var multipleFieldParent;
+        var presentFilter = [];
+        var presentColumn = [];
+        var dataSourceType = '';
+        var dataSourceName = '';
+        $(document).ready(function () {
+
+            $('.select-picker').selectpicker();
+            filterTypeHtml = getFilterdropdown();
+            columnTypeHtml = columnTypeDropdown();
+
+
+            $('#user_table_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+            $('#user_table_wrapper .dataTables_length select').addClass("form-control input-xsmall"); // modify table per page dropdown
+
+            if ($('.alert-block').is(':visible')) {
+                window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+        });
+
+
+
+        $('.delete-user-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+
+        function checkAllBox(obj,tableName) {
+            var isChecked = $(obj).prop("checked");
+            $('#'+tableName+' tr:gt(0):has(td:first input[type=checkbox])').each(function(i) {
+                isCheckedChildRow = $(this).find("td:eq(1)").find('input[type="text"]').prop("checked");
+                console.log(isCheckedChildRow);
+                if (!isCheckedChildRow) {
+                    $(this).find("td:first").find('input[type="checkbox"]').prop('checked', isChecked);
+                    getInputField($(this).attr('id'), isChecked);
+                }
+            });
+        }
+
+
+        function changeSourceDropdown(changedVal) {
+            var option = '';
+            console.log("Here");
+            console.log(changedVal);
+            dataSourceType = changedVal;
+            {% comment %} dataSourceName = ''; {% endcomment %}
+            if (changedVal === '1') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in table_choices) {
+                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                }
+            }
+            else if (changedVal === '2') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in datasource_choices) {
+                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                }
+            }
+
+             $('#list_datasource').html(option);
+             $('.select-picker').selectpicker('refresh');
+             list_datasource
+             $('#list_datasource').trigger('change');
+
+
+        }
+
+
+        function validation() {
+            var errorFlag = true;
+            var errorMessage = '<p>This field is required *</p>';
+            if ($('#list_name_bangla').val() === '') {
+                $('#list_name_bangla_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#list_name_bangla_error').html('');
+                
+            }
+            if ($('#list_name_english').val() === '') {
+                $('#list_name_english_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#list_name_english_error').html('');
+                
+            }
+            if (dataSourceType === '') {
+                $('#datasource_type_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#datasource_type_error').html('');
+                
+            }
+            if (dataSourceName === '' && dataSourceType !== '') {
+                $('#list_datasource_error').html(errorMessage );
+                errorFlag = false;
+            }
+            else{
+                $('#list_datasource_error').html('');
+                
+            }
+            if (presentColumn.length<1) {
+                $('#list_definition_error').html('List column Definition is required');
+                errorFlag = false;
+            }
+            else{
+                $('#list_definition_error').html('');
+                
+            }
+            console.log("in validation");
+            console.log(errorFlag);
+            return errorFlag;
+        }
+
+
+        function saveData() {
+            if ( validation() ){
+                var filterDef = JSON.stringify($("#form_filter_def").serializeObject());
+                var parameters = JSON.stringify($('#form_col_def').serializeObject());
+                var basic_info = JSON.stringify($('#form_basic_info').serializeObject());
+
+                $.ajax({
+                    type: 'POST',
+                    url: '/bhmodule/add/module-list-config/' + module_id + '/',
+                    data: {'col_def': parameters, 'filter_def': filterDef, 'basic_info': basic_info},
+                    success: function (response) {
+                        console.log(response);
+                        window.location.href = response;
+                    },
+                    error: function (xhr, status, error) {
+
+                    }
+                });
+            }
+            
+        }
+
+        // this function is for column configuration table selected row input generation
+        function getInputField(element, checked) {
+            console.log(checked);
+            if (checked) {
+                presentColumn.push(element);
+                var secondCol = $('[id="'+element+'"]').find('td').eq(2).html('<input class="form-control" style="" type="text" name="' + element + '@english">');
+                var thirdCol = $('[id="'+element+'"]').find('td').eq(3).html('<input class="form-control" type="text" name="' + element + '@bangla">');
+                var thirdCol = $('[id="'+element+'"]').find('td').eq(4).html('<select class="form-control" name="' + element + '@data_type"><option value="">Select</option>'+columnTypeHtml+'</select>');
+                var fourthCol = $('[id="'+element+'"]').find('td').eq(5).html('<input  type="checkbox" name="' + element + '@sortable">');
+                //var fifthCol = $('[id="'+element+'"]').find('td').eq(6).html('<input class="form-control" type="text" name="' + element + '@format">');
+                $('[id="'+element+'"]').find('td').eq(6).html('<input class="" type="checkbox" name="' + element + '@is_hidden">');
+                $('[id="'+element+'"]').find('td').eq(7).html('<input class="" type="checkbox" name="' + element + '@is_exportable">');
+                $('[id="' + element + '"]').find('td').eq(8).html('<input class="" type="text" name="' + element + '@order">');
+
+            }
+            else {
+                var index = presentColumn.indexOf(element);
+                if (index > -1) {
+                    presentColumn.splice(index, 1);
+                }
+                for (var i =2 ;i<10; i++){
+                    $('[id="'+element+'"]').find('td').eq(i).html('');
+                }
+
+            }
+            console.log(secondCol);
+        }
+
+
+        function onChangeDataSource(changed_val) {
+            if(changed_val!==''){
+                dataSourceName = changed_val;
+                var datasource = $('#datasource_type').val();
+                var datasource_type = ((datasource === '2') ? 'datasource' : 'table');
+                $.ajax({
+                    type: 'POST',
+                    url: "/bhmodule/get-column-name/",
+                    data: {'datasource_name': changed_val, 'datasource_type': datasource_type},
+                    success: function (data) {
+                        var data_list = JSON.parse(data)
+                        var table = $('#format-table');
+                        table.find("tbody tr").remove();
+                        table.append('<tr><td><input onclick="checkAllBox(this,\'format-table\');" type="checkbox" /></td> <td>Attribute Name</td><td>Column Title(English)</td> <td>Column Title(Bangla)</td> <td>Column Type</td> <td>Sortable</td> <td>Hidden</td><td>Exportable</td><Order></tr>'
+                        );
+                        for (var d in data_list) {
+                            var l = data_list[d];
+                            console.log(l);
+                            var tablerow = '<tr id="' + l["column_name"] + '">';
+                            tablerow += '<td ><input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + l["column_name"] + '\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                            tablerow += '<td></td><td></td>'
+                            tablerow += '<td></td><td></td>'
+                            tablerow += '<td></td><td></td><td></td><td></td></tr>';
+                            table.append(tablerow);
+                        }
+                        getFilterTable(data_list);
+
+                    },
+                    error: function (xhr, status, error) {
+                        $('#del_modal').modal('show');
+                    }
+                });
+            }
+            else{
+            
+                        $('#format-table').find("tbody tr").remove();
+                        $('#filter-table').find("tbody tr").remove();
+            }
+        }
+
+
+        function getFilterTable(data_list) {
+
+            var table = $('#filter-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><td><input onclick="checkAllBox(this,\'filter-table\');" type="checkbox" /></td> <td>Attribute Name</td><td>Filter Title(English)</td> <td>Filter Title(bangla)</td> <td>Filter Type</td> <td>Searchable</td><td>Dependant</td> <td>Parent Attribute</td><td>Order</td> </tr>'
+            );
+
+            for (var d in data_list) {
+                var l = data_list[d];
+                console.log(l);
+                var tablerow = '<tr id="' + l["column_name"] + '_filter">';
+                tablerow += '<td ><input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputFilter(\'' + l["column_name"] + '_filter\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                tablerow += '<td></td><td></td>'
+                tablerow += '<td></td><td></td><td></td><td></td><td></td>'
+                tablerow += '</tr>';
+                table.append(tablerow);
+            }
+        }
+
+
+        function getFilterdropdown() {
+
+            var optionHtml = ''
+            for (const key in filterType) {
+                var value = filterType[key];
+                //optional check for properties from prototype chain
+                if (filterType.hasOwnProperty(key)) {
+                    optionHtml += "<option value='" + key + "'>" + value + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            return optionHtml;
+        }
+
+
+        function columnTypeDropdown(){
+            var optionHtml  = '';
+            for (const key in columnType) {
+                var col = columnType[key];
+                //optional check for properties from prototype chain
+                if (col.length>0) {
+                    optionHtml += "<option value='" + col[0] + "'>" +col[1] + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            console.log(optionHtml );
+            return optionHtml;
+        }
+
+
+        function getInputFilter(element, checked) {
+            var own_element = element.replace('_filter', '')
+            console.log(checked);
+            if (checked) {
+                presentFilter.push(own_element);
+                console.log(own_element);
+                var secondCol = $('[id="'+element+'"]').find('td').eq(2).html('<input style="" type="text" name="' + element + '@english">');
+                var thirdCol = $('[id="'+element+'"]').find('td').eq(3).html('<input style="" type="text" name="' + element + '@bangla">');
+                var fourthCol = $('[id="'+element+'"]').find('td').eq(4).html('<select class="select-picker"  name="' + element + '@type">' + filterTypeHtml + '</select>');
+                //var fourthCol = $('[id="'+element+'"]').find('td').eq(5).html('<select class="select-picker"  name="' + element + '@appearnace"><option value="">Select Appearance</option></select>');
+                var fifthCol =$('[id="'+element+'"]').find('td').eq(5).html('<input  type="checkbox" name="' + element + '@searchable">');
+                var fifthCol = $('[id="'+element+'"]').find('td').eq(6).html('<input onclick="var changed_val= $(this).is(\':checked\');getParentFilter(\'' + own_element + '\',changed_val)" type="checkbox" name="' + element + '@dependant">');
+
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(8).html('<input style="" type="text" id="' + element + '@order" name="' + element + '@order">');
+                $('.select-picker').selectpicker();
+            }
+            else {
+                var index = presentFilter.indexOf(own_element);
+                if (index > -1) {
+                    presentFilter.splice(index, 1);
+                }
+                var secondCol = $('[id="'+element+'"]').find('td').eq(2).html('');
+                var thirdCol = $('[id="'+element+'"]').find('td').eq(3).html('');
+                var fourthCol = $('[id="'+element+'"]').find('td').eq(4).html('');
+                //var fifthCol = $('[id="'+element+'"]').find('td').eq(5).html('');
+                var fifthCol = $('[id="'+element+'"]').find('td').eq(5).html('');
+                var fifthCol = $('[id="'+element+'"]').find('td').eq(6).html('');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(8).html('');
+
+                $('[id="'+element+'"]').find('td').eq(7).html('');
+            }
+            console.log(secondCol);
+
+
+        }
+
+
+        function getParentFilter(element, checked) {
+            console.log(presentFilter);
+            if (checked) {
+                var options = '';
+                for (var i in presentFilter) {
+                    console.log(presentFilter[i], element);
+                    if (presentFilter[i] !== element) {
+                        options += '<option value="' + presentFilter[i] + '">' + presentFilter[i] + '</option>';
+                    }
+                }
+                if (options !== '') {
+                    var fifthCol =$('[id="'+element+'_filter"]').find('td').eq(7).html('<select multiple="multiple" class="multiple-select" name="' + element + '_filter@parent">' + options + '</select>');
+
+                }
+            }
+            else {
+                $('[id="'+element+'_filter"]').find('td').eq(8).html('');
+
+            }
+
+            $('.multiple-select').selectpicker();
+        }
+
+
+        function myfunc(ele) {
+
+            var values = new Array();
+            $.each($("input[name='case[]']:checked").closest("td").siblings("td"),
+                    function () {
+                        values.push($(this).text());
+                    });
+
+            alert("val---" + values.join(", "));
+        }
+
+
+        function getDataTable(element_id){
+            $('#'+element_id).dataTable({
+                // set the initial value
+                "iDisplayLength": 10,
+                "sPaginationType": "bootstrap",
+                "aLengthMenu": [
+                    [10, 20, 50],
+                    [10, 20, 50] // change per page values here
+                ],
+                "aoColumnDefs": [{
+                    'bSortable': false,
+                    'aTargets': [3]
+                }
+                ]
+            });
+        }
+
+
+
+
+
+    </script>
+{% endblock %}

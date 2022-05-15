@@ -1,0 +1,136 @@
+    {% extends 'base.html' %}
+    {% load i18n %}
+    {% block additional-headers %}
+        <style type="text/css">
+        /*th{
+            border: none !important;
+            border-right:1px solid #ddd !important;
+            border-bottom:1px solid #ddd !important;
+        }
+        td{
+            border: none !important;
+            border-right:1px solid #ddd !important;
+            border-bottom:1px solid #ddd !important;
+        }*/
+        </style>
+        <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+        <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">-->
+        <link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+    {% endblock %}
+
+
+
+    {% block content %}
+
+        <div class="portlet box red">
+            <div class="portlet-title">
+                <div class="caption"><i class="fa fa-adn"></i>Geo Definition List</div>
+            </div>
+            <div class="portlet-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        {% if can_conf == True %}
+                        <a href="/usermodule/geo_definition/">
+                            <button type="submit" class="btn btn-info pull-left" id="add_new" data-original-title=""
+                                    title="">Add New
+                            </button>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                <br>
+                <table id="geo_def_table" class="table table-bordered table-hover">
+                    <thead>
+                    <tr>
+                        <th>Node Name</th>
+                        <th>Node Parent</th>
+                        <th class="td-center">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a node structure, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+
+
+
+
+    {% block additional-javascript %}
+   <!-- <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+        <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>-->
+        <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+        <script>
+{#        $(document).ready(function () {#}
+
+               $(document).ready(function () {
+            var table = $('#geo_def_table').DataTable({
+                "scrollX": true, "ordering": false
+                    });
+                });
+            var tbody = '';
+            var geo_def_data = {{ geo_def_data|safe }};
+
+            for (var idx in geo_def_data) {
+                if (geo_def_data[idx].node_parent_name != null)
+                    tbody += '<tr><td>' + geo_def_data[idx].node_name + '</td><td>' + geo_def_data[idx].node_parent_name + '</td><td class="td-center">\n' +
+                        '                    {% if can_conf == True %}<a class="tooltips" data-placement="top" data-original-title="Edit"\n' +
+                        '                       href="/usermodule/edit_form_definition/' + geo_def_data[idx].id + '"><i class="fa fa-2x fa-pencil-square-o"></i></a>{% endif %}\n' +
+                        '                {% if can_conf == True %}<a class="delete-item tooltips" data-placement="top" data-toggle="modal" data-target="#confirm-delete" data-original-title="Delete" href="#" data-href="/usermodule/delete_form_definition/' + geo_def_data[idx].id + '"><i class="fa fa-2x fa-trash-o"></i></a>{% endif %}</td></tr>';
+                else tbody += '<tr><td>' + geo_def_data[idx].node_name + '</td><td>Root</td><td class="td-center">\n' +
+                    '                    {% if can_conf == True %}<a class="tooltips" data-placement="top" data-original-title="Edit"\n' +
+                    '                       href="/usermodule/edit_form_definition/' + geo_def_data[idx].id + '"><i class="fa fa-2x fa-pencil-square-o"></i></a>{% endif %}\n' +
+                    '                {% if can_conf == True %}<a class="delete-item tooltips" data-placement="top" data-container="body" data-toggle="modal" data-target="#confirm-delete" data-original-title="Delete" href="#" data-href="/usermodule/delete_form_definition/' + geo_def_data[idx].id + '"><i class="fa fa-2x fa-trash-o"></i></a>{% endif %}</td><tr>';
+                   
+            }
+            $("#geo_def_table").find('tbody').html(tbody);
+
+
+                $('.delete-item').on('click', function(e) {
+                    var criteria_id = $(this).attr("data-href");
+                    $('.btn-ok').attr("href",criteria_id);
+                });
+                if ($('.alert-block').is(':visible')) {
+                window.setTimeout(function () {
+                        $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                            $(this).remove();
+                        });
+                    }, 5000);
+                }
+{#        });#}
+            
+        </script>
+    {% endblock %}

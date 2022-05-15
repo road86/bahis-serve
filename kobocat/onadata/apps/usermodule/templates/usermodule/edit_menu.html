@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load i18n %}
+        {% block content %}
+        <div class="col-md-12">
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-list-alt"></i> Edit Menu Item
+            </div>
+        </div>
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="menu_form" method="post" action="/usermodule/edit-menu/{{id}}/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.title.id_for_label }}">Title:</label>
+                                <input type="text" name="{{ menu_form.title.name }}" class="form-control" value="{{ menu_form.title.value }}">
+                                <span class="help-block">{{ menu_form.title.errors.as_text }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.url.id_for_label }}">Url:</label>
+                                <input type="text" name="{{ menu_form.url.name }}" class="form-control" value="{{ menu_form.url.value }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.list_class.id_for_label }}">Menu List Class:</label>
+                                <input type="text" name="{{ menu_form.list_class.name }}" class="form-control" value="{{ menu_form.list_class.value }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.icon_class.id_for_label }}">Menu Icon Class:</label>
+
+                                <input type="text" name="{{ menu_form.icon_class.name }}" class="form-control" value="{{ menu_form.icon_class.value }}">
+                                <span class="help-block">{{ menu_form.email.errors.as_text }}</span>
+
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.parent_menu.id_for_label }}">Parent Menu:</label>
+                                <select id="{{ menu_form.parent_menu.id_for_label }}"
+                                        name="{{ menu_form.parent_menu.name }}" class="form-control">
+                                    <option value="">Parent Menu</option>
+                                    {% for x,y in menu_form.fields.parent_menu.choices %}
+                                    <option value="{{ x }}" {% if x == menu_form.parent_menu.value %} selected{% endif %} >{{ y }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ menu_form.parent_menu.errors.as_text }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="{{ menu_form.sort_order.id_for_label }}">Sort order:</label>
+                                <input class="form-control" type="number" id="{{ menu_form.sort_order.id_for_label }}" min="0" name="{{ menu_form.sort_order.name }}" value="{{ menu_form.sort_order.value }}">
+                                <span class="help-block">{{ menu_form.sort_order.errors.as_text }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn red pull-right">Submit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+        {% endblock %}

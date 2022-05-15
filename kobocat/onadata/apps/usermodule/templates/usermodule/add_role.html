@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} Add Role {% endblock %}
+        </title>
+    </head>
+{% endblock %}
+
+{% block additional-javascript %}
+    <!-- <script type="text/javascript" src="/static/js/organization_access.js"></script> -->
+{% endblock %}
+
+{% block content %}
+    <!--<section id="data-view">
+        <h1>Role Management</h1>
+        <span class="span12">
+            <div class="data-table-container table table-striped table-hover">
+                {% if is_added_role %}
+                    <strong>Added Successfully!</strong>
+                {% else %}
+                    <strong>Add Role</strong><br />
+                    <form id="menu_form" method="post" action="/usermodule/add-role/">
+
+                        {% csrf_token %}
+                        {{ role_form.as_p }}
+                        &lt;!&ndash; Provide a button to click to submit the form. &ndash;&gt;
+                        <input type="submit" class="btn btn-primary btn-lg" name="submit" value="Save" />
+                    </form>
+                {% endif %}
+                <div style="clear: both;"></div>
+            </div>
+        </span>
+
+    </section>-->
+    <div class="col-md-offset-3 col-md-6">
+        <div class="portlet box red">
+            <div class="portlet-title">
+                <div class="caption">
+                    <i class="fa fa-reorder"></i> Add Role
+                </div>
+            </div>
+            <div class="portlet-body form">
+                <form class="horizontal-form" id="menu_form" method="post" action="/usermodule/add-role/"
+                      enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="form-body">
+                        <div class="form-group">
+                            <label>Organization:</label>
+                            <select id="{{ role_form.organization.id_for_label }}"
+                                    name="{{ role_form.organization.name }}" class="form-control" required>
+                                {% for m,n in role_form.fields.organization.choices %}
+                                    <option value="{{ m }}">{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <span class="help-block">{{ role_form.organization.errors.as_text }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ role_form.role.id_for_label }}">Role:</label>
+                            <input type="text" name="{{ role_form.role.name }}" class="form-control"
+                                    {% if role_form.role.value %} value="{{ role_form.role.value }}" {% endif %}
+                                   required>
+                            <span class="help-block">{{ role_form.role.errors.as_text }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ role_form.role.id_for_label }}">Parent Role:</label>
+                            <select id="{{ role_form.parent_role.id_for_label }}"
+                                    name="{{ role_form.parent_role.name }}" class="form-control">
+                                {% for m,n in role_form.fields.parent_role.choices %}
+                                    <option value="{{ m }}">{{ n }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+
+                        </div>
+                        <div class="form-group">
+                            <label class=""></label>
+                            <div class="checkbox-list">
+                                <label>
+                                    <input name="{{ role_form.can_configure.name }}" type="checkbox"> Can Configure
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn red pull-right">Submit</button>
+                        <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                                class="btn default pull-right">Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

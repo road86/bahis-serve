@@ -1,0 +1,717 @@
+{% extends 'base_test.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/project_dashboard_style.css" type="text/css"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/vendor/animate/animate.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/vendor/select2/select2.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/vendor/perfect-scrollbar/perfect-scrollbar.css">
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/util.css">
+    {#    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}css/main.css">#}
+    <link href="{{ STATIC_URL }}css/BootSideMenu.css" rel="stylesheet">
+    <link href="{{ STATIC_URL }}css/project_dashboard_style.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css"
+          href="{{ STATIC_URL }}assets/plugins/bootstrap-multiselect/bootstrap-multiselect.css">
+
+    <head>
+        <title>{% block title %}{{ SITE_NAME }}{% endblock %}</title>
+    </head>
+    <style>
+        .portlet.box.red > .portlet-title {
+            background-color: #0F084B;
+        }
+
+        .control-label {
+            display: block;
+        }
+
+        .legend {
+            background-color: #fff;
+            border-radius: 3px;
+            bottom: 20px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.10);
+            font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+            padding: 10px;
+            position: absolute;
+            right: 25px;
+            z-index: 1;
+        }
+
+        .legend h4 {
+            margin: 0 0 10px;
+        }
+
+        .legend div span {
+            border-radius: 50%;
+            display: inline-block;
+            height: 10px;
+            margin-right: 5px;
+            width: 10px;
+        }
+
+        th.dt-center, td.dt-center {
+            text-align: center;
+        }
+
+        .highcharts-series-group {
+
+        }
+
+        .mp_submit {
+            padding-left: 10px;
+        }
+
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div data-load="unloaded" id="container_chart">
+        <div class="portlet box red">
+            <div class="portlet-title">
+                <div class="caption"><i class="fa fa-gavel"></i>{{ report_header }}</div>
+            </div>
+            <div class="portlet-body">
+                <div class="chart_body">
+
+                </div>
+            </div>
+        </div>
+
+        <div id="filter_box">
+            <form id="filter_form" method="POST">
+                <div class="portlet box">
+                    <div class="portlet-title" style="-webkit-border-radius: 0px !important;">
+                        <div class="caption pull-right"><i class="fa fa-filter"></i>Filters</div>
+                    </div>
+                    <div class="portlet-body">
+                        <div class="panel-group accordion" id="accordion1"
+                             style="-webkit-border-radius: 0px !important;">
+                            <div class="panel panel-default" style="-webkit-border-radius: 0px !important;">
+                                <div class="panel-heading">
+                                    <h4 class="panel-title" style="-webkit-border-radius: 0px !important;">
+                                        <a class="accordion-toggle" data-toggle="collapse"
+                                           data-parent="#accordion1"
+                                           href="#collapse_1">
+                                            Date
+                                        </a>
+                                    </h4>
+                                </div>
+                                <div id="collapse_1" class="panel-collapse in">
+                                    <div class="panel-body" style="-webkit-border-radius: 0px !important; ">
+                                        <label>From</label>
+                                        <input type="text" class="datepicker form-control" name="from_date"
+                                               id="from_date"
+                                               style="border: 1px solid #e5e5e5 !important; cursor: pointer"
+                                               autocomplete="off"
+                                               readonly>
+
+                                        <label>To</label>
+                                        <input type="text" class="datepicker form-control" name="to_date" id="to_date"
+                                               style="border: 1px solid #e5e5e5 !important; cursor: pointer"
+                                               autocomplete="off"
+                                               readonly>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="panel-body" style="-webkit-border-radius: 0px !important; ">
+                            <label>RSC</label>
+                            <select multiple="multiple" id="rsc" name="rsc"
+                                    onchange="var changed_val= $(this).val();onChangeMultipleSelect('rsc',changed_val);">
+                                <option>
+
+                                </option>
+                            </select>
+
+                            <label>Disrict</label>
+                            <select multiple="multiple" id="district" name="district" onchange="">
+                                <option>
+
+                                </option>
+                            </select>
+                            <label>Upazila</label>
+                            <select multiple="multiple" id="upazila" name="upazila" onchange="">
+                                <option>
+
+                                </option>
+                            </select>
+
+                        </div>
+                        <button type="submit" id="submitBtn" style="display:none;" data-validate="contact-form">Hidden
+                            Button
+                        </button>
+
+                        <div class="form-actions" style="-webkit-border-radius: 0px !important;">
+                             <input type="button" id="reset_filter"
+                                   class="btn pull-right" style="-webkit-border-radius: 0px !important; margin-left: 10px;"
+                                   onclick="reset_elements();"
+                                   value="Reset"/>
+                            <input type="button" id="generate_report"
+                                   class="btn pull-right" style="-webkit-border-radius: 0px !important;"
+                                   onclick="get_elements();"
+                                   value="Apply"/>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+
+{% endblock %}
+
+
+
+{% block additional-javascript %}
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/series-label.js"></script>
+    <script src="https://code.highcharts.com/modules/exporting.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+    <script src="{{ STATIC_URL }}css/vendor/bootstrap/js/popper.js"></script>
+    <script src="{{ STATIC_URL }}css/vendor/select2/select2.min.js"></script>
+    <script type="text/javascript"
+            src="{{ STATIC_URL }}assets/plugins/bootstrap-multiselect/bootstrap-multiselect.js"></script>
+    <script src="{{ STATIC_URL }}js/main.js"></script>
+    <script src="{{ STATIC_URL }}js/report_module/chart_lib.js"></script>
+    <script src="{{ STATIC_URL }}js/BootSideMenu.js" type="text/javascript"></script>
+   
+    <script>
+        var submodule = '{{ submodule|safe }}';
+
+        $(document).ready(function () {
+{#            generate_filter();#}
+
+            $('#from_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+
+            $('#to_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            }).on('changeDate', function () {
+                $(this).datepicker('hide');
+            });
+
+            $("#rsc").multiselect({
+                enableFiltering: true,
+                //filterBehavior: 'value',
+                enableCaseInsensitiveFiltering: true,
+                maxHeight: 200,
+                numberDisplayed: 1,
+                includeSelectAllOption: true,
+                buttonWidth: '100%',
+                allSelectedText: 'All Selected'
+            });
+            $("#district").multiselect({
+                enableFiltering: true,
+                //filterBehavior: 'value',
+                enableCaseInsensitiveFiltering: true,
+                maxHeight: 200,
+                numberDisplayed: 1,
+                includeSelectAllOption: true,
+                buttonWidth: '100%',
+                allSelectedText: 'All Selected'
+            });
+            $("#upazila").multiselect({
+                enableFiltering: true,
+                //filterBehavior: 'value',
+                enableCaseInsensitiveFiltering: true,
+                maxHeight: 200,
+                numberDisplayed: 1,
+                includeSelectAllOption: true,
+                buttonWidth: '100%',
+                allSelectedText: 'All Selected'
+            });
+            jsondata = {{ jsondata | safe }};
+            var dateObj = moment();
+            var prevDateObj = moment().subtract(180, 'd');
+            $('#from_date').val(prevDateObj.format('YYYY-MM-DD'));
+            $('#to_date').val(dateObj.format('YYYY-MM-DD'));
+            get_filter(jsondata);
+            $('#generate_report').trigger('click')
+
+{#            get_elements();#}
+
+
+        });
+        var dateObj = moment();
+        var prevDateObj = moment().subtract(180, 'd');
+
+        function reset_elements() {
+            $('#from_date').val(prevDateObj.format('YYYY-MM-DD'));
+            $('#to_date').val(dateObj.format('YYYY-MM-DD'));
+            $('#rsc').val([]).multiselect('refresh');
+            $('#district').val([]).multiselect('refresh');
+            $('#upazila').val([]).multiselect('refresh');
+
+        }
+                
+        function get_filter(result) {
+            console.log(result);
+                    try {
+                        console.log("JSON");
+                        jsondata = JSON.parse(result);
+                        console.log(jsondata);
+                    } catch (e) {
+                        jsondata = result;
+                    }
+                    if (jsondata) {
+                        var keys = Object.keys(jsondata);
+                        for (var i = 0; i < keys.length; i++) {
+                            console.log(keys[i]);
+
+                            var data = jsondata[keys[i]];
+                            $('#' + keys[i] + "  option").remove();
+                            var multiple_select_html = '';
+                            temp_id = []
+                            if (data) {
+                                for (var j = 0; j < data.length; j++) {
+                                    multiple_select_html += '<option value="' + data[j].id + '">' + data[j].name + '</option>';
+                                    temp_id.push(data[j].id);
+                                }
+                            }
+
+                            console.log(temp_id)
+                            $('#' + keys[i]).append(multiple_select_html);
+                            $('#' + keys[i]).multiselect('rebuild');
+                            if(keys[i]=='district' || keys[i]=='upazila')
+                                continue
+                            $('#' + keys[i]).val(temp_id);
+                            $('#' + keys[i]).multiselect("refresh");
+
+
+                        }
+                    }
+        }
+
+
+        function get_excel(filename) {
+            console.log(" data " + "/dashboard/getExcel?" + filename);
+            // location.href = "/dashboard/getExcel?path="+filename;
+            window.open('/media/iom_admin/exported_file/' + filename);
+
+
+        }
+
+
+
+        function get_elements() {
+            console.log(event);
+            event.preventDefault();
+
+            var parameters = $('#filter_form').serializeArray();
+
+
+            from_date = $('#from_date').val();
+            to_date = $('#to_date').val();
+            rsc = $('#rsc').val();
+            district = $('#district').val();
+            upazila = $('#upazila').val();
+            console.log(rsc,district,upazila);
+            if(rsc === null && district === null && upazila === null)
+                return
+
+            $.ajax({
+                url: '/reports/get_report_elements/' + submodule + '/',
+                type: 'POST',
+                dataType: 'json',
+                data: parameters,
+                beforeSend: function () {
+
+                },
+                success: function (result) {
+                    console.log(result);
+                    try {
+                        console.log("JSON");
+                        chart_data = JSON.parse(result);
+                        console.log(chart_data);
+                    } catch (e) {
+                        chart_data = result;
+                    }
+                    if (chart_data) {
+                        $('.chart_body').append('<div id="row_' + rowkey + '" class="row" style="margin-top: 25px;"></div>');
+                        for (var key in chart_data) {
+                            if (chart_data[key][1] == 'gauge') {
+                                $('#row_' + rowkey).append('<div id="g_data_' + key + '" class="span4" style="margin-top: 25px;"></div>');
+                                generateSolidGauge('g_data_' + key, chart_data[key][2], [chart_data[key][0]], '%');
+                                story_length = story_length + 3;
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            } else if (chart_data[key][1] == 'column' || chart_data[key][1] == 'bar') {
+                                var filename = chart_data[key][7];
+                                $('#row_' + rowkey).append('<div id="g_data_' + key + '" class="col-md-' + chart_data[key][4] + '" style="margin-top: 25px;"></div>');
+                                var percentage, height, filtering, divId, chartType, stackLabelEnabled, plotColumnDatalabelEnabled, stackLabelEnabled, chart_title, colorByPoint, colors, stacking, new_yAxis, legend_enabled, dataLabel, tooltip_text;
+
+                                chart_object = JSON.parse(chart_data[key][6]);
+                                if ('colorByPoint' in chart_object)
+                                    colorByPoint = chart_object['colorByPoint'];
+                                else colorByPoint = false;
+                                if ('dataLabel' in chart_object)
+                                    dataLabel = chart_object['dataLabel'];
+                                else dataLabel = false;
+                                if ('colors' in chart_object)
+                                    colors = chart_object['colors'];
+                                else
+                                    colors = ['#058DC7', '#50B432', '#ED561B', '#DDDF00', '#24CBE5', '#64E572', '#FF9655', '#FFF263', '#6AF9C4'];
+
+                                if ('percentage' in chart_object)
+                                    percentage = chart_object['percentage'];
+                                else
+                                    percentage = false;
+                                console.log(chart_object);
+                                if ('legend_enabled' in chart_object)
+                                    legend_enabled = chart_object['legend_enabled'];
+                                else
+                                    legend_enabled = false;
+                                console.log(chart_object);
+                                if ('yAxis1_title' in chart_object)
+                                    yAxis1_title = chart_object['yAxis1_title'];
+                                else yAxis1_title = "";
+
+
+
+                                if (chart_data[key][3] == 'multiple') {
+                                    var datasum = chart_data[key][0].datasum;
+                                } else {
+                                    var sd = chart_data[key][0].series[0].data;
+                                    var datasum;
+                                    try {
+                                        datasum = sd.sum('y');
+                                    }
+                                    catch (e){
+                                        datasum = 0
+                                    }
+                                }
+                                //column fd_type value is equal 'color'
+                                if (chart_data[key][3] == 'color') {
+                                    var dataset = {};
+                                    dataset['categories'] = chart_data[key][0].categories;
+                                    dataset['seriesdata'] = chart_data[key][0].series;
+                                    var obj = {}
+                                    chart_object['dataset'] = dataset
+                                    chart_object['chartType'] = chart_data[key][1];
+                                    chart_object['element'] = 'g_data_' + key;
+                                    {#                                    chart_object['title'] = chart_data[key][0].series[0].name#}
+
+                                    if (percentage)
+                                        chart_object['filtering'] = [{'name': 'cal_type', 'value': 'percentage'}];
+                                    mPowerChartGeneration(chart_object);
+                                    console.log(chart_object);
+                                }
+                                else {
+                                    generateBarChart('g_data_' + key, chart_data[key][1], chart_data[key][2], '', chart_data[key][0].categories, chart_data[key][0].series, yAxis1_title, '', colorByPoint, legend_enabled, null, 0, percentage, datasum, false, true, chart_data[key][5], colors,filename,chart_data[key][3]);
+                                }
+                                story_length = story_length + 6;
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            } else if (chart_data[key][1] == 'single') {
+                                if (chart_data[key][3] == '1.5.3') {
+                                    var range = 300;
+                                } else if (chart_data[key][3] == '1.4.8') {
+                                    var range = 10;
+                                }
+                                $('#row_' + rowkey).append('<div id="g_data_' + key + '" class="span4" style="margin-top: 25px;"></div>');
+                                generateSingleSolidGauge('g_data_' + key, chart_data[key][2], [chart_data[key][0]], '', range);
+                                story_length = story_length + 3;
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            } else if (chart_data[key][1] == 'pie') {
+                                $('#row_' + rowkey).append('<div id="g_data_' + key + '" class="col-md-5" style="margin-top: 25px;"></div>');
+                                generatePieChart('g_data_' + key, chart_data[key][2], '', 'Response', chart_data[key][0]);
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            } else if (chart_data[key][1] == 'stacked bar') {
+                                $('#row_' + rowkey).append('<div id="g_data_' + key + '" class="span' + chart_data[key][4] + '" style="margin-top: 25px;"></div>');
+                                generateStackedBarChart('g_data_' + key, chart_data[key][1], chart_data[key][2], '', chart_data[key][0].categories, chart_data[key][0].series, '', '', false, true, 'percent', 0, true, null, false, false, chart_data[key][5])
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            }
+                            else if (chart_data[key][1] == 'card') {
+                                console.log("here in card");
+                                $('#row_' + rowkey).append('<div id="g_data_' + key + '" class="col-md-' + chart_data[key][3] + '" style="margin-top: 25px;"></div>');
+                                generateCard('g_data_' + key, chart_data[key][4], chart_data[key][0],chart_data[key][5])
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            }
+                            else if (chart_data[key][1] == 'table') {
+                                console.log("here in table");
+
+                                $('#row_' + rowkey).append('<div id="' + key + '_g_data_parent" class="col-md-' + chart_data[key][3] + '" style="margin-top: 25px;"></div>');
+                                var tableData = JSON.parse(chart_data[key][0]);
+                                console.log(typeof(tableData));
+                                var chart_object = JSON.parse(chart_data[key][4]);
+                                initDataTable('' + key + '_g_data', tableData.data, tableData.col_name, chart_object)
+                                $('#row_' + rowkey).append('<div class="page-break"></div>');
+                            }
+                        }
+                    }
+
+                }
+            });
+
+
+        }
+
+        function onChangeMultipleSelect(control_id, changed_val) {
+            var filtered_data = {'rsc': changed_val};
+{#            filter_ajax(filtered_data, 'POST')#}
+        }
+
+        $('#filter_box').BootSideMenu({
+            side: "right",
+            // animation speed
+            duration: 500,
+            // restore last menu status on page refresh
+            remember: false,
+            // auto close
+            autoClose: true,
+            // push the whole page
+            pushBody: true,
+            // close on click
+            closeOnClick: true,
+            // width
+            width: "300px"
+        });
+
+
+        Array.prototype.sum = function (prop) {
+            var total = 0
+            for (var i = 0, _len = this.length; i < _len; i++) {
+                total += this[i][prop]
+            }
+            return total
+        }
+
+        var dv = '{{ dv }}';
+        if (dv) {
+            $('#division_id').val(dv);
+        }
+
+        var zl = '{{ zl }}';
+        if (zl) {
+            $('#district_id').val(zl);
+        }
+        var story_length = 0;
+        var rowkey = 0;
+        {#        var chart_data = {{ chart_data|safe }};#}
+
+
+        function pdf_findings() {
+            var dv = $('#division_id').val();
+            var zl = $('#district_id').val();
+            $.ajax({
+                url: '/reportmodule/pdf_findings/',
+                type: 'POST',
+                dataType: 'json',
+                data: {'dv': dv, 'zl': zl},
+                success: function (result, textStatus, jqxhr) {
+                    $("a#download").attr({
+                        "download": jqxhr.filename,
+                        "href": result
+                    }).get(0).click();
+                },
+                error: function (request, status, error) {
+
+                    var val = request.responseText;
+                    console.log("error" + val);
+                }
+            })
+        }
+
+
+        function filter_ajax(filtered_data, request_type) {
+            $.ajax({
+                url: '/reports/generate_filter/',
+                type: request_type,
+                dataType: 'json',
+                data: filtered_data,
+                beforeSend: function () {
+
+                },
+                success: function (result) {
+                    console.log(result);
+                    try {
+                        console.log("JSON");
+                        jsondata = JSON.parse(result);
+                        console.log(jsondata);
+                    } catch (e) {
+                        jsondata = result;
+                    }
+                    if (jsondata) {
+                        var keys = Object.keys(jsondata);
+                        for (var i = 0; i < keys.length; i++) {
+                            console.log(keys[i]);
+                            var data = jsondata[keys[i]];
+                            $('#' + keys[i] + "  option").remove();
+                            var multiple_select_html = '';
+                            temp_id = []
+                            if (data) {
+                                for (var j = 0; j < data.length; j++) {
+                                    multiple_select_html += '<option value="' + data[j].id + '">' + data[j].name + '</option>';
+                                    temp_id.push(data[j].id);
+                                }
+                            }
+
+                            console.log(temp_id)
+                            $('#' + keys[i]).append(multiple_select_html);
+                            $('#' + keys[i]).multiselect('rebuild');
+                            $('#' + keys[i]).val(temp_id);
+                            $('#' + keys[i]).multiselect("refresh");
+
+
+                        }
+                    }
+
+                }
+            });
+        }
+
+        function generate_filter() {
+            filter_ajax({}, 'GET');
+        }
+
+{#        $('#generate_report').on('click', function () {#}
+{#            var from_date = $('#from_date').val();#}
+{#            var to_date = $('#to_date').val();#}
+{##}
+{#            if (from_date == '' || to_date == '')#}
+{#                return false;#}
+{##}
+{#            $.ajax({#}
+{#                url: '/reports/get_post_arrival_immediate_assistance/',#}
+{#                type: 'POST',#}
+{#                dataType: 'json',#}
+{#                data: {#}
+{#                    'from_date': from_date, 'to_date': to_date#}
+{#                },#}
+{#                beforeSend: function () {#}
+{##}
+{#                },#}
+{#                success: function (result) {#}
+{#                    console.log(result.cat)#}
+{#                    console.log(result.dataset);#}
+{#                    get_post_arrival_immediate_asst_report(result.cat, result.dataset)#}
+{#                }#}
+{#            });#}
+{#        });#}
+
+
+        function generateCard(element, chart_object, data,icon_class) {
+            color = chart_object;
+            var json_dataset = JSON.parse(data);
+            var visual = '<div class="visual"><i class="'+icon_class+'"></i> </div>';
+            console.log(json_dataset);
+            var body_html = '<div id="' + element + '_child" class = "dashboard-stat tile-red" style="min-height: 120px; background-color:' + color + ';">'
+            var details_html = ' <div class="details"><div class="number"><span class="count"><b>' + json_dataset.number + '</b></span></div><div class="desc"><b>' + json_dataset.details + '</b></div></div>'
+            body_html += visual + details_html + '</div>';
+            $("#" + element).html(body_html);
+        }
+
+
+        var dataSet = [];
+        var chartSeries = [];
+        function isArray(what) {
+            return Object.prototype.toString.call(what) === '[object Array]';
+        }
+
+        function initDataTable(tableID, dataSet, tableColumn, chart_object) {
+
+            var head_html = ''
+            var head = ''
+            /******Check For Customized Properties***/
+            console.log(tableID);
+            var paging = true;
+            if ('paging' in chart_object)
+                paging = chart_object['paging'];
+            else paging = false;
+            var filtering = true;
+            if ('filtering' in chart_object)
+                filtering = chart_object['filtering'];
+
+            if ('head' in chart_object) {
+                head = chart_object['head'];
+            }
+            var export_buttons = ['copy', 'csv', 'excel', 'pdf'];
+            if ('export_buttons' in chart_object)
+                export_buttons = [{extend: 'excel', text: "Export Excel", title: head}];
+            if ('title' in chart_object) {
+                var title = chart_object['title'];
+                //head_html = '<div class="portlet-title-sub"><center>'+title+'</center></div>'
+
+            }
+
+            $("#" + tableID + "_parent").html(head_html + '<table id="' + tableID + '" class="display table table-bordered table-striped table-condensed table-responsive nowrap"></table>');
+            var paging = true;
+            if ('paging' in chart_object)
+                paging = chart_object['paging'];
+            else paging = false;
+
+            if (tableColumn.length == 0) {
+                tableColumn = ["id", "user_id", "received", "pngo", "approvalstatus", "details"];
+            }
+            console.log(tableColumn);
+            /**END of Properties Check**/
+            var query_column = []
+            for (var column in tableColumn) {
+                if (column != 'sum') {
+                    query_column.push({
+                        title: tableColumn[column]
+                    });
+                }
+            }
+            console.log(query_column);
+            // Disable search and ordering by default
+            $.extend($.fn.dataTable.defaults, {
+                searching: true,
+                ordering: true
+            });
+            if ($.fn.dataTable.isDataTable('#' + tableID)) {
+                var data_table = $('#' + tableID).DataTable();
+                data_table.clear().draw();
+                data_table.rows.add(dataSet); // Add new data
+                data_table.columns.adjust().draw(); // Redraw the DataTable
+            } else {
+                $('#' + tableID).DataTable({
+                    data: dataSet,
+                    // scrollY: 400,
+                    //responsive: true,
+                    "columnDefs": [{
+                        className: "dt-center",
+                        "targets": "_all"
+                    }],
+                    scrollY: true,
+                    "autoWidth": true,
+                    scrollX: true,
+                    "ordering": true,
+                    bFilter: filtering,
+                    scrollCollapse: true,
+                    bPaginate: paging,
+                    columns: query_column,
+                    dom: 'Bfrtip',
+                    buttons: export_buttons,
+                    bAutoWidth:false
+                });
+                $('.dataTables_scrollHeadInner').css('width', 'auto');
+                var data_table = $('#' + tableID).DataTable();
+                data_table.columns.adjust().draw(); // Redraw the DataTable
+                console.log("table")
+{#                $('#' + tableID).columns.adjust().draw();#}
+                ;
+            }
+            $('#' + tableID + '_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+            $('#' + tableID + '_wrapper .dataTables_length select').addClass("form-control"); // modify table per page dropdown
+        }
+
+
+    </script>
+{% endblock %}

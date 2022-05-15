@@ -1,0 +1,669 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <title>
+        {% block title %} {{ xform.title }}{% endblock %}
+    </title>
+    <!-- start: css for data view and filters -->
+    <style>
+        th {
+            text-align: center !important;
+            width: auto !important;
+        }
+
+        .chart-filter {
+            float: left;
+            padding: 10px;
+        }
+
+        .chart-header-btn {
+            float: left;
+            margin-left: 25px;
+            padding: 1px;
+            position: relative;
+            font-size: 13px;
+        }
+
+        .chart-main-container {
+            width: inherit;
+            height: 400px;
+            min-height: 200px;
+            float: center;
+            padding: 2px;
+            border: 2px rgb(89, 89, 89) double;
+        }
+
+        .table-control-container {
+            margin: 0px 2px !important;
+        }
+    </style>
+    <link href="/static/css/datepicker.css" rel="stylesheet">
+    <link href="/static/css/data_view.css" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="/static/js/DataTables/datatables.css">
+    <link rel="stylesheet" href="/static/css/blueimp-gallery.min.css">
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+        <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">Filter</div>
+        </div>
+                                <div class="portlet-body">
+            <div class="form-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Submission Date</label>
+                            <input type="text" class="datepicker form-control" placeholder="From" name="start_date"
+                                   id="start_date">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Submission Date</label>
+                            <input type="text" class="datepicker form-control" placeholder="To" name="end_date"
+                                   id="end_date">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Submitted By</label>
+                            <select id="userlist" class="form-control userlist">
+                                <option value="custom">Select a User</option>
+                                {% for usermodule_user in user_list %}
+                                    <option value="{{ usermodule_user }}">{{ usermodule_user }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="form-group">
+                            <label class="control-label">Status</label>
+                            <select id="status" class="form-control status">
+                                <option value="custom">Select Status</option>
+                                <option value="New">New</option>
+                                <option value="Approved">Approved</option>
+                                <option value="Pending">Pending</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <button type="button" class="btn red" id="default_search" onclick="getDefaultSearch()">
+                                Search
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12">
+        <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">Details</div>
+        </div>
+                                <div class="portlet-body">
+            <ul class="nav nav-tabs">
+                <li role="presentation" {% if tab_selection == "#data_table" %} class="active" {% endif %}><a
+                        data-toggle="tab" href="#data_table" aria-controls="profile">Data View</a></li>
+                <!-- <li {% if tab_selection == "#grid" %}
+                     class="active" {% endif %}><a data-toggle="tab" href="#grid">Grid</a></li> -->
+                <li {% if tab_selection == "#excel" %} class="active" {% endif %}><a data-toggle="tab" href="#excel">Exports</a>
+                </li>
+                {#  <li {% if tab_selection == "#chart" %} class="active" {% endif %}><a data-toggle="tab" href="#chart">Chart</a></li>#}
+                {# <li {% if tab_selection == "#gallery" %} class="active" {% endif %}><a data-toggle="tab" href="#gallery">View Gallery</a></li>#}
+                {# <li {% if tab_selection == "#audio" %} class="active" {% endif %}><a data-toggle="tab" href="#audio">Audio</a></li>#}
+                {# <li {% if tab_selection == "#attachments" %} class="active" {% endif %}><a data-toggle="tab" href="#attachments">Attachments</a></li>#}
+                {# <li {% if tab_selection == "#pending_approval" %} class="active" {% endif %}><a data-toggle="tab" href="#pending_approval">Pending approval</a></li>#}
+            </ul>
+            <div class="tab-content">
+                <div id="excel" class="tab-pane fade {% if tab_selection == "#excel" %} in active {% endif %}">
+                    <h3>Excel Exports</h3>
+                    <div>
+                        <form class="form form-horizontal" id="search_form"
+                              action="{% url "onadata.apps.viewer.views.create_export" username xform.id_string export_type %}"
+                              method="post" enctype="application/x-www-form-urlencoded">
+                            {% csrf_token %}
+                            <input type="hidden" name="default_xls_fields" value="{{ default_fields_data }}"/>
+                            <input type="hidden" id="current_xform_id_string" name="current_xform_id_string" value="{{ xform.id_string }}"/>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <select id="report_format" class="form-control">
+                                        <option value="xls">XLS</option>
+                                        <!--<option value="csv">CSV</option>-->
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <select class="form-control" id="rprt_data_type" name="rprt_data_type"
+                                            title="Currently Only working for only Excel type">
+                                        <option value="lbl">Label</option>
+                                        <option value="xml">XML Value</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3"><select class="form-control" id="label_name" name="label_name" title="Currently Only working for only Excel type">
+                     <option value="English">English</option>
+                     <option value="Bengali">Bangla</option>
+                  </select>
+</div>
+                                <div class="col-md-3">
+                                    <input id="export-button" type="submit" onclick="filterDownload(event,1);"
+                                           class="btn red" value="{% trans 'Export' %}"/>
+                                </div>
+                                <input type="hidden" name="custom" id="custom" value="excel"/>
+                                <input type="hidden" name="query" id="query1" value=""/>
+                            </div>
+                        </form>
+                        <div class="top-buffer"></div>
+                        <table id="forms-table" class="table table-bordered table-striped">
+                            <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>{% trans "Filename" %}</th>
+                                <th class="td-center">{% trans "Date Created" %}</th>
+                                <th class="td-center">{% trans "Delete" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for export in exports %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>
+                                        {% if not export.is_pending %}
+                                            {% if export.is_successful %}
+                                                {% if export.internal_status = 0 %} No Data found {% else %}
+                                               <!-- <a href="{% url "onadata.apps.viewer.views.export_download" username xform.id_string export.export_type export.filename %}">{{ export.filename }}</a>-->
+                                                <a href="/{{ export.filedir }}/{{export.filename}}">{{ export.filename }}</a>
+                                         {% endif %}
+
+
+                                            {% else %}
+                                                Failed
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="status">{% trans "Pending ..." %}</span>
+                                            <a href="#" class="refresh-export-progress"
+                                               data-role="refresh-export-progress" data-export="
+                                                    {{ export.id|stringformat:"d" }}">{% trans "Click to refresh" %}</a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="td-center">{{ export.created_on }}</td>
+                                    <td class="td-center">
+                                        <form action="{% url "onadata.apps.viewer.views.delete_export" username xform.id_string export_type %}"
+                                              method="post" enctype="application/x-www-form-urlencoded">
+                                            {% csrf_token %}
+                                            <div id="delete-{{ export.id|stringformat:"d" }}" class="modal fade">
+                                                <div class="modal-dialog">
+                                                    <div class="modal-content">
+                                                        <div class="modal-header">
+                                                            <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-hidden="true">&times;</button>
+                                                            <h4 class="modal-title custom-align-left">{% trans "Delete Export" %}</h4>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p class="custom-align-left">{% trans "Are you sure you want to delete this export?" %}</p>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <a href="#" class="btn"
+                                                               data-dismiss="modal">{% trans "Cancel" %}</a>
+                                                            <input type="submit" class="btn red"
+                                                                   value="{% trans 'Delete' %}"/>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <span style="float:middle;">
+         <div>
+         <input type="hidden" name="export_id" value="{{ export.id|stringformat:"d" }}">
+         <a data-toggle="modal" href="#delete-{{ export.id|stringformat:"d" }}" data-backdrop="true"
+            data-keyboard="true">
+         <i class="fa fa-2x fa-trash-o"></i>
+         </a>
+         </div>
+         </span>
+                                            <input type="hidden" name="custom" id="custom" value="excel"/>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="chart" class="tab-pane fade {% if tab_selection == "#chart" %} in active {% endif %}">
+                    <div class="form-group chart_view_header">
+                        <div class="form-group chart-header-btn">
+                            <div style="margin-top:10px;">
+                                <input id="view7days-button" type="submit" class="btn red"
+                                       value="{% trans 'Last 7 Days' %}"/>
+                                <input id="view30days-button" type="submit" class="btn red"
+                                       value="{% trans 'Last 30 Days' %}"/>
+                                <input id="view60days-button" type="submit" class="btn red"
+                                       value="{% trans 'Last 60 Days' %}"/>
+                            </div>
+                        </div>
+                        <div class="form-group chart-filter">
+                            <select id="chart_type" class="chart_type form-control">
+                                <option value="column">Select an Option</option>
+                                <option value="column">Column</option>
+                                <option value="line">Line</option>
+                                <option value="area">Area</option>
+                                <option value="bar">Bar</option>
+                                <!--<option value="scatter">Scatter</option>-->
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-main-container" id="chart-main-container"></div>
+                </div>
+                <div id="gallery" class="tab-pane fade {% if tab_selection == "#gallery" %} in active {% endif %}">
+                    <h3>Gallery</h3>
+                    <!--start gallery -->
+                    <div class="image-filter"></div>
+                    <div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls blueimp-gallery-carousel">
+                        <div class="slides"></div>
+                        <h3 class="title"></h3>
+                        <a class="prev">‹</a>
+                        <a class="next">›</a>
+                        <a class="close">×</a>
+                        <a class="play-pause"></a>
+                        <ol class="indicator"></ol>
+                    </div>
+                    <div id="links"></div>
+                    {% comment %}
+                        {% for image in image_list %}
+                            <a href="{{ image.url }}" title="{{ image.title }}" data-gallery>
+                                <img src="{{ image.url }}" width="100px" height="100px" alt="{{ image.title }}">
+                            </a>
+                        {% endfor %}
+                        <a href="{{ STATIC_URL }}images/apple.jpg" title="Apple" data-gallery>
+                            <img src="{{ STATIC_URL }}images/apple.jpg" width="100px" height="100px" alt="Apple">
+                        </a>
+                        <a href="{{ STATIC_URL }}images/orange.jpg" title="Orange" data-gallery>
+                            <img src="{{ STATIC_URL }}images/orange.jpg" width="100px" height="100px" alt="Orange">
+                        </a>
+                    {% endcomment %}
+                </div>
+                <div id="audio" class="tab-pane fade {% if tab_selection == "#audio" %} in active {% endif %}">
+                    <h3>Audio</h3>
+                    <div class="audio-container">
+                        <div id="audio-list">
+                            <audio controls>
+                                <source src="https://192.168.21.50:8001/media/kobo/attachments/courage_cowardly_dog.mp3"
+                                        type="audio/mp3">
+                                Your browser does not support the audio element.
+                            </audio>
+                            <a href="https://192.168.23.251:8001/media/kobo/attachments/courage_cowardly_dog.mp3"
+                               download="bobo.mp3">Download</a>
+                        </div>
+                    </div>
+                </div>
+                <div id="attachments"
+                     class="tab-pane fade {% if tab_selection == "#attachments" %} in active {% endif %}">
+                    <h3>Attachments</h3>
+                    <div class="attachments-container">
+                        <form class="form form-horizontal" id="attachments_form"
+                              action="{% url "onadata.apps.viewer.views.create_export" username xform.id_string export_type_zip %}"
+                              method="post" enctype="application/x-www-form-urlencoded">
+                            {% csrf_token %}
+                            <input id="export-button" type="submit" onclick="filterDownload(event,2);" class="btn red"
+                                   value="{% trans 'Download all Attachments' %}"/>
+                            <input type="hidden" name="custom" id="custom" value="attachments"/>
+                            <input type="hidden" name="query" id="query2" value=""/>
+                        </form>
+                        <div class="top-buffer">
+                            <table id="forms-table" class="table table-bordered table-striped">
+                                <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>{% trans "Filename" %}</th>
+                                    <th>{% trans "Date Created" %}</th>
+                                    <th>{% trans "Delete" %}</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {% for export in exports_zip %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>
+                                            {% if not export.is_pending %}
+                                                {% if export.is_successful %}
+                                                    <a href="{% url "onadata.apps.viewer.views.export_download" username xform.id_string export.export_type export.filename %}">{{ export.filename }}</a>
+                                                {% else %}
+                                                    Failed
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="status">{% trans "Pending ..." %}</span>
+                                                <a href="#" class="refresh-export-progress"
+                                                   data-role="refresh-export-progress" data-export="
+                                                        {{ export.id|stringformat:"d" }}">{% trans "Click to refresh" %}</a>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ export.created_on }}</td>
+                                        <td class="text-center">
+                                            <form action="{% url "onadata.apps.viewer.views.delete_export" username xform.id_string export_type %}"
+                                                  method="post" enctype="application/x-www-form-urlencoded">
+                                                {% csrf_token %}
+                                                <div id="delete-{{ export.id|stringformat:"d" }}" class="modal fade">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <button type="button" class="close" data-dismiss="modal"
+                                                                        aria-hidden="true">&times;</button>
+                                                                <h4 class="modal-title custom-align-left">{% trans "Delete Export" %}</h4>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <p class="custom-align-left">{% trans "Are you sure you want to delete this export?" %}</p>
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <a href="#" class="btn"
+                                                                   data-dismiss="modal">{% trans "Cancel" %}</a>
+                                                                <input type="submit" class="btn btn-primary"
+                                                                       value="{% trans 'Delete' %}"/>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <span style="float:middle;">
+   <div>
+   <input type="hidden" name="export_id" value="{{ export.id|stringformat:"d" }}">
+   <a data-toggle="modal" href="#delete-{{ export.id|stringformat:"d" }}" data-backdrop="true" data-keyboard="true">
+   <i class="fa fa-2x fa-trash-o"></i>
+   </a>
+   </div>
+   </span>
+                                                <input type="hidden" name="custom" id="custom" value="attachments"/>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div id="pending_approval"
+                     class="tab-pane fade {% if tab_selection == "#pending_approval" %} in active {% endif %}">
+                    <table id="pending_table" class="display compact order-column"></table>
+                </div>
+                <div id="data_table" role="tabpanel"
+                     class="tab-pane fade {% if tab_selection == "#data_table" %} in active {% endif %}">
+                    <table id="example" class="display compact order-column"></table>
+                </div>
+            </div>
+        </div> <!--/tab-->
+    </div>
+    </div>
+    </div>
+{% endblock %}
+{% block additional-javascript %}
+{% endblock %}
+{% block javascript %}
+    {{ block.super }}
+    <script type="text/javascript" charset="utf8" src="/static/js/DataTables/datatables.js"></script>
+    <script type="text/javascript" charset="utf8" src="/static/js/custom_data_view.js"></script>
+    <script type="text/javascript" src="/static/bower_components/underscore/underscore-min.js"></script>
+    <script type="text/javascript" src="/static/bower_components/backbone/backbone-min.js"></script>
+    <script type="text/javascript" src="/static/js/json2.js"></script>
+    <script type="text/javascript" src="/static/bower_components/backgrid/lib/backgrid.min.js"></script>
+    <script type="text/javascript" src="/static/bower_components/lunr.js/lunr.min.js"></script>
+    <script type="text/javascript"
+            src="/static/bower_components/backbone-pageable/lib/backbone-pageable.min.js"></script>
+    <script type="text/javascript" src="/static/bower_components/backgrid-filter/backgrid-filter.min.js"></script>
+    <script type="text/javascript" src="/static/bower_components/backgrid-paginator/backgrid-paginator.min.js"></script>
+    <script type="text/javascript" src="/static/js/xform.js"></script>
+    <script type="text/javascript" src="/static/js/data_view.js"></script>
+    <script type="text/javascript">
+        var formJSONUrl = "{% url "onadata.apps.logger.views.download_jsonform" owner.username xform.id_string %}";
+        var mongoAPIUrl = "{% url "onadata.apps.main.views.api" owner.username xform.id_string %}";
+        var views, sideBarViews, multiView, slickView;
+        // var filtered_data = new Array();
+        var numDefaultColumns = 30;//number of columns to show by default
+        var instance_view_url = "{% url "onadata.apps.viewer.views.instance" owner.username xform.id_string %}";
+
+        var get_data_json = "{% url "onadata.apps.viewer.views.custom_data_view" owner.username xform.id_string %}"
+        var dataView;
+        // url used for action attribute for exporting exel/csv
+        var action_url_first_half = '';
+        var init_from_date = getDesiredDate(2);
+        var init_to_date = getDesiredDate(1);
+        $('#start_date').val(init_from_date);
+        $('#end_date').val(init_to_date);
+        init_from_date += "T00:00:00";
+        init_to_date += "T23:59:59";
+        var formatted_list = "[";
+        var user_list = {{ user_list|safe }};
+        var allowed_users = user_list.length;
+        for (loop = 0; loop < user_list.length; loop++, allowed_users = loop) {
+            formatted_list += '"' + user_list[loop] + '",'
+        }
+        formatted_list = formatted_list.substring(0, (formatted_list.length - 1 )) + ']';
+
+        var initial_query = '{"_submission_time":{"$gte":"' + init_from_date + '","$lte":"' + init_to_date + '"} , "_submitted_by": { "$in" : ' + formatted_list + ' } }';
+        if (allowed_users == 0) {
+            initial_query = '{"_submission_time":{"$gte":"' + init_from_date + '","$lte":"' + init_to_date + '"}'
+        }
+
+        $(document).ready(function () {
+            get_query_data(get_data_json, false, null, '{{ xform.title }}', 2);
+
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                var tabName = $(e.target).attr('href');
+            });
+            // url used for exporting.
+            // start: required for exporting
+            var url = $('#search_form').attr('action');
+            var index = url.lastIndexOf('/xls/new');
+            action_url_first_half = url.substring(0, index);
+            var tab_selection = "{{tab_selection|safe}}";
+            // check for default click
+            // end: required for exporting
+
+
+        });
+
+        function getDefaultSearch() {
+            var start_date = '%';
+            var end_date = '%';
+            var submitted_by = '%';
+            var status = '%';
+            start_date = $("#start_date").val();
+            end_date = $("#end_date").val();
+            start_date += "T00:00:00";
+            end_date += "T23:59:59";
+            submitted_by = $("#userlist").val();
+            if (typeof submitted_by === 'undefined' || submitted_by === 'custom')
+                submitted_by = 'custom';
+            status = $("#status").val();
+            if (typeof status === 'undefined' || status === 'custom')
+                status = 'custom';
+            var filter_data = {
+                'start_date': start_date,
+                'end_date': end_date,
+                'submitted_by': submitted_by,
+                'status': status
+            };
+            get_query_data(get_data_json, true, filter_data, '{{ xform.title }}', 2);
+        }
+
+        $(function () {
+            $('#start_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+            $('#end_date').datepicker({
+                endDate: '0d',
+                format: 'yyyy-mm-dd',
+                todayHighlight: true
+            });
+        });
+
+        function getDesiredDate(n) {
+            var today = new Date();
+            var n_month_before_today = new Date(today);
+            n_month_before_today.setMonth((today.getMonth() + 1) - n);
+            var dd = n_month_before_today.getDate();
+            var mm = n_month_before_today.getMonth() + 1;
+
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            var yyyy = n_month_before_today.getFullYear();
+            formatted_date = yyyy + '-' + mm + '-' + dd;
+            return formatted_date;
+        }
+
+        function filterDownload(e, formnumber) {
+            e.preventDefault();
+            // getQuery() is located in onadata.apps.viewer.static.js.data_view.js
+            // this function evaluated the filter query on which export will be generated.
+            var filter_query = getQuery();
+            $('#query' + formnumber).val(filter_query);
+            var action_url = '';
+            var action_url_last_half = '';
+            if (formnumber === 1) {
+                var export_format = $("#report_format").val();
+                if (export_format === 'xls' || export_format === 'custom') {
+                    action_url_last_half = '/xls/new';
+                } else if (export_format === 'csv') {
+                    action_url_last_half = '/csv/new';
+                }
+                action_url = action_url_first_half + action_url_last_half;
+                $('#search_form').attr('action', action_url);
+                filter_query = filter_query.trim();
+                $("#search_form").submit();
+            } else if (formnumber === 2) {
+                $("#attachments_form").submit();
+            }
+        }
+    </script>
+    <!-- <script type="text/javascript" src="/static/js/data_view_extra.js"></script> -->
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <!--end: data view js-->
+    <!--start: map view js-->
+    <script type="text/javascript" src="{{ STATIC_URL }}js/form_actions.js"></script>
+    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}js/underscore-min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}js/export_list.js"></script>
+    <script type="text/javascript">
+        var progress_url = '{% url "onadata.apps.viewer.views.export_progress" username xform.id_string export_type %}';
+    </script>
+    <!--end: map view js-->
+    <!--start: gallery view js-->
+    <script src="{{ STATIC_URL }}js/blueimp-gallery.min.js"></script>
+    <script>
+        var global_image_list = [];
+        document.getElementById('links').onclick = function (event) {
+            event = event || window.event;
+            var target = event.target || event.srcElement,
+                link = target.src ? target.parentNode : target,
+                options = {index: link, event: event, hidePageScrollbars: false},
+                links = this.getElementsByTagName('a');
+            blueimp.Gallery(links, options);
+        };
+        $('#blueimp-gallery').width("690px");
+        function generate_gallery(image_list, image_set) {
+            global_image_list = image_list;
+            $(".image-filter").empty();
+            $("#links").empty();
+
+            if (image_list.length > 0) {
+                $(".image-filter").append('<label>Image Selection</label>');
+                $(".image-filter").append('<select id="image_filter">');
+                $("#image_filter").append('<option value="custom">Select an Image</option>');
+
+                image_set.forEach(function (img_count) {
+                    $("#image_filter").append('<option value="' + img_count.toString() + '">Image ' + img_count.toString() + '</option>');
+                });
+
+                $(".image-filter").append('</select>');
+                $(".image-filter").append('<button type="button" style="margin-left:12px" id="btn-filter" class="btn btn-primary" >Show</button>');
+            } else {
+                $("#links").append("<h4>No Image Available</h4>");
+            }
+
+            image_list.forEach(function (image) {
+                var img = '<a href="' + image.media_path + '" title="' + image.media_name + '" class="' + image.media_count + '" data-gallery>';
+                img += '<img src="' + image.media_path + '" width="100px" height="100px" class="' + image.media_count + '" alt="' + image.media_name + '">';
+                img += '</a>';
+                $("#links").append(img);
+            });
+        }
+
+        $(document).on('click', '#btn-filter', function () {
+            var filter_value = $("#image_filter").val();
+            if (filter_value !== 'custom') {
+                $("#links").empty();
+                //console.log(global_image_list);
+                global_image_list.forEach(function (image) {
+                    if (filter_value === String(image.media_count)) {
+                        var img = '<a href="' + image.media_path + '" title="' + image.media_name + '" class="' + image.media_count + '" data-gallery>';
+                        img += '<img src="' + image.media_path + '" width="100px" height="100px" class="' + image.media_count + '" alt="' + image.media_name + '">';
+                        img += '</a>';
+                        $("#links").append(img);
+                    }
+                });
+            }
+        });
+
+        function generate_audio(audio_list, audio_set) {
+            $("#audio-list").append('<div class="table-control-container">');
+            var table = '<table class="table" id="audio_table">';
+            table += '<tr>';
+            table += '<th>Filename</th>';
+            table += '<th>Audio Link</th>';
+            table += '<th>Download</th>';
+            table += '</tr>';
+            audio_list.forEach(function (audio) {
+                table += '<tr>';
+                table += '<td>' + audio.media_name + '</td>';
+                table += '<td><audio controls><source src="' + audio.media_path + '" type="' + audio.mimetype + '">Your browser does not support the audio element.</audio></td>';
+                table += '<td>' + audio.media_name + '</td>';
+                table += '</tr>';
+            });
+            table += '</table>';
+
+            $("#audio-list").append(table);
+            $("#audio-list").append('</div>');
+        }
+
+    </script>
+    <!--end: gallery view js-->
+    <!--start: chart view js -->
+    <script type="text/javascript" charset="utf-8" src="{{ STATIC_URL }}js/highchartcreate.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/highcharts/highcharts.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var interval_val = 7;
+            $("#view7days-button").click(function () {
+                interval_val = 7;
+                var chart_type = $('#chart_type').val();
+                createChartData(chartSeries, '{{ xform.title}}', 'chart-main-container', interval_val, chart_type);
+            });
+            $("#view30days-button").click(function () {
+                interval_val = 30;
+                var chart_type = $('#chart_type').val();
+                createChartData(chartSeries, '{{ xform.title}}', 'chart-main-container', interval_val, chart_type);
+            });
+            $("#view60days-button").click(function () {
+                interval_val = 60;
+                var chart_type = $('#chart_type').val();
+                createChartData(chartSeries, '{{ xform.title}}', 'chart-main-container', interval_val, chart_type);
+            });
+            $('#chart_type').on('change', function () {
+                var chart_type = $('#chart_type').val();
+                createChartData(chartSeries, '{{ xform.title}}', 'chart-main-container', interval_val, chart_type);
+            });
+        });
+    </script>
+    <!--end: chart view js -->
+{% endblock %}

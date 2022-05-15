@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+
+    <style>
+
+    #loop
+    {
+        background-color: #EEE;
+    padding: 10px;
+    margin-bottom: 11px;
+    }
+
+    </style>
+
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i>
+            </div>
+        </div>
+        <div class="portlet-body">
+            <div class=".form-body"></div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+
+    <script>
+    form_id = {{ form_id | safe }};
+    form_builder_server = '{{ form_builder_server | safe}}'
+    load_forms_html(form_id);
+
+    function load_forms_html(form_id) {
+    server_address = '{{ server_address | safe }}'
+    username = '{{ username | safe }}'
+    redirected_url = '{{ redirected_url | safe }}'
+    instance_id = '{{ instance_id | safe }}'
+    if(instance_id == '-1')
+    {
+        url = form_builder_server+"/?id="+form_id+"&url="+server_address+"&username="+username
+    }
+    else {
+        url = form_builder_server+"/?id="+form_id+"&url="+server_address+"&username="+username+"&instance_id="+instance_id
+    }
+    console.log(url);
+    $('.portlet-body').html('<iframe src="'+url+'" style="width:100%;height:500px;"></iframe>');
+
+window.addEventListener('message',handleIframeTask);
+    }
+      function handleIframeTask(e) {
+         if (e.data === 'submitted form') {
+               window.parent.location.href = 'http://' + server_address + redirected_url
+            }
+    }
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+        function load_district(object) {
+            $('#upazila').html("<option value=\"\">Select One</option>");
+            $('#union').html("<option value=\"\">Select One</option>");
+            $('#ward').html("<option value=\"\">Select One</option>");
+            div = parseInt(object.value)
+            // console.log(dist);
+            if (isNaN(parseFloat(div))) {
+                $('#district').html("<option value=\"\">Select One</option>");
+
+            }
+            else {
+
+                $.ajax({
+                    url: '/asf/get_districts/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'div': div},
+                    {#                    beforeSend: function () {#}
+                    {#                        $("#all_info_table").html('<div class="alert alert-success">Please Wait...loading....</div>');#}
+                    {#                    },#}
+                    success: function (result) {
+                        console.log(result);
+                        var html_code = "<option value=\"\">Select One</option>";
+
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].field_name + "</option>";
+                        }
+                        $('#district').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+
+        function load_upazila(dist_object) {
+            $('#union').html("<option value=\"\">Select One</option>");
+                $('#ward').html("<option value=\"\">Select One</option>");
+            ajaxcall();
+            dist = parseInt(dist_object.value)
+            // console.log(dist);
+            if (isNaN(parseFloat(dist))) {
+                $('#upazila').html("<option value=\"\">Select One</option>");
+
+            }
+            else {
+
+                $.ajax({
+                    url: '/asf/get_upazilas/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'dist': dist},
+                    {#                    beforeSend: function () {#}
+                    {#                        $("#all_info_table").html('<div class="alert alert-success">Please Wait...loading....</div>');#}
+                    {#                    },#}
+                    success: function (result) {
+                        console.log(result);
+                        var html_code = "<option value=\"\">Select One</option>";
+
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].field_name + "</option>";
+                        }
+                        $('#upazila').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+
+        function load_union(upz_object) {
+            $('#ward').html("<option value=\"\">Select One</option>");
+            ajaxcall();
+            upz = parseInt(upz_object.value);
+            if (isNaN(parseFloat(upz))) {
+                $('#union').html("<option value=\"\">Select One</option>");
+
+            }
+            else {
+
+                $.ajax({
+                    url: '/asf/get_unions/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'upz': upz},
+
+                    success: function (result) {
+                        console.log(result);
+                        var html_code = "<option value=\"\">Select One</option>";
+
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].field_name + "</option>";
+                        }
+                        $('#union').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+        function load_ward(upz_object) {
+            ajaxcall();
+            uni = parseInt(upz_object.value);
+            if (isNaN(parseFloat(upz))) {
+                $('#ward').html("<option value=\"\">Select One</option>");
+            }
+            else {
+
+                $.ajax({
+                    url: '/asf/get_wards/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'uni': uni},
+
+                    success: function (result) {
+                        console.log(result);
+                        var html_code = "<option value=\"\">Select One</option>";
+
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].field_name + "</option>";
+                        }
+                        $('#ward').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+
+
+
+
+
+        function getDesiredDate(n) {
+            var today = new Date();
+            var n_month_before_today = new Date(today);
+            n_month_before_today.setMonth((today.getMonth() + 1) - n);
+            var dd = n_month_before_today.getDate();
+            var mm = n_month_before_today.getMonth() + 1;
+
+            if (dd < 10) {
+                dd = '0' + dd
+            }
+            if (mm < 10) {
+                mm = '0' + mm
+            }
+            var yyyy = n_month_before_today.getFullYear();
+            formatted_date = yyyy + '-' + mm + '-' + dd;
+            return formatted_date;
+        }
+{#        $('#registration_date').val(getDesiredDate(2));#}
+
+    </script>
+
+{% endblock %}

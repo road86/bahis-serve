@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <!--<link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">-->
+    <link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+{% endblock %}
+
+
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Geo List</div>
+        </div>
+        <div class="portlet-body">
+            <div class="row">
+                <div class="col-md-12">
+                    {% if can_conf == True %}
+                    <a href="/usermodule/geo_form/">
+                        <button type="submit" class="btn btn-info pull-left" id="add_new" data-original-title=""
+                                title="">Add New
+                        </button>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <br>
+            <table id="geo_def_table" class="table table-bordered table-striped table-condensed flip-content">
+                <thead class="flip-content">
+                <tr>
+                    <th>Field Name</th>
+                    <th>Field Type</th>
+                    <th>Geo Code</th>
+                    <th class="td-center">Action</th>
+                </tr>
+                </thead>
+                <tbody>
+                    {% for each in geo_def_data %}
+                        <tr>
+                        <td>{{ each.1 }}</td>
+                        <td>{{ each.2 }}</td>
+                        <td>{{ each.3 }}</td>
+                       <td class="td-center">
+                           {% if can_conf == True %}
+                    <a class="tooltips" data-placement="top" data-original-title="Edit" data-container="body"
+                       href="/usermodule/edit_form/{{ each.0 }}"><i
+                            class="fa fa-2x fa-pencil-square-o"></i></a>
+                    <a class="delete-item tooltips .delete-item" data-container="body" onclick="load({{ each.0}})" data-placement="top" data-original-title="Delete"  href="#" data-href="/usermodule/delete_form/{{ each.0}}" data-toggle="modal"
+                       data-target="#confirm-delete"><i class="fa fa-2x fa-trash-o"></i></a>
+                           {% endif %}
+                        </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div>
+                <ul class="pagination pagination-sm">
+                    <li><a onclick="goBackPage();"><i class="fa fa-angle-left"></i></a></li>
+                    {% for i in range %}
+                        <li class="{% if page_no == i %}active{% endif %}">
+                            <a href="/usermodule/geo_list/?page_length={{ page_length }}&page_no={{ i }}">{{ i }}</a>
+                        </li>
+                    {% endfor %}
+                    <li><a onclick="goForwardPage();"><i class="fa fa-angle-right"></i></a></li>
+                </ul>
+                <span style="float: right;padding: 10px;font-weight: 400;color: #3a6ca0;">Showing {{ record_start }} to {{ record_end }} of {{ tc }} entries</span>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+                <div class="modal-body"></div>
+                <div class="modal-footer"></div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+
+
+
+{% block additional-javascript %}
+    <!--<script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>-->
+     <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script>
+        var range_last = {{ range_last }};
+
+        function getSearchParameters() {
+            var prmstr = window.location.search.substr(1);
+            return prmstr != null && prmstr != "" ? transformToAssocArray(prmstr) : {};
+        }
+
+        function transformToAssocArray(prmstr) {
+            var params = {};
+            var prmarr = prmstr.split("&");
+            for (var i = 0; i < prmarr.length; i++) {
+                var tmparr = prmarr[i].split("=");
+                params[tmparr[0]] = tmparr[1];
+            }
+            return params;
+        }
+
+        var params = getSearchParameters();
+
+
+
+        function goBackPage(){
+            if (params['page_no'] > 1) {
+                var prev_page_no = params['page_no'] - 1;
+            } else {
+                prev_page_no = 1
+            }
+            window.location.href = '/usermodule/geo_list/?page_length={{page_length}}&page_no='+prev_page_no;
+        }
+
+        function goForwardPage(){
+            if (params.hasOwnProperty('page_no')) {
+                if (params['page_no'] < range_last) {
+                    var next_page_no = params['page_no'] + 1;
+                } else {
+                    var next_page_no = range_last;
+                }
+            } else {
+                if (range_last >= 2){
+                    var next_page_no = 2;
+                } else {
+                    next_page_no = range_last;
+                }
+            }
+            window.location.href = '/usermodule/geo_list/?page_length={{page_length}}&page_no='+next_page_no;
+        }
+
+
+    $(document).ready(function () {
+        //     var tbody = '';
+           
+        // var geo_def_data = {{ geo_def_data|safe }};
+
+        // for (var idx in geo_def_data) {
+        //     tbody += '<tr><td>' + geo_def_data[idx].field_name + '</td><td>' + geo_def_data[idx].field_type + '</td><td>' + geo_def_data[idx].geocode + '</td><td class="td-center"><a class="tooltips" data-placement="top" data-original-title="Edit" href="/usermodule/edit_form/' + geo_def_data[idx].id + '"><i class="fa fa-2x fa-pencil-square-o"></i></a><a class="delete-item tooltips" onclick="load('+geo_def_data[idx].id+')" data-placement="top" data-toggle="modal" data-target="#confirm-delete" data-original-title="Delete" href="#" data-href="/usermodule/delete_form/' + geo_def_data[idx].id + '"><i class="fa fa-2x fa-trash-o"></i></a></td></tr>';
+            
+        // }
+
+        // $("#geo_def_table").find('tbody').html(tbody);
+            //var table = $('#geo_def_table').DataTable({
+            //    "scrollX": true, "ordering": true
+            //  });
+
+        
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+
+
+
+    });
+   
+    
+
+        function load(id) {
+            $.ajax({
+                url: '/usermodule/check_for_delete/', 
+                type: 'POST', 
+                dataType: 'json',
+                data: {'id': id},
+                success: function (result) {
+                   if(result.dependency ==0 )
+                   {
+
+                       html_code="<p>You are about to delete a node structure, this procedure is irreversible.</p>\n" +
+                           "                    <p>Do you want to proceed?</p>\n" +
+                           "                    <p class=\"debug-url\"></p>";
+                       $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button><a href="/usermodule/delete_form/'+id+'" class="btn btn-danger btn-ok">Delete</a>');
+                        
+                        
+
+                   }
+                   else if(result.dependency ==1 )
+                   {
+                       html_code="<p>Geo data already assigned to "+result.extra_info+". Cannot be deleted.</p>\n";
+                       $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>');
+
+
+                   }
+                   else  if(result.dependency ==2)
+                   {
+                        html_code="<p>Geo data already exists in "+result.extra_info+". Cannot be deleted.</p>";
+                        $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>');
+                   }
+                   else {
+                        html_code = "<p>There is one or more location added under this. Please delete those first, then try again.</p>"
+                       $('.modal-footer').html('<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>');
+                   }
+                   $('.modal-body').html(html_code);
+                }
+            });
+        }
+
+
+        
+    </script>
+{% endblock %}

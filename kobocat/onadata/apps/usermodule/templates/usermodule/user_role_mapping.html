@@ -1,0 +1,431 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.16/css/jquery.dataTables.min.css">
+    <link href="https://cdn.datatables.net/buttons/1.4.2/css/buttons.dataTables.min.css" rel="stylesheet">
+    <style>
+        .fa-minus-circle {
+            color: red;
+        }
+
+        .fa-check-square {
+            color: green;
+        }
+
+        .custom_btn {
+            margin-top: 24px;
+        }
+
+        .btn.red {
+            margin-left: 9px !important;
+        }
+
+    </style>
+{% endblock %}
+
+
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>User Role Mapping</div>
+        </div>
+        <div class="portlet-body">
+            <div class="col-md-3">
+
+                <div class="form-group">
+                    <label>Organization:</label>
+                    <select class="form-control" name="organization" id="organization" >
+                        <option value="">Select One</option>
+                        {% for org_id,org_name in organization %}
+                            <option value="{{ org_id }}">{{ org_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <!--<div class="col-md-3">
+                <div class="form-group">
+                    <label>Branch:</label>
+                    <select class="form-control" name="branch" id="branch">
+                        <option value="">Select One</option>
+                    </select>
+                </div>
+            </div>-->
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <button class="btn btn-info custom_btn" id="search" name="search"
+                            data-original-title=""
+                            title="">Search
+                    </button>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="form-group">
+                    <button class="btn btn-info custom_btn pull-right" id="edit_user_role" name="edit_user_role"
+                            data-original-title=""
+                            title="">Edit Users' Roles
+                    </button>
+                </div>
+            </div>
+
+            <form class="horizontal-form" id="" method="post" action="/usermodule/user_role_mapping/"
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="current_val" name="current_val" value="">
+                <div class="form-body">
+                    <div id="container"></div>
+                    <table id="all_info_table"
+                           class="table table-bordered table-striped table-condensed flip-content nowrap">
+                        <thead class="flip-content">
+
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                <input type="submit" class="btn red" style="display: None" id="submit" name="submit" value="Save"
+                       data-original-title="" title="">
+                <button style="display: None;  margin-right:10px;" id="cancel" type="button" class="btn default"
+                        data-original-title="" title="">Cancel
+                </button>
+            </form>
+
+
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a branch info, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block additional-javascript %}
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/dataTables.buttons.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.flash.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/pdfmake.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.32/vfs_fonts.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.html5.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/buttons/1.4.2/js/buttons.print.min.js"></script>
+
+    <script async>
+    var d = new Date();
+var n = d.getTime();
+
+         var clicked = [];
+         var edit_user_role_clicked_stat = 0;
+         var current_value = [];
+        var table;
+        var head_list;
+        var thead = '<tr>'
+        head_list = {{ columns |safe }};
+
+        for (var idx in head_list) {
+            if (head_list[idx] != 'user_id')
+                thead += '<th>' + head_list[idx].toString().toUpperCase() + '</th>'
+        }
+        thead += '</tr>';
+        $("#all_info_table").find('thead').html(thead);
+
+        head_list = {{ columns |safe }};
+        head_list = head_list.slice(1, head_list.length);
+        colspan = head_list.length;
+
+        var tbody = '';
+        var data = {{ data|safe }};
+        var previous_value = [];
+
+        for (var idx in data) {
+            tbody += '<tr>';
+            for (var idx2 in head_list) {
+                var id_name = head_list[idx2] + '_' + data[idx].user_id;
+                if (data[idx][head_list[idx2]] == '0') {
+                    previous_value[id_name] = 0;
+                    tbody += '<td class="td-center"><input type="hidden" id="' + id_name.toString() + '" name="" value="" onclick="click_fun(this)"><i class="fa fa-minus-circle"></td>';
+                }
+
+                else if (data[idx][head_list[idx2]] == '1') {
+                    previous_value[id_name] = 1;
+                    tbody += '<td class="td-center"><input type="hidden" id="' + id_name.toString() + '" name="" value="" onclick="click_fun(this)" checked><i class="fa fa-check-square"></td>';
+                }
+
+                else tbody += '<td>' + data[idx][head_list[idx2]] + '</td>';
+            }
+            tbody += '</tr>';
+
+        }
+
+        $("#all_info_table").find('tbody').html(tbody);
+
+        table = $('#all_info_table').DataTable({
+            "scrollX": true, "ordering": false, "lengthChange": false,
+            deferRender: true, "bFilter": false, drawCallback: function () {
+                $('.paginate_button', this.api().table().container())
+                    .on('click', function () {
+                        if (edit_user_role_clicked_stat)
+                            $("#edit_user_role").trigger("click");
+                        else $("#cancel").trigger("click");
+
+
+                    });
+            }
+        });
+
+
+
+
+
+        $('#edit_user_role').on('click', function () {
+            edit_user_role_clicked_stat = 1;
+            $('#submit').show();
+            $('#cancel').show();
+
+            var s = document.getElementsByTagName("INPUT");
+
+
+            var d = new Date();
+            var n = d.getMilliseconds();
+            for (i = 2, len = s.length - 1; i < len; i++) {
+                s[i].type = "checkbox";
+            }
+
+
+            var minus = document.getElementsByClassName("fa-minus-circle");
+
+            for (i = 0, len = minus.length; i < len; i++) {
+                minus[i].style.display = 'none';
+            }
+
+
+            var check = document.getElementsByClassName("fa-check-square");
+            for (i = 0, len = check.length; i < len; i++) {
+                check[i].style.display = 'none';
+            }
+
+
+            var d = new Date();
+            var n1 = d.getMilliseconds();
+            console.log(n1 - n)
+
+        });
+
+
+
+
+        function click_fun(value) {
+            id = value.id;
+            if (!clicked.includes(id))
+                clicked.push(id);
+
+        }
+
+
+
+        $('#submit').on('click', function () {
+
+            for (i = 0, len = clicked.length; i < len; i++) {
+                if ($("#" + clicked[i] + "").is(':checked'))
+                    value = 1
+                else if (!$("#" + clicked[i] + "").is(':checked'))
+                    value = 0
+
+
+                if (previous_value[clicked[i]] != value) {
+                    dict = {}
+                    dict['id'] = clicked[i];
+                    dict['value'] = value;
+                    current_value.push(dict)
+                }
+
+            }
+            $('#current_val').val(JSON.stringify(current_value));
+
+
+        });
+        $('#cancel').on('click', function () {
+            edit_user_role_clicked_stat = 0;
+            $('#submit').hide()
+            $('#cancel').hide()
+            var s = document.getElementsByTagName("INPUT");
+            for (i = 2, len = s.length - 1; i < len; i++) {
+                s[i].type = "hidden";
+            }
+
+            var minus = document.getElementsByClassName("fa-minus-circle");
+            for (i = 0, len = minus.length; i < len; i++) {
+                minus[i].style.display = 'block';
+            }
+
+            var check = document.getElementsByClassName("fa-check-square");
+            for (i = 0, len = check.length; i < len; i++) {
+                check[i].style.display = 'block';
+            }
+            for (i = 0, len = clicked.length; i < len; i++) {
+                if (previous_value[clicked[i]] == 0)
+                    $('#' + clicked[i] + '').attr('checked', false);
+                else $('#' + clicked[i] + '').attr('checked', true);
+            }
+            clicked = [];
+
+        });
+
+
+        $('.delete-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
+
+
+        function load_branch(object) {
+            org = parseInt(object.value);
+            if (isNaN(parseFloat(org))) {
+                $('#branch').html("<option value=\"\">Select One</option>");
+            }
+            else {
+
+                $.ajax({
+                    url: '/usermodule/getBranch/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'org': org},
+                    success: function (result) {
+                        var html_code = "<option value=\"\">Select One</option>";
+                        for (i = 0; i < result.length; i++) {
+                            html_code += "<option value=\"" + result[i].id + "\"> " + result[i].branch_name + "</option>";
+                        }
+                        $('#branch').html(html_code);
+
+
+                    }
+                });
+            }
+
+        }
+
+
+        $('#search').on('click', function () {
+            table.destroy();
+            var organization = $('#organization option:selected').val();
+            //var branch = $('#branch option:selected').val();
+            if (organization == null)
+                organization = ""
+            //if (branch == null)
+              //  branch = ""
+
+            $.ajax({
+                url: '/usermodule/getUserRoles/',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    'organization': organization
+                    //, 'branch': branch
+                },
+                beforeSend: function () {
+                    $("#all_info_table").find('tbody').html('<tr><td class="td-center alert alert-success" valign="top" colspan="' + colspan + '"><img src="{{ STATIC_URL }}images/Spinner.gif"></td></tr>');
+                },
+                success: function (result) {
+                    if (result['data'].length) {
+                        var head_list = JSON.parse(result['columns']);
+                        console.log("head_list+++++++++++++++++++++++++++++++++++++++++")
+                        console.log(head_list)
+                        head_list = head_list.slice(1, head_list.length);
+                        data = JSON.parse(result['data']);
+                        console.log("data+++++++++++++++++++++++++++++++++++++++++")
+                        console.log(data)
+                        var tbody = '';
+                        for (var idx in data) {
+                            tbody += '<tr>';
+                            for (var idx2 in head_list) {
+                                var id_name = head_list[idx2] + '_' + data[idx].user_id;
+                                if (data[idx][head_list[idx2]] == '0') {
+                                    if (edit_user_role_clicked_stat) {
+                                        tbody += '<td class="td-center"><input type="checkbox" id="' + id_name.toString() + '" name="" value="" onclick="click_fun(this)"><i class="fa fa-minus-circle" style="display:None;"></td>';
+                                    }
+                                    else {
+                                        tbody += '<td class="td-center"><input type="hidden" id="' + id_name.toString() + '" name="" value="" onclick="click_fun(this)"><i class="fa fa-minus-circle"></td>';
+                                    }
+
+                                }
+
+                                else if (data[idx][head_list[idx2]] == '1') {
+
+                                    if (edit_user_role_clicked_stat) {
+                                        tbody += '<td class="td-center"><input type="checkbox" id="' + id_name.toString() + '" name="" value="" onclick="click_fun(this)" checked><i class="fa fa-check-square" style="display:None;"></td>';
+                                    }
+                                    else
+                                        tbody += '<td class="td-center"><input type="hidden" id="' + id_name.toString() + '" name="" value="" onclick="click_fun(this)" checked><i class="fa fa-check-square"></td>';
+                                }
+
+                                else tbody += '<td>' + data[idx][head_list[idx2]] + '</td>';
+                            }
+                            tbody += '</tr>';
+
+                        }
+                        $("#all_info_table").find('tbody').html(tbody);
+                    }
+
+                    else $("#all_info_table").find('tbody').html('');
+
+
+                    table = datatable_reinitialize();
+                }
+            });
+
+
+        });
+
+
+        function datatable_reinitialize() {
+            return $('#all_info_table').DataTable({
+                "scrollX": true, "ordering": false, "lengthChange": false,
+                deferRender: true, "bFilter": false, drawCallback: function () {
+                    $('.paginate_button', this.api().table().container())
+                        .on('click', function () {
+                            if (edit_user_role_clicked_stat)
+                                $("#edit_user_role").trigger("click");
+                            else $("#cancel").trigger("click");
+                        });
+                }
+            });
+        }
+
+
+           var d = new Date();
+            console.log(d.getTime()-n);
+
+
+    </script>
+{% endblock %}

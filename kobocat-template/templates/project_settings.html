@@ -1,0 +1,336 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load app_filters %}
+{% load i18n %}
+{% block content %}
+{% if message %}
+    <div class="alert alert-block alert-success crop-both-side success fade in">
+        <a class="close" href="#" data-dismiss="alert">×</a>
+        <p><i class="fa fa-check-circle"></i> {{ message }}!</p>
+    </div>
+{% endif %}
+<div class="row">
+    <div class = "col-md-12">
+   <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">Form Settings</div>
+        </div>
+                                <div class="portlet-body">
+
+            <div class="settings__form-item">
+              <label class="bold-label">
+                {% trans "Accept Submissions" %}
+              </label>
+              <label><input id="active-form" type="checkbox" class="ios-switch" {% if xform.downloadable %} checked=""{% endif %} data-url="{% url "onadata.apps.main.views.edit" content_user.username xform.id_string %}"><div class="switch"></div></label>
+            </div>
+        <div class="top-buffer"></div>
+        <div class="settings__form-item">
+              <label class="bold-label">
+                {% trans "DB Export" %}
+              </label>
+              <label><input id="dbexp-form" type="checkbox" class="ios-switch" {% if xform.db_export %} checked=""{% endif %} data-url="{% url "onadata.apps.main.views.edit" content_user.username xform.id_string %}"><div class="switch"></div></label>
+          </div>
+        <div class="top-buffer"></div>
+        <div class="settings__form-item">
+              <table class="table table-bordered">
+
+                  <tr>
+                      <th>Existing Form Files</th>
+                      <th class="td-center">Actions</th>
+                  </tr>
+                  {% for media in media_upload %}
+                  <tr>
+                      <td>{{ media.data_value }}</td>
+                      <td class="td-center"><a href="{% url "onadata.apps.main.views.download_media_data" content_user.username xform.id_string media.id %}" class="settings__files-download" {% trans "download" %}><i class="fa fa-2x fa-download"></i></a>
+                    {% if can_edit %}
+                    <a href="{% url "onadata.apps.main.views.download_media_data" content_user.username xform.id_string media.id %}?del=true" class="settings__files-delete" title="{% trans "remove" %}"><i class="fa fa-2x fa-trash-o"></i></a>
+                    {% endif %}</td>
+                  </tr>
+                  {% endfor %}
+              </table>
+
+              {% if can_edit %}
+              <button style = "margin-bottom: 20px;" class="btn green single-project__add-media">+ Add Document</button>
+
+              <form action="{% url "onadata.apps.main.views.edit" content_user.username xform.id_string %}" method="post" enctype="multipart/form-data" class="single-project__media-upload hidden">
+                  {% csrf_token %}
+                  <ul class="nav nav-tabs">
+                      <li class="active"><a href="#media_upload" data-toggle="tab">Media Upload</a></li>
+                      <li><a href="#media_url_add" data-toggle="tab">Media URL</a></li>
+                  </ul>
+                  <div class="tab-content">
+                      <div class="tab-pane active" id="media_upload">
+                          <div class="form-group">
+                            <input type="file" multiple="" name="media" id="id_media">
+                          </div>
+                          <div class="form-group">
+                            <input type="submit" class="btn red" value="{% trans 'Upload' %}" />
+                          </div>
+                      </div>
+                      <div class="tab-pane" id="media_url_add">
+                          <div class="form-group">
+                              <label for="id_media">Media url:</label>
+                              <input class="form-control" type="text" name="media_url" id="id_media_url">
+                          </div>
+                          <div class="form-group">
+                              <input type="submit" class="btn red" value="{% trans 'Save Media URL' %}" />
+                          </div>
+                      </div>
+                  </div>
+              </form>
+              {% endif %}
+            </div>
+        <div class="top-buffer"></div>
+       <div class="settings__form-item">
+            	<label class="bold-label">
+              		Delete project with all data and its form
+            	</label>
+                </br>
+            	<button data-backdrop="true" data-keyboard="true" class="btn red single-project__button-delete">
+                	{% trans "Delete" %}
+            	</button>
+            </div>
+    </div>
+  <!-- <div class="col-md-6">
+        <h2>Approve Form With Others</h2>
+    {% if approval_list|length %}
+            <ul>
+                {% for approvelines in approval_list %}
+                <li>{{ approvelines.userid }} : {{ approvelines.approver_type }} : {{ approvelines.approver_label }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+
+           {# <form class="form-horizontal" action="{% url "onadata.apps.approval.views.set_approval" content_user.username xform.id_string %}" method="post">#}
+              {% csrf_token %}
+                <div class="form-group">
+                                <label class="col-md-3" for="{{ approve_form.approver.id_for_label }}">Approver:</label>
+                    <div class="col-md-9">
+                                <input autocomplete="off" data-provide="typeahead" id="autocompleted" type="text" name="{{ approve_form.approver.name }}" class="form-control">
+                                <span class="help-block">{{ approve_form.approver.errors.as_text }}</span>
+                        </div>
+                            </div>
+        <div class="form-group">
+                                <label class="col-md-3">Approval Option:</label>
+            <div class="col-md-9">
+                                <select id="{{ approve_form.approval_option.id_for_label }}"
+                                        name="{{ approve_form.approval_option.name }}" class="form-control">
+                                    {% for m,n in approve_form.fields.approval_option.choices %}
+                                    <option value="{{ m }}">{{ n }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ approve_form.approval_option.errors.as_text }}</span>
+                </div>
+                            </div>
+        <div class="form-group">
+                                <label class="col-md-3" for="{{ approve_form.label_type.id_for_label }}">Label Type:</label>
+                    <div class="col-md-9">
+                                <input type="text" name="{{ approve_form.label_type.name }}" class="form-control">
+                                <span class="help-block">{{ approve_form.label_type.errors.as_text }}</span>
+                        </div>
+                            </div>
+        <div class="form-group">
+                                <label class="col-md-3">Approver type:</label>
+            <div class="col-md-9">
+                                <select id="{{ approve_form.approver_type.id_for_label }}"
+                                        name="{{ approve_form.approver_type.name }}" class="form-control">
+                                    {% for m,n in approve_form.fields.approver_type.choices %}
+                                    <option value="{{ m }}">{{ n }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ approve_form.approver_type.errors.as_text }}</span>
+                </div>
+                            </div>
+        <div class="form-group">
+                                <label class="col-md-3">Approval type:</label>
+            <div class="col-md-9">
+                                <select id="{{ approve_form.approval_type.id_for_label }}"
+                                        name="{{ approve_form.approval_type.name }}" class="form-control">
+                                    {% for m,n in approve_form.fields.approval_type.choices %}
+                                    <option value="{{ m }}">{{ n }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                                <span class="help-block">{{ approve_form.approval_type.errors.as_text }}</span>
+                </div>
+                            </div>
+                <input type="submit" class="btn red" value="{% trans 'Save Approvals' %}" />
+            </form>
+    </div>-->
+</div>
+    </div>
+</div>
+
+
+
+<div class="top-buffer"></div>
+<div class="row">
+   <!-- <div class="col-md-12">
+        <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> {{xform.title}} : Form Permissions
+            </div>
+        </div>
+        <!--<div class="portlet-body">
+            <div id="tables" class="table-responsive">
+            <table class="table table-bordered table-striped" border="1">
+                <tr>
+                    <th>User</th>
+                    <th class="td-center">Can View</th>
+                    <th class="td-center">Can Edit</th>
+                    <th class="td-center">Can Submit</th>
+                </tr>
+
+                <form id="menu_form" method="post">
+
+                {% csrf_token %}
+                {{permisssion_form_set.management_form}}
+                {% for permisssion_form in permisssion_form_set %}
+                <tr>
+                    <td>
+                    {{ permisssion_form.user.errors }}
+                    {{ permisssion_form.user }}
+                    <b>{{ permisssion_form.initial.username|capfirst }}</b>
+                    </td>
+
+                    {% for choice in permisssion_form.perm_type.field.choices %}
+                    <td class="td-center">
+                        <label for="">
+                        {% if choice.0|get_checked_string:permisssion_form.initial.perm_type %}
+                        <input type="checkbox" name="perm-{{forloop.parentloop.counter}}" value="{{choice.0}}" checked="checked">
+                        {% else %}
+                        <input type="checkbox" name="perm-{{forloop.parentloop.counter}}" value="{{choice.0}}">
+                        {% endif %}
+                        </label>
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </table>
+                <input type="submit" class="btn red" name="submit" value="Save" />
+                </form>
+            <div style="clear: both;"></div>
+            </div>
+
+        </div>
+        </div>
+    </div>-->
+</div>
+{% endblock %}
+{% block styles %}
+{{ block.super }}
+  <!-- NEW SANDBOX STYLES -->
+  <link href="/static/css/ios-switches.css" rel="stylesheet">
+  <!-- END NEW SANDBOX STYLES -->
+ <!-- <link href="{{STATIC_URL}}css/iphone-btn-style.css" rel="stylesheet"/> -->
+{% endblock %}
+{% block javascript %}
+{{ block.super }}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-3-typeahead/4.0.2/bootstrap3-typeahead.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+ // Typeahead, fetch usernames for permission assign
+    $('#autocompleted').typeahead(
+        {
+            source: function (query, process){
+                return $.get('/typeahead_usernames/', {query: query}, function(data){
+                    return process(data);
+                });
+            }
+        }
+    );
+    //-- end
+
+	{% if xform.shared_data %}
+      $('#data-shared-private').hide();
+    {% else %}
+      $('#data-shared-public').hide();
+    {% endif %}
+    {% if xform.shared %}
+      $('#form-shared-private').hide();
+    {% else %}
+      $('#form-shared-public').hide();
+    {% endif %}
+    {% if not xform.encrypted %}
+      $('#form-encrypted').hide();
+      $('#data-encrypted').hide();
+    {% endif %}
+// toggle fields
+    {% if user.is_authenticated %}
+        $.each(['form-shared', 'data-shared', 'active-form','dbexp-form'], function(inx, el) {
+            var cb = $('#' + el + ':checkbox');
+            cb.change(function() {
+              privacyEdit(cb.data('url'), el.split('-')[0]);
+              // legacy
+              $('#' + el + '-public').toggle();
+              $('#' + el + '-private').toggle();
+            });
+        });
+      // add click event to all public (x)forms
+      $('a.clonexls').click(function(){
+        el = $(this);
+        clone_xlsform(el.data('url'), el.data('username'), el.data('id'));
+        return false;
+      });
+    {% endif %}
+
+    $(document).on("click", ".single-project__add-media", function () {
+        $('.single-project__media-upload').toggleClass('hidden');
+        $(this).toggleClass('active');
+      });
+
+	});
+
+	var delete_form = $('#delete-form');
+      $(document).on("click", ".single-project__button-delete", function () {
+      vexDelete = vex.open({
+        content: delete_form.clone(),
+        contentClassName: 'vex-content vex-content-large',
+      });
+      });
+</script>
+{% endblock %}
+
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Project Settings {% endblock %}
+    </title>
+</head>
+<style >
+      #tables input[type="checkbox"] {
+        position: inherit;
+        opacity: 1 !important;
+      }
+
+    .highlight { background-color: #D9EDF7; }
+
+    </style>
+<style type="text/css">
+  .kc-hide { display: none !important; }
+  </style>
+      <!-- Delete form (in vex window) -->
+  {% if is_owner %}
+  <div class="kc-hide">
+    <div id="delete-form">
+        <form action="{% url "onadata.apps.logger.views.delete_xform" username=user.username id_string=xform.id_string %}" method="post">
+        {% csrf_token %}
+            <div class="vex-header">
+                <h3>{% trans "Delete Confirmation" %}</h3>
+            </div>
+            <div class="vex-kobo-body">
+                <p>{% blocktrans with title=xform.title nb_sub=xform.submission_count|intcomma %}Are you sure you want to delete the form '{{ title }}'? This form has <strong>{{ nb_sub }}</strong> submissions associated with it that will also be deleted. If you are unsure about deleting this form press 'Cancel' and consider 'Archiving' the form instead.{% endblocktrans %}</p>
+            </div>
+            <div class="vex-footer">
+                <a href="#" onclick="vex.close(vexDelete.data().vex.id)" class="btn btn-transparent">{% trans "Cancel" %}</a>
+                <button class="btn btn-danger form-submit">Delete</button>
+            </div>
+        </form>
+    </div>
+  </div>
+  {% endif %}
+  {% endblock %}
+

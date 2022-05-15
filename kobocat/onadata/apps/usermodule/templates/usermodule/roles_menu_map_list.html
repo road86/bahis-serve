@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} Access Control {% endblock %}
+    </title>
+</head>
+
+{% endblock %}
+
+{% block content %}
+<!--<form action="/usermodule/add-role-menu-map/">
+    <input type="submit" class="btn red pull-right" value="Add Access" style="margin-bottom:15px;">
+</form>-->
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-sitemap"></i>Access Control</div>
+    </div>
+    <div class="portlet-body">
+        {% if can_conf == True %}
+        <form class="horizontal-form" id="access_form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" name="role_id" value="8"/>
+            <table id="organizations-table" class="table table-bordered table-striped table-condensed flip-content"
+                   id="organization-list">
+                <tr>
+                    <th class="td-center"></th>
+                    {% for role in roles %}
+                    <th class="td-center">{{role}}</th>
+                    {% endfor%}
+                </tr>
+                {% for mi in menu_items %}
+                <tr>
+                    <td class="header-column-custom">{{ mi.title }}</td>
+                    {% for role in roles %}
+                    <td class="td-center"><label>
+                                    <span><input name="menu_id" type="checkbox" value="{{ role.id }}__{{ mi.id }}" {% if mi.id in menu_dict|keyvalue:role.id %}checked{% endif %}/></span>
+                                </label></td>
+                    {% endfor%}
+                </tr>
+                {% endfor%}
+            </table>
+            <div class="form-actions">
+                <button type="submit" class="btn red pull-right">Save</button>
+            </div>
+        </form>
+            {% elif can_conf == False %}
+            <p>You don't have permission to modify this</p>
+    {% endif %}
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Action</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a Roles access to a menu item, this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block additional-javascript %}
+<script>
+    $('.delete-item').on('click', function(e) {
+        var criteria_id = $(this).attr("data-href");
+        $('.btn-ok').attr("href",criteria_id);
+    });
+
+    $(document).ready(function(){
+        if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+    });
+
+
+
+
+</script>
+{% endblock %}

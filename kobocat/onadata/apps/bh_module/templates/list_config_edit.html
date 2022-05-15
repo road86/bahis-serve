@@ -1,0 +1,1724 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+
+    <head>
+        <title>
+            {% block title %} Module List Settings {% endblock %}
+        </title>
+    </head>
+    <style>
+        .panel {
+            margin-bottom: 20px;
+            background-color: #f5f5f5;
+            border: none;
+            border-radius: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-group .panel {
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        .panel-group .panel + .panel {
+            margin-top: 0;
+        }
+
+        .panel-default {
+            border: none;
+        }
+
+        .panel-heading {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .panel-default > .panel-heading {
+            color: #333;
+            background: none;
+            border-top: 1px solid #ddd;
+        }
+
+        .panel-default > .panel-heading + .panel-collapse > .panel-body {
+            border: none;
+            background: white;
+        }
+
+        .panel-sub-body {
+            padding: 10px;
+            background: white;
+        }
+
+        .panel-heading .accordion-toggle:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading .accordion-toggle.collapsed:after {
+            content: "\e080";
+        }
+
+        #sortable {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            width: 60%;
+        }
+
+        #sortable li {
+            margin: 0 3px 3px 3px;
+            padding: 0.4em;
+            padding-left: 1.5em;
+            font-size: 1.4em;
+            height: 18px;
+        }
+
+        #sortable li span {
+            position: absolute;
+            margin-left: -1.3em;
+        }
+    </style>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/alertify.min.css" media="all"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/themes/semantic.min.css"
+          media="all"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/plugins/select2/select2_metro.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+
+    <link href="https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+
+    {#    <form action="/usermodule/register">#}
+    {#        <input type="submit" class="btn red pull-right" value="Register User" style="margin-bottom:15px;">#}
+    {#    </form>#}
+
+    <div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i><b>Module List Settings</b></div>
+    </div>
+
+    <div class="portlet-body">
+        <form id="form_basic_info">
+            <div class="panel-sub-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <label>List Title (Bangla)</label>
+                        <input class="form-control" type="text" name="list_name_bangla" required {% if list_name %}
+                               value="{{ list_name.Bangla }}" {% endif %} />
+                    </div>
+                    <div class="col-md-3">
+                        <label>List Title (English)</label>
+                        <input class="form-control" type="text" name="list_name_english" {% if list_name %}
+                               value="{{ list_name.English }}" {% endif %} />
+                    </div>
+                    <div class="col-md-3">
+                        <label>Data Source Type</label>
+                        <select name="datasource_type" class="form-control select-picker" id="datasource_type"
+                                data-live-search="true"
+                                onchange="var changed_val= $(this).val();changeSourceDropdown(changed_val);" required>
+                            <option value="">Select</option>
+                            {% for m,n in datasource_type_choices %}
+                                <option value="{{ m }}" {% if datasource_type == m %} selected {% endif %}>{{ n }}
+                                </option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Select Data Source</label>
+                        <select name="list_datasource" class="form-control select-picker" id="list_datasource"
+                                data-live-search="true"
+                                onchange="var changed_val= $(this).val();onChangeDataSource(changed_val);" required>
+
+
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+        </form>
+        <div class="panel-group" id="accordion">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
+                            <b>List Definition</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseTwo" class="panel-collapse in">
+                    <div class="panel-body">
+                        <div class="row">
+                            <form id="form_col_def">
+                                <div id="czContainer" class="col-md-12">
+                                    <div id="first" style="padding-top: 20px;  height:400px;overflow:scroll;">
+                                        <table id="format-table" style="background: white"
+                                               class="table table-bordered table-striped">
+                                            <tbody>
+
+
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!--<div class="row" style="padding-top:20px;">
+                            <div class="col-md-12">
+                                <h4 style="color:#1abc9c;"><b>LookUp Columns</b></h4>
+                                <table id="lookup-table" style="background: white"
+                                       class="table table-bordered table-striped">
+                                    <tbody>
+
+
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="row" style="padding-top:20px;">
+                            <form id="lookup-form">
+                                <div class="form-body">
+                                    <div class="row" style="padding-top:20px;">
+                                        <div class="col-md-12">
+                                            <h4 style="color:#1abc9c;"><b>Add LookUp Column</b></h4>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+
+                                        <div class="col-md-2"><label>Column Title(English)</label><input
+                                                class="form-control" type="text" name="lookup_title_english"
+                                                placeholder="Column Title(English)"></div>
+                                        <div class="col-md-2"><label>Column Title(Bangla)</label><input
+                                                class="form-control" type="text" name="lookup_title_bangla"
+                                                placeholder="Column Title(Bangla)"></div>
+                                        <div class="col-md-2">
+                                            <label>Column Datasource</label>
+                                            <select name="lookup_datasource" class="form-control" id="lookup_datasource"
+                                                    onchange="var changed_val= $(this).val();onChangeLookUpDatasource(changed_val);">
+                                                <option value="">Select Datasource</option>
+                                                {% for m in datasource %}
+                                                    <option value="{{ m.id }}" {% if datasource_type == m %} selected
+                                                    {% endif %}>{{ m.title }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label>Return Column</label>
+                                            <select name="lookup_return_column" class="form-control"
+                                                    id="lookup_return_column" onchange="">
+                                                <option value=""> Select Return Column</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div style="text-align: right;" class="input-group-btn float-filter">
+                                                <button type="button" class="btn btn-secondary red "><i
+                                                        class="fa fa-search"></i></button>
+                                                <button onclick="conditionDivHide('lookup_source_column_0');"
+                                                        data-toggle="dropdown" aria-haspopup="true" type="button"
+                                                        class="btn btn-secondary red dropdown-toggle dropdown-toggle-split"
+                                                        aria-expanded="false">
+                                                    <i class="fa fa-caret-left" id="icon_caret_right_6"
+                                                       aria-hidden="true" style="display: block;"></i> <i
+                                                        class="fa fa-times" style="display: none"
+                                                        id="icon_cross_right_6" aria-hidden="true"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="lookup_condition_div" style="padding-top: 20px; display:None;">
+                                        <div class="row">
+                                            <button type="button" class="btn btn-secondary red pull-right"
+                                                    onclick="addMoreSubindicator();"><i class="fa fa-plus"></i></button>
+                                        </div>
+                                        <div class="row" style="padding: 5px;" id="lookup_condition_row_0">
+                                            <div class="col-md-2">
+                                                <label>Source Condition Column</label>
+                                                <select name="lookup_source_column_0" class="form-control"
+                                                        id="lookup_source_column_0"
+                                                        onchange="var changed_val= $(this).val();">
+                                                    <option value="">Select Source Column</option>
+
+                                                </select>
+                                            </div>
+
+                                            <div class="col-md-2">
+                                                <label>Condition Type</label>
+                                                <select name="lookup_condition_type_0" class="form-control"
+                                                        id="lookup_condition_type_0"
+                                                        onchange="var changed_val= $(this).val();onChangeLookupConditionType(changed_val,'lookup_condition_column_0_div','lookup_condition_value_0_div');">
+                                                    <option value="">Select Type</option>
+                                                    <option value="1">static</option>
+                                                    <option value="2">list</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2" style="display:none;"
+                                                 id="lookup_condition_value_0_div"><label>Condition static
+                                                Input</label><input class="form-control"
+                                                                    name="lookup_condition_value_0"
+                                                                    id="lookup_condition_value_0"
+                                                                    type="text" value=""/></div>
+                                            <div class="col-md-2" style="display:none;"
+                                                 id="lookup_condition_column_0_div">
+                                                <label>Condition List Column</label>
+                                                <select name="lookup_condition_column_0" class="form-control"
+                                                        id="lookup_condition_column_0">
+                                                    <option value="">Select List Column</option>
+                                                </select>
+                                            </div>
+
+
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-actions">
+
+                                        <button type="submit" class="btn red pull-right" style="margin-right:10px;"
+                                                onclick="dataLookUpSubmit();">Submit
+                                        </button>
+                                        <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                                                class="btn default pull-right">Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+
+                        </div>-->
+
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseThree">
+                            <b>Filter Definition</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseThree" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <form id="form_filter_def">
+                            <div id="">
+                                <div id="first" style="padding-top: 20px;  height:400px;overflow:scroll;">
+                                    <table id="filter-table" style="background: white"
+                                           class="table table-bordered table-striped">
+                                        <tbody>
+
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseFour">
+                            <b>WorkFlow</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseFour" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <!-- <div class="row">
+                            <div class="col-md-12">
+                                <a href="">
+                                    <button class="btn btn-info pull-left" id="add_new" data-original-title=""
+                                        title="">Add Workflow
+                                    </button>
+                                </a>
+                            </div>
+                        </div> -->
+                        <div class="row">
+                            <div class="col-md-5" id="" style="padding: 20px;">
+                                <div class="form-body" id="second" style="padding-top: 20px;background: white">
+                                    <form id="form_csv_config">
+
+                                        <div class="form-group">
+                                            <label>Workflow Type</label>
+                                            <select id="workflow_type" name="workflow_type" class="form-control"
+                                                    required
+                                                    onchange="var changedVal= $(this).val();onChangeActionType(changedVal)">
+                                                <option value="">Select</option>
+
+                                                <option value="entry">Followup Form
+                                                </option>
+                                                <option value="details">Details
+                                                </option>
+
+                                            </select>
+                                        </div>
+                                        <div class="form-group" id="details_key" style="display: None;">
+                                            <label>Details Primary Key</label>
+                                            <select id="details_pk" name="details_pk" class="form-control" required
+                                            >
+                                                <option value="">Select</option>
+                                                <option value=""></option>
+
+
+                                            </select>
+                                        </div>
+                                        <div class="form-group" id="workflow_form" style="display: block;">
+                                            <label>Form Name *</label>
+                                            <select id="xform_id" name="xform_id" class="form-control" required
+                                                    onchange="var changedVal= $(this).val();onChangeActionForm(changedVal)">
+                                                <option value="">Select</option>
+                                                {% for m in form_choices %}
+                                                    <option value="{{ m.0 }}">{{ m.1 }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                        <div class="form-group" style="">
+                                            <label>Workflow Label Bangla</label>
+                                            <input class="form-control" name="workflow_label_bangla"
+                                                   id="workflow_label_bangla" type="text">
+                                        </div>
+                                        <div class="form-group" id="" style="">
+                                            <label>Workflow Label English</label>
+                                            <input class="form-control" name="workflow_label_english"
+                                                   id="workflow_label_english" type="text">
+                                        </div>
+                                        <div id="data_embedding" class="form-group">
+                                            <label><span id="preload_label"></span></label>
+                                            <table id="worflow-table" class="table table-bordered table-striped"
+                                                   style="background: white ">
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </form>
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-info pull-right" id="update_csv"
+                                                onclick="saveWorkFlow();" title="">Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <div class="col-md-7" style="padding: 20px; overflow:scroll;">
+                                <div id="first" style="padding-top: 20px;">
+                                    <table id="workflow-list-table" style="background: white"
+                                           class="table table-bordered table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th>Title</th>
+                                            <th>Preload Fields</th>
+                                            <th>Form Name</th>
+                                            <th>Action</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4 class="panel-title">
+                        <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                           href="#collapseFive">
+                            <b>Publish</b>
+                        </a>
+                    </h4>
+                </div>
+                <div id="collapseFive" class="panel-collapse collapse">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="checkbox" id="first" style="padding-top: 20px;">
+                                    <label><input name="list_publish" id="list_publish" type="checkbox">Publish
+                                        The
+                                        List</label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- <div class="row">
+                            <div class="col-md-12">
+                                <button class="btn btn-info pull-left" id="add_new" type="submit"
+                                    onclick="showColumnList();" title="">Order List Column
+                                </button>
+                            </div>
+                        </div> -->
+                        <div class="row">
+                            <div class="col-md-3" style="padding-top: 20px;" id="order_div"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseSix">
+                                <b>Status</b>
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseSix" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="checkbox" id="first" style="padding-top: 20px;">
+                                        <label><input name="list_status" id="list_status" type="checkbox">Inactive
+                                            Module</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn pull-right" onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                    class="btn default">Cancel
+            </button>
+            <button onclick="saveData();" type="submit" class="btn red pull-right">Save</button>
+
+        </div>
+        {#        <button type="submit" onclick="saveData();">Save</button>#}
+
+    </div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a user, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="lookup_modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Setup Lookup</h4>
+                </div>
+
+                <div class="modal-body">
+                    <form id="lookup_form" name="lookup_form" action="">
+                        <input type="hidden" name="lookup_target_field" id="lookup_target_field" value="">
+                        <div class="form-group">
+                            <label>Datasource type</label>
+                            <select name="lookup_datasource_type" class="form-control select-picker"
+                                    id="lookup_datasource_type"
+                                    onchange="var changed_val= $(this).val();changeLookupSourceDropdown(changed_val)">
+                                <option value="">Select Datasource Type</option>
+                                <option value="table">Table</option>
+                                <option value="datasource">Datasource</option>
+                                <option value="label">Show Label</option>
+                            </select>
+                        </div>
+                        <div id="tb_ds">
+                            <div class="form-group">
+                                <label>Datasource</label>
+                                <select name="lookup_datasource_list" class="form-control select-picker"
+                                        id="lookup_datasource_list"
+                                        onchange="var changed_val= $(this).val();fetchDatasurceColumsForLookup(changed_val);">
+                                    <option value="">Select Datasource</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Matching Column</label>
+                                <select name="match_lookup_column" class="form-control" id="match_lookup_column"
+                                        onchange="var changed_val= $(this).val();">
+
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Return Column</label>
+                                <select name="return_lookup_column" class="form-control" id="return_lookup_column"
+                                        onchange="var changed_val= $(this).val();">
+
+                                </select>
+                            </div>
+                        </div>
+                        <div id="form_label" style="display: none;">
+                            <div class="form-group">
+                                <label>Source Form</label>
+                                <select name="source_form_id" class="form-control" id="source_form_id"
+                                        onchange="var changed_val= $(this).val();fetchLookupSelectFields(changed_val);">
+
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Source Field</label>
+                                <select name="source_form_field" class="form-control select-picker"
+                                        id="source_form_field"
+                                        onchange="var changed_val= $(this).val();">
+
+                                </select>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a onclick="saveLookupInfo();" class="btn btn-danger btn-ok">Save</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <!-- Latest compiled and minified CSS -->
+
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+
+    <script src="https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script>
+
+        var module_id = {{ module_id }};
+        var filterType = {{ filter_type| safe}};
+        var filterTypeHtml;
+        var multipleFieldParent;
+        var datasource_choices = {{ datasource_choices| safe }};
+        var table_choices = {{ table_choices| safe }};
+        var form_choices_lookup = {{ form_choices_lookup| safe }};
+        var list_id = {{ list_id }};
+        var presentFilter = [];
+        var presentColumn = [];
+        var lookupColumn = [];
+        var datasourceName = '{{ datasource_name }}';
+        var filterDef = {{ filter_def| safe }};
+        var columnDef = {{ column_def| safe }};
+        var columnTypeHtml;
+        var columnType = {{ column_data_type| safe }};
+        var formColumnHtml;
+        var actionFormColumn;
+        var presentLookUpDatasource;
+        var lookUpDivSerial = 0;
+
+        function getWorkflowTable() {
+            console.log("hello here workflow");
+            var table_tbody = $('#workflow-list-table').find("tbody");
+            table_tbody.html('');
+            $.ajax({
+                type: 'GET',
+                url: "/bhmodule/get/list-workflow/" + list_id + "/",
+                success: function (data) {
+                    console.log(data);
+                    var actionList = JSON.parse(data);
+                    for (var d in actionList) {
+                        var l = actionList [d];
+                        var tablerow = '<tr id="wftr_' + l['id'] + '">';
+                        tablerow += '<td >' + l['title']['English'] + '</td>';
+                        if (l['workflow_type'] === 'entry') {
+                            tablerow += '<td>' + JSON.stringify(l['workflow_definition']) + '</td>';
+                        } else {
+                            tablerow += '<td>Details Primary Key: ' + l['details_pk'] + '</td>';
+
+                        }
+                        tablerow += '<td>' + l['form_title'] + '</td><td><i style="cursor:pointer;" onclick="removeWorkflow(' + l['id'] + ')" class="fa fa-trash-o"></i></td>'
+                        tablerow += '</tr>';
+                        table_tbody.append(tablerow);
+                    }
+                },
+                error: function (xhr, status, error) {
+
+
+                }
+            });
+
+
+        }
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+
+
+        function removeWorkflow(workflow_id) {
+            ajaxcall();
+            $.ajax({
+                type: 'GET',
+                url: "/bhmodule/delete/list-workflow/" + workflow_id + "/",
+                success: function (data) {
+                    if (data == 'True') {
+                        console.log("HERE")
+                        $('#wftr_' + workflow_id).remove();
+                    }
+
+                }
+            });
+        }
+
+
+        function showColumnList() {
+            console.log(presentColumn);
+            ulHtml = '';
+            for (var d in presentColumn) {
+                ulHtml += '<li class="ui-state-default" id="' + presentColumn[d] + '"><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>' + presentColumn[d] + '</li>';
+            }
+            ulHtml = '<ul id="sortable-1" class="list">' + ulHtml + '</ul';
+
+            $('#order_div').html(ulHtml);
+
+            $("#sortable-1").sortable({
+                update: function (event, ui) {
+                    var productOrder = $(this).sortable('toArray');
+                    console.log(productOrder);
+                }
+            });
+            console.log($("#sortable-1").sortable('toArray'));
+        }
+
+
+        $('.delete-user-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+
+        function saveData() {
+            var filterDef = JSON.stringify($("#form_filter_def").serializeObject());
+            var parameters = JSON.stringify($('#form_col_def').serializeObject());
+            console.log("Printing Parameteres");
+            console.log(parameters);
+            var basic_info = JSON.stringify($('#form_basic_info').serializeObject());
+            console.log(basic_info);
+            var publish_info = JSON.stringify($('#publish_form').serializeObject());
+            console.log(publish_info);
+            var list_publish = $('#list_publish').is(':checked');
+            console.log(list_publish);
+            var list_status = $('#list_status').is(':checked');
+            console.log(list_publish);
+            // var sortedList = $("#sortable-1").sortable('toArray');
+            // console.log(sortedList);
+            console.log(list_status);
+
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add/module-list-config/' + module_id + '/',
+
+                data: {
+                    'list_id': list_id,
+                    'col_def': parameters,
+                    'filter_def': filterDef,
+                    'basic_info': basic_info,
+                    'publish': list_publish,
+                    'status': list_status,
+                    // 'sort_list': sortedList
+                },
+
+                success: function (response) {
+                    console.log(response);
+                    window.location.href = response;
+                },
+                error: function (xhr, status, error) {
+                }
+            });
+
+        }
+
+
+        function getInputField(element, checked) {
+            console.log(checked);
+            if (checked) {
+                presentColumn.push(element);
+                $('[id="' + element + '"]').find('td').eq(2).html('<input class="form-control" style="" type="text" name="' + element + '@english">');
+                $('[id="' + element + '"]').find('td').eq(3).html('<input class="form-control" type="text" name="' + element + '@bangla">');
+                $('[id="' + element + '"]').find('td').eq(4).html('<select class="form-control" name="' + element + '@data_type"><option value="">Select</option>' + columnTypeHtml + '</select>');
+                $('[id="' + element + '"]').find('td').eq(5).html('<input  type="checkbox" name="' + element + '@sortable">');
+                //$('[id="' + element + '"]').find('td').eq(6).html('<input class="form-control" type="text" name="' + element + '@format">');
+                $('[id="' + element + '"]').find('td').eq(6).html('<input class="" type="checkbox" name="' + element + '@is_hidden">');
+                $('[id="' + element + '"]').find('td').eq(7).html('<input class="" type="checkbox" name="' + element + '@is_exportable">');
+                $('[id="' + element + '"]').find('td').eq(8).html('<button class="btn btn-info" type="button" onclick="newSetupLookup(\'' + element + '\')" name="' + element + '@haslookup">Lookup</button>');
+                $('[id="' + element + '"]').find('td').eq(9).html('<input class="" type="text" name="' + element + '@order">');
+
+            } else {
+                var index = presentColumn.indexOf(element);
+                if (index > -1) {
+                    presentColumn.splice(index, 1);
+                }
+
+                for (var i = 2; i < 10; i++) {
+                    $('[id="' + element + '"]').find('td').eq(i).html('');
+
+                }
+            }
+        }
+
+
+        function onChangeDataSource(changed_val) {
+
+            if (changed_val !== '') {
+                var datasource = $('#datasource_type').val();
+                var datasource_type = ((datasource === '2') ? 'datasource' : 'table');
+                $.ajax({
+                    type: 'POST',
+                    url: "/bhmodule/get-column-name/",
+                    data: {'datasource_name': changed_val, 'datasource_type': datasource_type},
+                    success: function (data) {
+                        console.log("here" + changed_val);
+                        console.log(data);
+                        var data_list = JSON.parse(data);
+                        var table = $('#format-table');
+                        table.find("tbody tr").remove();
+                        table.append('<tr><td></td> <td>Attribute Name</td><td>Column Title(English)</td> <td>Column Title(bangla)</td> <td>Column Type</td> <td>Sortable</td> <td>Hidden</td><td>Exportable</td><td>Lookup</td><td>Order</td> </tr>'
+                        );
+                        for (var d in data_list) {
+                            var l = data_list[d];
+                            console.log(l);
+                            var tablerow = '<tr id="' + l["column_name"] + '">';
+                            tablerow += '<td ><input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + l["column_name"] + '\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                            tablerow += '<td></td><td></td>'
+                            tablerow += '<td></td><td></td>'
+                            tablerow += '<td></td><td></td><td></td><td></td><td></td></tr>';
+                            table.append(tablerow);
+                        }
+                        getFilterTable(data_list);
+                        if (datasourceName === changed_val) {
+                            populateColumnTable();
+                            console.log(filterDef);
+                            for (var j = 0; j < filterDef.length; j++) {
+                                var element = filterDef[j].name;
+                                $('#' + element + '_filter').find('td').eq(0).find(':checkbox').prop("checked", true).trigger("change");
+                            }
+                            populateFilterTable();
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        $('#del_modal').modal('show');
+                    }
+                });
+            } else {
+                $('#format-table').find("tbody tr").remove();
+                $('#filter-table').find("tbody tr").remove();
+            }
+
+        }
+
+
+        function changeSourceDropdown(changedVal) {
+            var option = '';
+            console.log("Here");
+            console.log(changedVal);
+            if (changedVal === '1') {
+
+                option = '<option value="">Select </option>';
+                for (var d in table_choices) {
+                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                }
+            } else if (changedVal === '2') {
+
+                option = '<option value="">Select </option>';
+                for (var d in datasource_choices) {
+                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                }
+            }
+
+            $('#list_datasource').html(option);
+            $('.select-picker').selectpicker('refresh');
+            $('#list_datasource').trigger('change');
+        }
+
+        /* Lookup related functions start*/
+        function changeLookupSourceDropdown(changedVal) {
+            var option = '';
+            if (changedVal === 'table') {
+                $('#tb_ds').show();
+                $('#form_label').hide();
+                option = '<option value="">Select </option>';
+                for (var d in table_choices) {
+                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                }
+
+                $('#lookup_datasource_list').html(option);
+                $('.select-picker').selectpicker('refresh');
+                $('#lookup_datasource_list').trigger('change');
+            } else if (changedVal === 'datasource') {
+                $('#tb_ds').show();
+                $('#form_label').hide();
+                option = '<option value="">Select </option>';
+                for (var d in datasource_choices) {
+                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                }
+
+                $('#lookup_datasource_list').html(option);
+                $('.select-picker').selectpicker('refresh');
+                $('#lookup_datasource_list').trigger('change');
+            } else if (changedVal === 'label') {
+                console.log("S5S5S5S5S5S5S5S5S5S5S5S5")
+                $('#tb_ds').hide();
+                $('#form_label').show();
+
+                option = '<option value="">Select </option>';
+                for (var d in form_choices_lookup) {
+                    option += '<option value="' + form_choices_lookup[d]["id"] + '">' + form_choices_lookup[d][["title"]] + ' </option>';
+                }
+
+                $('#source_form_id').html(option);
+                $('.select-picker').selectpicker('refresh');
+                $('#source_form_id').trigger('change');
+
+            }
+
+
+        }
+
+
+        function fetchLookupSelectFields(changed_val) {
+            $.ajax({
+                type: 'POST',
+                url: "/bhmodule/fetch-lookup-select-fields/",
+                data: {'form_id': changed_val},
+                success: function (data) {
+                    console.log(typeof data)
+                    console.log(data)
+                    data = JSON.parse(data);
+                    var option = '';
+                    for (var d in data) {
+                        option += '<option value="' + data[d]["field_name"] + '">' + data[d][["field_label"]] + ' </option>';
+                    }
+                    $('#source_form_field').html(option);
+                    $('.select-picker').selectpicker('refresh');
+                    $('#source_form_field').trigger('change');
+                }
+            })
+        }
+
+        function fetchDatasurceColumsForLookup(changed_val) {
+            if (changed_val !== '') {
+                var lookup_datasource = $('#lookup_datasource_type').val();
+                $.ajax({
+                    type: 'POST',
+                    url: "/bhmodule/get-column-name/",
+                    data: {'datasource_name': changed_val, 'datasource_type': lookup_datasource},
+                    success: function (data) {
+                        var data_list = JSON.parse(data);
+                        //lookupOptionPopulate(data_list, 'match_lookup_column', 'Matching');
+                        //lookupOptionPopulate(data_list, 'return_lookup_column', 'Return');
+                        var option = '';
+                        for (var d in data_list) {
+                            option += '<option value="' + data_list[d]["column_name"] + '">' + data_list[d][["column_name"]] + ' </option>';
+                        }
+                        $('#match_lookup_column').html(option);
+                        $('#return_lookup_column').html(option);
+                    }
+                });
+            }
+        }
+
+
+        function setupLookup(element, checked) {
+            if (checked) {
+                $('#lookup_modal').modal('show');
+                $('#lookup_target_field').val(element);
+                $('#lookup_datasource_type').val('');
+                $('#lookup_datasource_list').val('');
+                $('#return_lookup_column').val('');
+                $('#match_lookup_column').val('');
+                $('#source_form_id').val('');
+                $('#source_form_field').val('');
+            }
+        }
+
+
+        function newSetupLookup(element, checked) {
+            $('#lookup_modal').modal('show');
+            $('#lookup_target_field').val(element);
+            $('#lookup_datasource_type').val('');
+            $('#lookup_datasource_list').val('');
+            $('#return_lookup_column').val('');
+            $('#match_lookup_column').val('');
+            $('#source_form_id').val('');
+            $('#source_form_field').val('');
+            $('.select-picker').selectpicker('refresh');
+            $.ajax({
+                type: 'POST',
+                url: "/bhmodule/fetch-lookup-info/" + list_id + "/",
+                data: {
+                    'field_name': element
+                },
+                success: function (data) {
+                    lookup_data = JSON.parse(data);
+                    if (lookup_data.hasOwnProperty('lookup_definition')) {
+                        console.log('HERE HERE prev')
+                        /*$.when($("#lookup_datasource_type").val(lookup_data['lookup_definition']['lookup_type']).change()).then(function () {
+                            if (lookup_data['lookup_definition']['lookup_type'] == 'label') {
+                                console.log('HERE HERE')
+                                $.when($("#source_form_id").val(lookup_data['lookup_definition']['form_id']).change()).then(function () {
+                                    console.log("HERE .....")
+                                    $('#source_form_field').val(lookup_data['lookup_definition']['form_field']);
+                                });
+                            } else {
+                                $.when($("#lookup_datasource_list").val(lookup_data['lookup_definition']['datasource']).change()).then(function () {
+                                    $('#return_lookup_column').val(lookup_data['lookup_definition']['return_column']);
+                                    $('#match_lookup_column').val(lookup_data['lookup_definition']['match_column']);
+                                });
+                            }
+                        });*/
+                        var option = '';
+                        $("#lookup_datasource_type").val(lookup_data['lookup_definition']['lookup_type']);
+                        if (lookup_data['lookup_definition']['lookup_type'] === 'table' || lookup_data['lookup_definition']['lookup_type'] === 'datasource') {
+                            $('#tb_ds').show();
+                            $('#form_label').hide();
+                            option = '<option value="">Select </option>';
+                            if (lookup_data['lookup_definition']['lookup_type'] === 'table') {
+                                for (var d in table_choices) {
+                                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                                }
+                            } else if (lookup_data['lookup_definition']['lookup_type'] === 'datasource') {
+                                for (var d in datasource_choices) {
+                                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                                }
+                            }
+
+                            $('#lookup_datasource_list').html(option);
+                            $("#lookup_datasource_list").val(lookup_data['lookup_definition']['datasource']);
+                            $('.select-picker').selectpicker('refresh');
+                            $.ajax({
+                                type: 'POST',
+                                url: "/bhmodule/get-column-name/",
+                                data: {'datasource_name': lookup_data['lookup_definition']['datasource'], 'datasource_type': lookup_data['lookup_definition']['lookup_type']},
+                                success: function (data) {
+                                    var data_list = JSON.parse(data);
+                                    var option = '';
+                                    for (var d in data_list) {
+                                        option += '<option value="' + data_list[d]["column_name"] + '">' + data_list[d][["column_name"]] + ' </option>';
+                                    }
+                                    $('#match_lookup_column').html(option);
+                                    $('#return_lookup_column').html(option);
+                                    $('#return_lookup_column').val(lookup_data['lookup_definition']['return_column']);
+                                    $('#match_lookup_column').val(lookup_data['lookup_definition']['match_column']);
+                                }
+                            });
+                        } else if (lookup_data['lookup_definition']['lookup_type'] === 'label') {
+                            $('#tb_ds').hide();
+                            $('#form_label').show();
+
+                            option = '<option value="">Select </option>';
+                            for (var d in form_choices_lookup) {
+                                option += '<option value="' + form_choices_lookup[d]["id"] + '">' + form_choices_lookup[d][["title"]] + ' </option>';
+                            }
+
+                            $('#source_form_id').html(option);
+                            $("#source_form_id").val(lookup_data['lookup_definition']['form_id'])
+                            $('.select-picker').selectpicker('refresh');
+                            $.ajax({
+                                type: 'POST',
+                                url: "/bhmodule/fetch-lookup-select-fields/",
+                                data: {'form_id': lookup_data['lookup_definition']['form_id']},
+                                success: function (data) {
+                                    data = JSON.parse(data);
+                                    var option = '';
+                                    for (var d in data) {
+                                        option += '<option value="' + data[d]["field_name"] + '">' + data[d][["field_label"]] + ' </option>';
+                                    }
+                                    $('#source_form_field').html(option);
+                                    $('#source_form_field').val(lookup_data['lookup_definition']['form_field']);
+                                    $('.select-picker').selectpicker('refresh');
+                                }
+                            })
+                        }
+                    }
+                }
+            })
+        }
+
+
+        function saveLookupInfo() {
+            var lookup_target_field = $('#lookup_target_field').val();
+            var lookup_datasource_type = $('#lookup_datasource_type').val();
+            var lookup_datasource_list = $('#lookup_datasource_list').val();
+            var match_lookup_column = $('#match_lookup_column').val();
+            var return_lookup_column = $('#return_lookup_column').val();
+            var source_form_id = $('#source_form_id').val();
+            var source_form_field = $('#source_form_field').val();
+            if (lookup_datasource_type == 'table' || lookup_datasource_type == 'datasource') {
+                if (lookup_datasource_type != '' && lookup_datasource_list != '' && match_lookup_column != 'Select Matching Column' && match_lookup_column != null && return_lookup_column != 'Select Return Column' && return_lookup_column != null) {
+                    $.ajax({
+                        type: 'POST',
+                        url: "/bhmodule/save-lookup-info/" + list_id + "/",
+                        data: {
+                            'return_lookup_column': return_lookup_column,
+                            'lookup_datasource_type': lookup_datasource_type,
+                            'lookup_datasource_list': lookup_datasource_list,
+                            'match_lookup_column': match_lookup_column,
+                            'lookup_target_field': lookup_target_field
+                        },
+                        success: function (data) {
+                            $('#lookup_datasource_list').val('');
+                            $('#return_lookup_column').val('');
+                            $('#match_lookup_column').val('');
+                            $('#source_form_id').val('');
+                            $('#source_form_field').val('');
+                            $('.select-picker').selectpicker('refresh');
+                            window.location.reload();
+                        }
+                    })
+                } else {
+                    alert('Please select all information necessary to create a lookup')
+                }
+            } else if (lookup_datasource_type == 'label') {
+                if (lookup_datasource_type != '' && source_form_id != '' && source_form_field != '') {
+                    $.ajax({
+                        type: 'POST',
+                        url: "/bhmodule/save-lookup-info/" + list_id + "/",
+                        data: {
+                            'source_form_id': source_form_id,
+                            'lookup_datasource_type': lookup_datasource_type,
+                            'source_form_field': source_form_field,
+                            'lookup_target_field': lookup_target_field
+                        },
+                        success: function (data) {
+                            window.location.reload();
+                        }
+                    })
+                } else {
+                    alert('Please select all information necessary to create a lookup')
+                }
+            } else {
+                alert('Please select all information necessary to create a lookup')
+            }
+        }
+
+
+        /* Lookup related functions end*/
+
+        function getWorkFlowColumn(actionFormColumn) {
+            $('#preload_label').html('Preload Mapping')
+            var table = $('#worflow-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><th></th><th>Source Column</th> <th>Destination Column</th></tr>'
+            );
+            for (var d in actionFormColumn) {
+                var l = actionFormColumn[d];
+                var tablerow = '<tr id="' + l + '@data_embed">';
+                tablerow += '<td ><input type="checkbox" onchange="var changed_val= $(this).is(\':checked\');getFormColumnDropdown(\'' + l + '@data_embed\',changed_val)"></td><td>' + l + '</td>';
+                tablerow += '<td></td>'
+                tablerow += '</tr>';
+                table.append(tablerow);
+            }
+        }
+
+
+        function getFormColumnDropdown(element, checked) {
+            if (checked) {
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('<select class="form-control select-picker" data-live-search="true"  type="text" name="' + element + '_form">' + formColumnHtml + '</select>');
+                $('.select-picker').selectpicker('refresh');
+            } else {
+                var secondCol = $("#" + CSS.escape(element)).find('td').eq(2).html('');
+            }
+        }
+
+
+        function onChangeActionForm(xform_id) {
+            if (xform_id === '') {
+                $('#preload_label').html('')
+                var table = $('#worflow-table');
+                table.html('');
+            }
+            console.log("hello here");
+            $.ajax({
+                type: 'GET',
+                url: "/bhmodule/get-form-column/" + xform_id + "/",
+                success: function (data) {
+                    console.log(presentColumn);
+                    actionFormColumn = JSON.parse(data);
+                    formColumnHtml = getFormcolumnOption();
+                    getWorkFlowColumn(presentColumn);
+                },
+                error: function (xhr, status, error) {
+                    $('#del_modal').modal('show');
+
+                }
+            });
+        }
+
+        function onChangeActionType(action_type) {
+            console.log("hello here");
+            if (action_type === 'entry') {
+                $('#workflow_form').show();
+                $('#details_key').hide();
+            } else if (action_type === 'details') {
+                //$('#workflow_form').hide();
+                $('#xform_id').val('');
+                onChangeActionForm('');
+                $('#workflow_label_bangla').val('Details');
+                $('#workflow_label_english').val('Details');
+                // details_pk
+                var option = '<option value="">Select</option>'
+                for (var d in presentColumn) {
+                    option += '<option value="' + presentColumn[d] + '">' + presentColumn[d] + '</option>';
+
+
+                }
+                $('#details_pk').html(option);
+                $('#details_key').show();
+            }
+        }
+
+
+        function saveWorkFlow() {
+            var formConfig = JSON.stringify($('#form_csv_config').serializeObject());
+            console.log("Here I am in workflow");
+            console.log(formConfig);
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add/list-workflow/' + list_id + '/',
+                data: {
+                    'form_info': formConfig,
+                },
+                success: function (response) {
+                    console.log(response);
+                    showAjaxConfirmationMessages('success', response);
+                    getWorkflowTable();
+                },
+                error: function (xhr, status, error) {
+                }
+            });
+        }
+
+        /**
+         * This Function will show message in top For Asynchronous Request
+         * @param: Json (messages, type field)
+         * @zinia
+         * */
+        function showAjaxConfirmationMessages(type, messages) {
+            $("#div_messages").html("");
+            $("#div_messages").append("<div class='alert alert-" + type + " fade in'><a class='close' href='#' data-dismiss='alert'>×</a> <p>" + messages + "</p></div>");
+        } //end of showAjaxConfirmationMessages
+
+
+        function getFormcolumnOption() {
+            var optionHtml = '<option value="">Select</option>'
+            for (const key in actionFormColumn) {
+
+                var value = actionFormColumn[key];
+                console.log(value);
+                //optional check for properties from prototype chain
+                optionHtml += "<option value='" + value['field_name'] + "'>" + value['field_name'] + "</option>"
+
+
+            }
+            return optionHtml;
+        }
+
+
+        function getFilterTable(data_list) {
+
+            var table = $('#filter-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><td></td> <td>Attribute Name</td><td>Filter Title(English)</td> <td>Filter Title(bangla)</td> <td>Filter Type</td> <td>Searchable</td><td>Dependant</td> <td>Parent Attribute</td> <td>Order</td> </tr>'
+            );
+
+            for (var d in data_list) {
+                var l = data_list[d];
+                console.log(l);
+                var tablerow = '<tr id="' + l["column_name"] + '_filter">';
+                tablerow += '<td ><input  type="checkbox" onchange="var changed_val= $(this).is(\':checked\');getInputFilter(\'' + l["column_name"] + '_filter\',changed_val)"></td><td>' + l["column_name"] + '</td>';
+                tablerow += '<td></td><td></td>'
+                tablerow += '<td></td><td></td><td></td><td></td><td></td>'
+                tablerow += '</tr>';
+                table.append(tablerow);
+            }
+        }
+
+
+        function columnTypeDropdown() {
+            var optionHtml = '';
+            for (const key in columnType) {
+                var col = columnType[key];
+                //optional check for properties from prototype chain
+                if (col.length > 0) {
+                    optionHtml += "<option value='" + col[0] + "'>" + col[1] + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            console.log(optionHtml);
+            return optionHtml;
+        }
+
+
+        function getFilterTypeDropdown() {
+
+            var optionHtml = ''
+            for (const key in filterType) {
+                var value = filterType[key];
+                //optional check for properties from prototype chain
+                if (filterType.hasOwnProperty(key)) {
+                    optionHtml += "<option value='" + key + "'>" + value + "</option>"
+                } else {
+                    //property from protytpe chain
+                }
+            }
+            return optionHtml;
+        }
+
+
+        function getInputFilter(element, checked) {
+            var own_element = element.replace('_filter', '')
+            console.log(checked);
+            if (checked) {
+                presentFilter.push(own_element);
+                console.log(own_element);
+                var secondCol = $('[id="' + element + '"]').find('td').eq(2).html('<input style="" type="text" id="' + element + '@english" name="' + element + '@english">');
+                var thirdCol = $('[id="' + element + '"]').find('td').eq(3).html('<input style="" type="text" id="' + element + '@bangla" name="' + element + '@bangla">');
+                var fourthCol = $('[id="' + element + '"]').find('td').eq(4).html('<select class="select-picker" id="' + element + '@type" name="' + element + '@type">' + filterTypeHtml + '</select>');
+                //var fourthCol = $('[id="' + element + '"]').find('td').eq(5).html('<select class="select-picker" id="' + element + '@appearnace" name="' + element + '@appearnace"><option value="">Select Appearance</option></select>');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(5).html('<input type="checkbox" id="' + element + '@searchable" name="' + element + '@searchable">');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(6).html('<input onchange="var changed_val= $(this).is(\':checked\');getParentFilter(\'' + own_element + '\',changed_val)" type="checkbox" id="' + element + '@dependant" name="' + element + '@dependant">');
+                // var fifthCol = $('[id="' + element + '"]').find('td').eq(8).html('<input style="" type="text" id="' + element + '@order" name="' + element + '@order">');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(8).html('<input style="" type="text" id="' + element + '@order" name="' + element + '@order">');
+
+                $('.select-picker').selectpicker();
+            } else {
+                var index = presentFilter.indexOf(own_element);
+                if (index > -1) {
+                    presentFilter.splice(index, 1);
+                }
+                var secondCol = $('[id="' + element + '"]').find('td').eq(2).html('');
+                var thirdCol = $('[id="' + element + '"]').find('td').eq(3).html('');
+                var fourthCol = $('[id="' + element + '"]').find('td').eq(4).html('');
+                //var fifthCol = $('[id="' + element + '"]').find('td').eq(5).html('');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(5).html('');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(5).html('');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(8).html('');
+                var fifthCol = $('[id="' + element + '"]').find('td').eq(9).html('');
+                $('[id="' + element + '"]').find('td').eq(7).html('');
+            }
+            adjustParentDropdown();
+        }
+
+
+        function adjustParentDropdown() {
+            for (var i in presentFilter) {
+                var element = presentFilter[i];
+                console.log("Adjust filter" + element);
+                var flag = $('#' + element + CSS.escape('_filter@dependant')).is(":checked");
+                var values = $('#' + element + CSS.escape('_filter@parent')).val();
+                if (flag) {
+                    var populateFlag = getParentFilter(element, flag);
+                    if (populateFlag) {
+                        $('#' + element + CSS.escape('_filter@parent')).selectpicker("val", values);
+                    }
+                }
+
+            }
+        }
+
+
+        function populateFilterTable() {
+            for (var j = 0; j < filterDef.length; j++) {
+                var filter = filterDef[j]
+                var element = filter.name;
+                var appearance = filter.appearance;
+                var label = filter.label;
+                document.getElementById(element + '_filter@english').setAttribute('value', label['English']);
+                document.getElementById(element + '_filter@bangla').setAttribute('value', label['Bangla']);
+                $('#' + element + CSS.escape('_filter@type')).selectpicker("val", filter.type);
+                if ('searchable' in appearance) {
+                    $('#' + element + CSS.escape('_filter@searchable')).prop("checked", true).trigger("change");
+                }
+                if (filter.dependency) {
+                    $('#' + element + CSS.escape('_filter@dependant')).prop("checked", true);
+                    var flag = getParentFilter(element, true);
+                    if (flag) {
+                        $('#' + element + CSS.escape('_filter@parent')).selectpicker("val", [filter.dependency]);
+                    }
+                }
+                if (filter.order) {
+                    document.getElementById(element + '_filter@order').setAttribute('value', filter.order);
+
+                }
+            }
+        }
+
+
+        function getParentFilter(element, checked) {
+            console.log(presentFilter);
+            if (checked) {
+                var options = '';
+                for (var i in presentFilter) {
+                    console.log(presentFilter[i], element);
+                    if (presentFilter[i] !== element) {
+                        options += '<option value="' + presentFilter[i] + '">' + presentFilter[i] + '</option>';
+                    }
+                }
+                if (options !== '') {
+                    var fifthCol = $("#" + element + '_filter').find('td').eq(7).html('<select multiple="multiple" class="multiple-select" id="' + element + '_filter@parent" name="' + element + '_filter@parent">' + options + '</select>');
+                    $('.multiple-select').selectpicker();
+                    return true;
+                } else {
+                    $("#" + element + '_filter').find('td').eq(8).html('');
+                }
+            } else {
+                $('[id="' + element + '_filter"]').find('td').eq(8).html('');
+            }
+            return false;
+
+        }
+
+
+        $(document).ready(function () {
+            $('.select-picker').selectpicker();
+            filterTypeHtml = getFilterTypeDropdown();
+            columnTypeHtml = columnTypeDropdown();
+            changeSourceDropdown('{{ datasource_type }}');
+            if (datasourceName !== '') {
+                $('#list_datasource').selectpicker("val", datasourceName);
+                console.log(datasourceName);
+                onChangeDataSource(datasourceName);
+            }
+            for (var i = 0; i < columnDef.length; i++) {
+
+                if (columnDef[i].field_name === '') {
+                    lookupColumn.push(columnDef[i]);
+                } else {
+                    presentColumn.push(columnDef[i].field_name);
+                }
+            }
+
+            var table = $('#lookup-table');
+            table.find("tbody tr").remove();
+            table.append('<tr><td>Column label Bangla</td><td>Column label English</td></tr>'
+            );
+            console.log(lookupColumn);
+
+            for (var i = 0; i < lookupColumn.length; i++) {
+                console.log(lookupColumn[i].label);
+                table.append('<tr><td>' + lookupColumn[i].label['Bangla'] + '</td><td>' + lookupColumn[i].label['English'] + '</td></tr>')
+            }
+            populateColumnTable();
+            var publish = '{{ publish }}';
+            var status = '{{ status }}';
+            if (publish === '1') {
+                $("#list_publish").prop("checked", true);
+            }
+            if (status === '0') {
+                $("#list_status").prop("checked", true);
+            }
+            // $("#format-table tbody").sortable();
+            // $("#filter-table tbody").sortable();
+
+
+            getWorkflowTable();
+        });
+
+
+        function getUllist() {
+            const listItems = document.querySelectorAll('.list li');
+            for (let i = 0; i < listItems.length; i++) {
+                alert(listItems[i].textContent);
+            }
+        }
+
+
+        function populateColumnTable() {
+
+            for (var i = 0; i < columnDef.length; i++) {
+                var element = columnDef[i].field_name;
+                var checked = '';
+                var is_hidden = '';
+                var is_disabled = '';
+                var is_exportable = '';
+                var hasLookup = '';
+
+                var label = columnDef[i].label;
+                var local = label['Bangla'];
+                var english = label['English'];
+                var sortable = columnDef[i].sortable;
+                var format = columnDef[i].format;
+                var data_type = columnDef[i].data_type;
+                var hidden = columnDef[i].hidden;
+                //var show_label = columnDef[i].show_label;
+                var Exportable = columnDef[i].exportable;
+                var order = columnDef[i].order;
+                // if (order){
+                //     order = ''
+                // }
+                var lookupPrevHtml = '';
+                if (columnDef[i].hasOwnProperty('lookup_definition')) {
+                    hasLookup = 'style="background-color:green;"';
+                    lookupPrevHtml += "<input type='hidden' name='"+element+"@lookup_flag' value='1'>";
+
+                    for (var k in columnDef[i].lookup_definition) {
+                        lookupPrevHtml += "<input type='hidden' name='" + element + '@lookup_' + k + "' value='" + columnDef[i].lookup_definition[k] + "'/>";
+                    }
+                }
+                if (hidden) {
+                    is_hidden = 'checked';
+                    is_disabled = 'disabled';
+                }
+                if (Exportable) {
+                    is_exportable = 'checked';
+                }
+
+                $('[id="' + element + '"]').find('td').eq(0).html('<input  type="checkbox" onclick="var changed_val= $(this).is(\':checked\');getInputField(\'' + element + '\',changed_val)" checked>')
+                var secondCol = $('[id="' + element + '"]').find('td').eq(2).html('<input class="form-control" style="" type="text" name="' + element + '@english" value="' + english + '"> ');
+                var thirdCol = $('[id="' + element + '"]').find('td').eq(3).html('<input class="form-control" style="" type="text" name="' + element + '@bangla" value="' + local + '"> ');
+                var thirdCol = $('[id="' + element + '"]').find('td').eq(4).html('<select class="form-control" id = "' + element + '@data_type" name="' + element + '@data_type"><option value="">Select</option>' + columnTypeHtml + '</select>');
+                $('[id="' + element + CSS.escape('@data_type') + '"]').val(data_type);
+                if (sortable)
+                    checked = 'checked';
+                var fourthCol = $('[id="' + element + '"]').find('td').eq(5).html('<input  style="" type="checkbox" name="' + element + '@sortable" ' + checked + '> ');
+                //var fifthCol = $('[id="' + element + '"]').find('td').eq(6).html('<input class="form-control" style="" type="text" name="' + element + '@format" value="' + format + '">');
+                $('[id="' + element + '"]').find('td').eq(6).html('<input class="" type="checkbox" name="' + element + '@is_hidden" ' + is_hidden + '>');
+                $('[id="' + element + '"]').find('td').eq(7).html('<input class="" type="checkbox" name="' + element + '@is_exportable" ' + is_exportable + '>');
+                //$('[id="' + element + '"]').find('td').eq(9).html('<input class="" type="checkbox" onclick="var changed_val= $(this).is(':checked');setupLookup(\'' + element + '\',changed_val)" name="' + element + '@haslookup" ' + hasLookup + '>');
+                $('[id="' + element + '"]').find('td').eq(8).html('<button ' + is_disabled + ' class="btn-info btn" type="button" onclick="newSetupLookup(\'' + element + '\')" name="' + element + '@haslookup" ' + hasLookup + '>Lookup</button>');
+                $('[id="' + element + '"]').find('td').eq(8).append(lookupPrevHtml);
+                $('[id="' + element + '"]').find('td').eq(9).html('<input class="form-control" type="text" name="' + element + '@order" value="' + order + '">');
+
+
+            }
+
+        }
+
+
+        function onChangeLookUpDatasource(changedVal) {
+            if (changedVal !== '') {
+                $.ajax({
+                    type: 'POST',
+                    url: "/bhmodule/get-column-name/",
+                    data: {'datasource_name': changedVal, 'datasource_type': 'datasource'},
+                    success: function (data) {
+                        console.log("here" + changedVal);
+                        console.log(data);
+                        var data_list = JSON.parse(data);
+                        presentLookUpDatasource = data_list;
+                        lookupOptionPopulate(data_list, 'lookup_return_column', 'Return');
+
+                    },
+                    error: function (xhr, status, error) {
+                        $('#del_modal').modal('show');
+                    }
+                });
+            } else {
+                $('#lookup_return_column').html('');
+            }
+        }
+
+
+        function lookupOptionPopulate(data_list, element, placeholder) {
+            console.log("HERE.......")
+            optionHtml = '<option> Select ' + placeholder + ' Column</option>'
+            for (var i in data_list) {
+                optionHtml += '<option>' + data_list[i]['column_name'] + '</option>'
+            }
+            $('#' + element).html(optionHtml);
+        }
+
+
+        {% comment %} function generate {% endcomment %}
+
+        function conditionDivHide(childElement) {
+            if ($('#lookup_condition_div').css('display') === 'none') {
+                //do something
+                $("#lookup_condition_div").css('display', 'block');
+                lookupOptionPopulate(presentLookUpDatasource, childElement, 'Source');
+
+            } else {
+                //something else
+                $("#lookup_condition_div").css('display', 'none');
+            }
+        }
+
+
+        function onChangeLookupConditionType(changed_val, columnElement, staticElement) {
+            if (changed_val === '1') {
+                $('#' + staticElement).prop("disabled", false);
+                {% comment %} $('#' + staticElement.replace('_div', '')).val(''); {% endcomment %}
+
+                $('#' + staticElement).css('display', 'block');
+
+                $('#' + columnElement).css('display', 'none');
+                $('#' + columnElement).prop("disabled", true);
+                $('#' + columnElement.replace('_div', '')).html('');
+            } else if (changed_val === '2') {
+                $('#' + staticElement).css('display', 'none');
+                $('#' + staticElement).prop("disabled", true);
+
+                {% comment %} $('#' + staticElement.replace('_div', '')).val(''); {% endcomment %}
+
+
+                $('#' + columnElement).prop("disabled", false);
+                var optionHtml = '<option> Select List Column</option>'
+                for (var i in presentColumn) {
+                    optionHtml += '<option>' + presentColumn[i] + '</option>'
+                }
+                $('#' + columnElement.replace('_div', '')).html(optionHtml);
+                $('#' + columnElement).css('display', 'block');
+            } else {
+                $('#' + staticElement).css('display', 'none');
+                $('#' + columnElement).css('display', 'none');
+            }
+        }
+
+
+        function addMoreSubindicator() {
+            var lookUpDivHtml = $("#lookup_condition_row_0").html();
+            lookUpDivSerial += 1;
+            var indicator_details_html = lookUpDivHtml.replace(/[_][0]/g, '_' + lookUpDivSerial.toString());
+            $('#lookup_condition_div').append('<div class="row" style="padding: 5px;" id="lookup_condition_row_' + lookUpDivSerial.toString() + '" >' + indicator_details_html + '<div class="col-md-1" style="margin: 5px;padding: 20px; "><button onclick="removeSubindicator(' + lookUpDivSerial.toString() + ')" class="btn blue pull-right" type="button">Remove</button></div></div>');
+
+        }
+
+
+        function removeSubindicator(serial) {
+            $("#lookup_condition_row_" + serial).remove();
+        }
+
+
+        function dataLookUpSubmit() {
+            var lookupConfig = JSON.stringify($('#lookup-form').serializeObject());
+            console.log("Here I am in lookup");
+            console.log(lookupConfig);
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add/lookup-column/' + list_id + '/',
+                data: {
+                    'form_info': lookupConfig,
+                },
+                success: function (response) {
+                    console.log(response);
+                    //window.location.href = response;
+                },
+                error: function (xhr, status, error) {
+                }
+            });
+        }
+
+        /***
+         * Navigation Filter Option OPEN onclick
+         * @param nav
+         * @param main
+         */
+        {% comment %} function openNav(nav, main) {
+            current_width = $("#" + nav).width();
+            if (current_width == "0") {
+                $("#" + nav).css('display', 'block');
+
+                $("#icon_cross_" + nav).css('display', 'block');
+                $("#icon_caret_" + nav).css('display', 'none');
+                $("#" + nav).css('padding', 10);
+
+            }
+            $(main).attr('onClick', 'closeNav("' + nav + '", this);');
+        }
+
+
+            /***
+             * Navigation Filter Option CLOSE onclick
+             * @param nav
+             * @param main
+             */
+
+            function closeNav(nav, main) {
+                $("#" + nav).css('padding', 0);
+                $("#" + nav).css('width', 0);
+                $(main).attr('onClick', 'openNav("' + nav + '", this);');
+                $("#icon_cross_" + nav).css('display', 'none');
+                $("#icon_caret_" + nav).css('display', 'block');
+                $("#" + nav).css('display', 'none');
+            } {% endcomment %}
+    </script>
+{% endblock %}

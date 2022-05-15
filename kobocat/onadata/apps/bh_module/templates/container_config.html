@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+    <head>
+        <title>
+            {% block title %} Module Container Settings {% endblock %}
+        </title>
+    </head>
+
+    <style>
+        .panel {
+            margin-bottom: 20px;
+            background-color: #fff;
+            border: none;
+            border-radius: 0;
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+
+        .panel-group .panel {
+            margin-bottom: 0;
+            border-radius: 0;
+        }
+
+        .panel-group .panel + .panel {
+            margin-top: 0;
+        }
+
+        .panel-default {
+            border: none;
+        }
+
+        .panel-heading {
+            padding: 20px 15px;
+            border: none;
+            border-radius: 0;
+        }
+
+        .panel-default > .panel-heading {
+            color: #333;
+            background: none;
+            border-top: 1px solid #ddd;
+        }
+
+        .panel-default > .panel-heading + .panel-collapse > .panel-body {
+            border: none;
+        {#            background: #e8e7e4;#}
+        }
+
+        .panel-sub-body {
+            padding: 10px;
+            background: white;
+        }
+
+        .panel-heading .accordion-toggle:after {
+            font-family: 'Glyphicons Halflings';
+            content: "\e114";
+            float: right;
+            color: grey;
+        }
+
+        .panel-heading .accordion-toggle.collapsed:after {
+            content: "\e080";
+        }
+
+
+    </style>
+
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/alertify.min.css" media="all"/>
+    <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/css/themes/semantic.min.css"
+          media="all"/>
+    <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}assets/plugins/select2/select2_metro.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.css"/>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/css/bootstrap-select.min.css">
+
+{% endblock %}
+
+{% block content %}
+
+
+    {#    <form action="/usermodule/register">#}
+    {#        <input type="submit" class="btn red pull-right" value="Register User" style="margin-bottom:15px;">#}
+    {#    </form>#}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption"><i class="fa fa-adn"></i>Module Container Settings</div>
+        </div>
+        <div class="portlet-body">
+            <div class="panel-group" id="accordion">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseThree">
+                                Publish
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseThree" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="checkbox" id="first" style="padding-top: 20px;">
+                                        <label><input id="container_publish" type="checkbox">Publish The
+                                            Changes</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <h4 class="panel-title">
+                            <a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion"
+                               href="#collapseFour">
+                                Status
+                            </a>
+                        </h4>
+                    </div>
+                    <div id="collapseFour" class="panel-collapse collapse">
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="checkbox" id="first" style="padding-top: 20px;">
+                                        <label><input id="container_status" type="checkbox">Inactive Module</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-actions">
+            <button class="btn pull-right" onclick="history.go(-1);" style="margin-right:10px;" type="button" class="btn default">Cancel</button>
+            <button type="submit" class="btn red pull-right" onclick="saveData();">Save</button>
+        </div>
+
+    </div>
+
+    <div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                    <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+                </div>
+
+                <div class="modal-body">
+                    <p>You are about to delete a user, this procedure is irreversible.</p>
+                    <p>Do you want to proceed?</p>
+                    <p class="debug-url"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <a href="#" class="btn btn-danger btn-ok">Delete</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/jquery.dataTables.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}assets/plugins/data-tables/DT_bootstrap.js"></script>
+    <script type="text/javascript" src="{{ STATIC_URL }}js/czMore/js/jquery.czMore-1.5.3.2.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alertifyjs@1.11.1/build/alertify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/jquery.validation/1.15.1/jquery.validate.min.js"></script>
+
+    <!-- Latest compiled and minified CSS -->
+
+
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/bootstrap-select.min.js"></script>
+
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.9/dist/js/i18n/defaults-*.min.js"></script>
+
+    <script>
+
+        var module_id = {{ module_id }};
+        var edited = '{{ edited  }}';
+        
+        var multipleFieldParent;
+        var presentFilter = [];
+        $('.delete-user-item').on('click', function (e) {
+            var criteria_id = $(this).attr("data-href");
+            $('.btn-ok').attr("href", criteria_id);
+        });
+
+        function onChangeEntryType(changedVal) {
+            if (changedVal == '1') {
+                $('#custom_div').hide();
+                $('#entry_type_error').html("");
+            }
+            else if (changedVal === '2') {
+                $('#custom_div').show();
+                $('#entry_type_error').html("");
+            }
+        }
+
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+
+
+        function onChangeDataSource(changed_val) {
+            var datasource = $('#datasource_type').val();
+            var datasource_type = ((datasource === '2') ? 'datasource' : 'table');
+            $.ajax({
+                type: 'POST',
+                url: "/bhmodule/get-column-name/",
+                data: {'datasource_name': changed_val, 'datasource_type': datasource_type},
+                success: function (data) {
+                    var data_list = JSON.parse(data)
+                    var option = '';
+                    option = '<option value="">Select </option>';
+                    for (var d in data_list) {
+                        var l = data_list[d];
+                        option += '<option value="' + l["column_name"] + '">' + l["column_name"] + ' </option>';
+                    }
+                    $('#searching_attribute').html(option);
+                },
+                error: function (xhr, status, error) {
+                    $('#del_modal').modal('show');
+                }
+            });
+        }
+
+
+        function changeSourceDropdown(changedVal) {
+            var option = '';
+            console.log("Here");
+            console.log(changedVal);
+            if (changedVal === '1') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in table_choices) {
+                    option += '<option value="' + table_choices[d]["table_name"] + '">' + table_choices[d][["table_name"]] + ' </option>';
+                }
+            }
+            else if (changedVal === '2') {
+                {#                var data_list = JSON.parse(table_choices);#}
+                option = '<option value="">Select </option>';
+                for (var d in datasource_choices) {
+                    option += '<option value="' + datasource_choices[d]["id"] + '">' + datasource_choices[d][["title"]] + ' </option>';
+                }
+            }
+
+            $('#list_datasource').html(option);
+            $('.select-picker').selectpicker('refresh');
+
+        }
+
+        function form_validation(){
+            var entry_type = $('#entry_type').val();
+             if (entry_type === ''){
+{#                alertify.alert("Entry Type need to selected");#}
+                $('#entry_type_error').html("<p>This field is required</p>");
+
+                 return false;
+            }
+            else{
+                 return true;
+             }
+        }
+
+
+        function saveData() {
+
+
+            var entry_publish = $('#container_publish').is(':checked');
+            var entry_status = $('#container_status').is(':checked');
+
+            $.ajax({
+                type: 'POST',
+                url: '/bhmodule/add/container-settings/' + module_id + '/',
+                data: {'publish':entry_publish,'status':entry_status},
+                success: function (response) {
+                    console.log(response);
+
+                    window.location.href = response;
+                },
+                error: function (xhr, status, error) {
+
+                }
+            })
+            }
+
+
+
+
+
+        $(document).ready(function () {
+
+            $('.select-picker').selectpicker();
+
+                var publish = '{{ publish_status }}';
+                var status = '{{ status }}';
+                console.log(publish);
+
+
+
+                if (publish==='1'){
+                    // Check #x
+                    $( "#container_publish" ).prop( "checked", true );
+
+                }
+
+                if (status === '0'){
+                    $( "#container_status" ).prop( "checked", true );
+                }
+
+
+            $('#user_table').dataTable({
+                // set the initial value
+                "iDisplayLength": 10,
+                "sPaginationType": "bootstrap",
+                "aLengthMenu": [
+                    [10, 20, 50],
+                    [10, 20, 50] // change per page values here
+                ],
+                "aoColumnDefs": [{
+                    'bSortable': false,
+                    'aTargets': [3]
+                }
+                ]
+            });
+
+            $('#user_table_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+            $('#user_table_wrapper .dataTables_length select').addClass("form-control input-xsmall"); // modify table per page dropdown
+
+            if ($('.alert-block').is(':visible')) {
+                window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+        });
+
+
+    </script>
+{% endblock %}

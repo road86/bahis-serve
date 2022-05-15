@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+{% block additional-headers %}
+<head>
+    <title>
+        {% block title %} User Adminstration {% endblock %}
+    </title>
+</head>
+<link rel="stylesheet" type="text/css" href="{{STATIC_URL}}assets/plugins/select2/select2_metro.css"/>
+<link rel="stylesheet" href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"/>
+{% endblock %}
+
+{% block content %}
+
+    {% if can_conf == True %}
+    <form action="/usermodule/register">
+        <input type="submit" class="btn red pull-right" value="Register User" style="margin-bottom:15px;">
+    </form>
+    {% endif %}
+
+<div class="portlet box red">
+    <div class="portlet-title">
+        <div class="caption"><i class="fa fa-adn"></i>Users List</div>
+    </div>
+    <div class="portlet-body">
+        <table id="user_table" class="table table-bordered table-striped table-condensed flip-content">
+            <thead class="flip-content">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Organization</th>
+                <th>Role</th>
+                <th >Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{user.username}}</td>
+                <td>{{user.email}}</td>
+                <td>{{user.organization}}</td>
+                <td>{{user.role}}</td>
+                <td >
+                    {% if can_conf == True %}
+                    <a class="tooltips" data-placement="top" data-original-title="Edit User"
+                       href="/usermodule/edit/{{user.id}}"><i class="fa fa-2x fa-pencil-square-o"></i></a>
+                    <a class="delete-user-item tooltips" data-placement="top" data-original-title="Delete User" href="#"
+                       data-href="/usermodule/delete/{{user.id}}" data-toggle="modal" data-target="#confirm-delete"><i class="fa fa-2x fa-trash-o"></i></a>
+                    <a class="tooltips" data-placement="top" data-original-title="Reset Password"
+                       href="/usermodule/reset-password/{{user.id}}"><i class="fa fa-2x fa-cog"></i></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="confirm-delete" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+     aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Delete</h4>
+            </div>
+
+            <div class="modal-body">
+                <p>You are about to delete a user, this procedure is irreversible.</p>
+                <p>Do you want to proceed?</p>
+                <p class="debug-url"></p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                <a href="#" class="btn btn-danger btn-ok">Delete</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block additional-javascript %}
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
+<script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
+<script>
+            $('.delete-user-item').on('click', function(e) {
+                var criteria_id = $(this).attr("data-href");
+                $('.btn-ok').attr("href",criteria_id);
+            });
+
+            $(document).ready(function(){
+                $('#user_table').dataTable({
+                // set the initial value
+                "iDisplayLength": 10,
+                "sPaginationType": "bootstrap",
+                "aLengthMenu": [
+                    [10, 20, 50],
+                    [10, 20, 50] // change per page values here
+                ],
+                "aoColumnDefs": [{
+                        'bSortable': false,
+                        'aTargets': [3]
+                    }
+                ]
+            });
+
+            $('#user_table_wrapper .dataTables_filter input').addClass("form-control input-medium"); // modify table search input
+            $('#user_table_wrapper .dataTables_length select').addClass("form-control input-xsmall"); // modify table per page dropdown
+
+            if ($('.alert-block').is(':visible')) {
+            window.setTimeout(function () {
+                    $(".alert-success").fadeTo(1500, 0).slideUp(500, function () {
+                        $(this).remove();
+                    });
+                }, 5000);
+            }
+
+            });
+
+
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+   <link href="/static/css/bootstrap-datepicker.css" rel="stylesheet" type="text/css"/>
+{% endblock %}
+
+{% block content %}
+
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Sector edit form
+            </div>
+        </div>
+
+        <div class="portlet-body form">
+            <form class="horizontal-form" id="" method="post" action="/usermodule/edit-sector/{{ data.id }}/"
+                  enctype="multipart/form-data">
+            <input type="hidden" value = "{{ data.id }}" name="sector_id" >
+                {% csrf_token %}
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label > Code: </label>
+                                <input type="text" minlength="3" maxlength="3" class="form-control" value = '{{ data.sector_code }}' name="sector_code" id="sector_code" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label >TL Pin: </label>
+                                <select class="form-control" name="tlpin_id" id="tlpin_id" required>
+                                        <option value="">Select One</option>
+                                        {% for tlpin_id,tlpin_code in tlpin_list %}
+                                            <option {% if data.tlpin_id == tlpin_id %} selected {% endif %}value="{{ tlpin_id }}">{{ tlpin_code }}</option>
+                                        {% endfor %}
+                                    </select>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button class="btn btn-danger pull-left" id="submit" name="submit" type="submit"
+                                    data-original-title=""
+                                    title="">Submit</button>
+                            <button onclick="history.go(-1);" style="margin-left:10px;" type="button"
+                                    class="btn btn-info pull-left" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block additional-javascript %}
+
+    <script type="text/javascript" src="/static/js/bootstrap-datepicker.js"></script>
+    <script>
+        $(function(){
+              $("input[name='sector_code']").on('input', function (e) {
+                $(this).val($(this).val().replace(/[^0-9]/g, ''));
+              });
+            });
+    </script>
+
+{% endblock %}

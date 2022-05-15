@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% load app_filters %}
+    {% block additional-headers %}
+        <style >
+        .data-table-container table {
+            clear: both;
+            display: table !important;
+            overflow-x: auto;
+            width: 98% !important;
+        }
+
+        .table th, .table td {
+            border: 1px solid #dddddd !important;
+        }
+        </style>
+        <link href="/static/bower_components/backgrid/lib/backgrid.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="/static/bower_components/backgrid-filter/backgrid-filter.min.css" />
+        <link rel="stylesheet" href="/static/bower_components/backgrid-paginator/backgrid-paginator.min.css" />
+        <link href="/static/css/data_view.css" rel="stylesheet">
+        <link href="/static/css/backbone-ui-min.css" rel="stylesheet">
+        <link href="/static/css/bootstrap-datetimepicker.min.css" rel="stylesheet">
+
+    {% endblock %}
+
+     {% block content %}
+        <section id="data-view">
+            <!--<span class="span12">-->
+                <div class="data-table-container table table-striped table-hover">
+                      {% if user.is_authenticated %}
+                      <h1>User list</h1>
+                        {% if admin %}
+                            <form action="/usermodule/register">
+                                <input type="submit" class="btn btn-success" value="Register User">
+                            </form>
+                        {% endif %}
+                        <table border="1">
+                          <tr>
+                            <th style="text-align:center">Serial</th>
+                            <th style="text-align:center">Form Name</th>
+                            <th style="text-align:center">Household ID</th>
+                            <th style="text-align:center">Member Name</th>
+                            <th style="text-align:center">Submitted By</th>
+                            <th style="text-align:center">Date</th>
+                            <th style="text-align:center">Url</th>
+                          </tr>
+
+                        {% for d in data %}
+
+                          <tr>
+                            <td style="text-align:center">{{d.serial}}</td>
+                            <td style="text-align:center">{{d.form_name}}</td>
+                            <td style="text-align:center">{{d.household_id}}</td>
+                            <td style="text-align:center">{{d.member_name}}</td>
+                            <td style="text-align:center">{{d.submitted_by}}</td>
+                            <td style="text-align:center">{{d.date}}</td>
+                            <td style="text-align:center"><a href="{{d.url}}"><i class="fa fa-eye"></i></a></td>
+                            {% comment %}
+                            <td style="text-align:center"><a href="/usermodule/edit/{{user.user.id}}"><i class="fa fa-pencil-square-o"></i></a></td>
+                            <td style="text-align:center"><a href="/usermodule/delete/{{user.id}}"><i class="fa fa-trash-o"></i></a></td>
+                            {% endcomment %}
+                          </tr>
+                        {% endfor %}
+                        </table>
+                      {% else %}
+                        You are not not logged in please <a href="/usermodule/login/">login</a>
+                      {% endif %}
+                      <div style="clear: both;"></div>
+                </div>
+                <div id="client-side-filter"></div>
+                <div style="float:left">    
+                    <div id="main"></div>
+                </div>
+        </section>
+
+        {% endblock %}
+		
+		{% block additional-javascript %}
+        <script>
+
+        </script>
+        {% endblock %}
+

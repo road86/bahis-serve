@@ -1,0 +1,388 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block additional-headers %}
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://api.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.css' rel='stylesheet'/>
+    <link href="http://code.gijgo.com/1.7.3/css/gijgo.css" rel="stylesheet" type="text/css"/>
+        <link rel="stylesheet" type="text/css" href="{{ STATIC_URL }}/plugins/gijgo/gijgo.min.css">
+    <style>
+        .row {
+            margin: 10px;
+        }
+
+        #map {
+            width: 960px;
+            position: relative;
+            margin: 0 auto;
+            line-height: 1.4em;
+        }
+
+        /* If in mobile screen with maximum width 479px. The iPhone screen resolution is 320x480 px (except iPhone4, 640x960) */
+        @media only screen and (max-width: 400px) {
+            #map {
+                width: 90%;
+            }
+        }
+
+        .blur {
+            -webkit-filter: blur(3px);
+            -moz-filter: blur(3px);
+            -o-filter: blur(3px);
+            -ms-filter: blur(3px);
+            filter: blur(3px);
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="portlet box red">
+        <div class="portlet-title">
+            <div class="caption">
+                <i class="fa fa-reorder"></i> Catchment Area
+            </div>
+        </div>
+        <div class="portlet-body">
+            <form class="horizontal-form" method="post" action="/usermodule/branch_catchment_data_insert/" id=""
+                  enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" id="result_set" name="result_set"/>
+                <input type="hidden" id="branch_id" name="branch_id" value="{{ branch_id }}">
+                <div class="form-body">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label for="ORG Name"><strong>Branch Name:</strong></label>
+                                <input type="text" class="form-control" name="organization_name" id="organization_name"
+                                       value="{{ organization_name }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="form-group">
+                                <label>Catchment Area:</label>
+                                <div id="tree"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <!--<div class="form-group table-responsive pull-right">-->
+                                <!--<div id='map' style='width: 471px; height: 500px;'></div>-->
+                                <!--&lt;!&ndash; style='width: 471px; height: 500px;' &ndash;&gt;-->
+                            <!--</div>-->
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <button type="submit" class="btn btn-danger pull-right" id="submit" data-original-title=""
+                                    title="">
+                                Submit
+                            </button>
+                            <button onclick="history.go(-1);" style="margin-right:10px;" type="button"
+                                    class="btn btn-info pull-right" data-original-title="" title="">Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block additional-javascript %}
+
+    <script src='https://api.mapbox.com/mapbox-gl-js/v0.43.0/mapbox-gl.js'></script>
+    <script src="http://code.gijgo.com/1.7.3/js/gijgo.js" type="text/javascript"></script>
+    <script src="{{ STATIC_URL }}/plugins/gijgo/gijgo.js" type="text/javascript"></script>
+    <script type="text/javascript">
+
+
+        {#        for(idx in id)#}
+        {#        {#}
+        {#            var temp = {"id": id[idx], "text": names.name[idx],"hasChildren":true, "children": null}#}
+        {#            data_test.push(temp);#}
+        {#        }#}
+        {#        console.log(data_test)#}
+
+        $(document).ready(function () {
+            var parent_list = {{ parent_list|safe }};
+
+            var datasource = {{ datasource| safe }}['list_of_dictionary'];
+            var check_node_already_expanded = [];
+
+            //var data_test = [{"id":1,"text":"Asia","population":null,"flagUrl":null,"checked":false,"hasChildren":true,"children":null},{"id":5,"text":"North America","population":null,"flagUrl":null,"checked":false,"hasChildren":true,"children":null},{"id":11,"text":"South America","population":null,"flagUrl":null,"checked":false,"hasChildren":true,"children":null},{"id":15,"text":"Europe","population":null,"flagUrl":null,"checked":false,"hasChildren":true,"children":null}];
+            var tree = $('#tree').tree({
+                primaryKey: 'id',
+                uiLibrary: 'bootstrap',
+                dataSource: datasource,
+                checkboxes: true,
+                cascadeCheck: false,
+                lazyLoading: true
+            });
+
+            mapboxgl.accessToken = 'pk.eyJ1IjoianViYWlyNzAiLCJhIjoiY2o2YWUxZnFjMTBpcTMxbnk3bW9qaGhiYiJ9.Z4xUKQkyzrALVFRNNofvTQ';
+//            var map = new mapboxgl.Map({
+//                container: 'map',
+//                style: 'mapbox://styles/mapbox/streets-v10',
+//                center: [90.300, 23.853], // starting position [lng, lat]
+//                zoom: 5.7, // starting zoom
+//                width: 500
+//            });
+//            map.addControl(new mapboxgl.NavigationControl());
+//            map.setPitch(90);
+
+            tree.on('expand', function (e, node, id) {
+                if (check_node_already_expanded.includes(id)) {
+                    return;
+                }
+                else check_node_already_expanded.push(id);
+
+                ajaxcall();
+                $.ajax({
+                    url: '/usermodule/add_children/',
+                    type: 'POST',
+                    dataType: 'json',
+                    beforeSend: function () {
+                        {#                        $('.test').fadeOut(500);#}
+                    },
+                    data: {'id': id},
+                    success: function (result) {
+
+                        for (each in result['list_of_dictionary'])
+                            tree.addNode(result['list_of_dictionary'][each], node);
+			                if(i<parent_list.length-1)
+                                tree.expand(tree.getNodeById(parent_list[i++]));
+                        getchecked();
+
+                    }
+                });
+
+            });
+
+            var check_nodes = {{ check_nodes|safe }};
+
+            getchecked();
+
+            function getchecked() {
+                for (var i = 0; i < check_nodes.length; i++) {
+                    try {
+                        tree.check(tree.getNodeById(check_nodes[i]));
+                    }
+                    catch (es) {
+                    }
+
+                }
+            }
+		i = 0;
+        if(parent_list.length)
+            tree.expand(tree.getNodeById(parent_list[i++]));
+
+            var json_content = {{ json_content|safe }};
+            var map_data = [];
+            for (each in json_content) {
+                temp_map_data = JSON.parse(json_content[each])
+                for (each1 in temp_map_data['features']) {
+                    map_data.push(temp_map_data['features'][each1])
+                }
+
+            }
+
+            if (map_data.length) {
+                map.on('style.load', function () {
+                    map.addSource('route', {
+                        type: 'geojson', data: {
+                            "type": "FeatureCollection",
+                            "features": map_data
+                        }
+                    });
+                    map.addLayer({
+                        "id": "route",
+                        "type": "fill",
+                        "source": 'route',
+                        "paint": {
+                            "fill-color": "#00c08e"
+                        }
+                    });
+
+                    var coordinates = [];
+                    for (each in map_data)
+                        coordinates.push(map_data[each]['geometry']['coordinates']);
+                    var result = [];
+                    flatten(result, coordinates);
+                    var bounds = result.reduce(function (bounds, coord) {
+                        return bounds.extend(coord);
+                    }, new mapboxgl.LngLatBounds(result[0], result[0]));
+
+                    map.fitBounds(bounds, {
+                        padding: 20
+                    });
+
+                });
+            }
+
+
+            tree.on('checkboxChange', function (e, $node, record, state) {
+                ajaxcall();
+
+                if (state == 'unchecked') {
+                    if (check_nodes.includes(record.id)) {
+                        var index = check_nodes.indexOf(record.id);
+                        if (index > -1) {
+                            check_nodes.splice(index, 1);
+                        }
+                    }
+                }
+                {#                console.log('The new state of record ' + $node + ' ' + record.id + ' is ' + state);#}
+                var all_check_node = tree.getCheckedNodes();
+                all_check_node = JSON.stringify(all_check_node);
+                $.ajax({
+                    url: '/usermodule/json_data_fetch/',
+                    type: 'POST',
+                    dataType: 'json',
+                    data: {'id': all_check_node},
+                    success: function (result) {
+                        var map_data = [];
+                        for (each in result.json_content) {
+                            temp_map_data = JSON.parse(result.json_content[each])
+                            for (each1 in temp_map_data['features']) {
+                                map_data.push(temp_map_data['features'][each1])
+                            }
+
+                        }
+
+
+                        if (map_data.length) {
+                            try {
+                                map.addSource('route', {
+                                    type: 'geojson', data: {
+                                        "type": "FeatureCollection",
+                                        "features": map_data
+                                    }
+                                });
+                                map.addLayer({
+                                    "id": "route",
+                                    "type": "fill",
+                                    "source": 'route',
+                                    "paint": {
+                                        "fill-color": "#00c08e"
+                                    }
+                                });
+
+                            }
+                            catch (e) {
+                                try {
+                                    map.getSource('route').setData({
+                                        "type": "FeatureCollection",
+                                        "features": map_data
+                                    });
+                                } catch (es) {
+                                }
+                            }
+                            var coordinates = []
+                            for (each in map_data)
+                                coordinates.push(map_data[each]['geometry']['coordinates']);
+                            var result = [];
+                            flatten(result, coordinates);
+                            var bounds = result.reduce(function (bounds, coord) {
+                                return bounds.extend(coord);
+                            }, new mapboxgl.LngLatBounds(result[0], result[0]));
+
+                            map.fitBounds(bounds, {
+                                padding: 20
+                            });
+                        }
+                        else
+                        {
+                           try {
+                                    map.getSource('route').setData({
+                                        "type": "FeatureCollection",
+                                        "features": []
+                                    });
+                                } catch (es) {
+                                }
+                                map.flyTo({center: [90.300, 23.853], zoom: 5.7});
+                        }
+
+
+
+                    }
+                });
+            });
+
+            function delete_element(datasource, result) {
+                $.each(datasource, function (i, obj) {
+                    delete_element(obj['children'], result);
+                    var index = result.indexOf(obj['id']);
+                    if (index > -1)
+                        result.splice(index, 1);
+                });
+            }
+
+
+            function itera(datasource, result, item) {
+
+                $.each(datasource, function (i, obj) {
+                    if (obj['id'] === item) {
+                        delete_element(obj['children'], result);
+                    }
+                    else itera(obj['children'], result, item);
+                });
+            }
+
+
+            function flatten(result, a) {
+                if (typeof a === 'object' &&
+                    a.length == 2
+                    &&
+                    typeof a[0] !== 'object'
+                ) {
+                    result.push(a);
+                    return;
+                }
+                for (each in a)
+                    flatten(result, a[each]);
+            }
+
+
+            $('#submit').on('click', function () {
+                var result = "";
+                result = result.concat(tree.getCheckedNodes().toString());
+                for (each in check_nodes) {
+                    result = result.concat(",");
+                    result = result.concat(String(check_nodes[each]));
+                }
+
+                $('#result_set').val(result);
+            });
+
+
+        });
+
+
+        function ajaxcall() {
+            $.ajaxSetup({
+                beforeSend: function (xhr, settings) {
+                    function getCookie(name) {
+                        var cookieValue = null;
+                        if (document.cookie && document.cookie != '') {
+                            var cookies = document.cookie.split(';');
+                            for (var i = 0; i < cookies.length; i++) {
+                                var cookie = jQuery.trim(cookies[i]);
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+
+                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                        // Only send the token to relative URLs i.e. locally.
+                        xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
+                    }
+                }
+            });
+        }
+    </script>
+{% endblock %}
