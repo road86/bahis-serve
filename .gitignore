@@ -6,7 +6,6 @@ bahisweb/src/kobocat/onadata/apps/reportsmodule/static/
 *.pyc
 __pycache__
 db.sqlite3
-media
 
 # Backup files #
 *.bak
