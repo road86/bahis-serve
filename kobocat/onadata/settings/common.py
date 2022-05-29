@@ -525,8 +525,7 @@ IMG_FILE_TYPE = 'jpg'
 
 # celery
 BROKER_BACKEND = "librabbitmq"
-#BROKER_URL = 'amqp://guest:guest@localhost:5672/'
-BROKER_URL = 'amqp://admin:admin@192.168.19.119:5672/dyn'
+BROKER_URL = 'amqp://guest:guest@rabbitmq:5672/'
 CELERY_RESULT_BACKEND = "amqp"  # telling Celery to report results to RabbitMQ
 CELERY_ALWAYS_EAGER = False
 
