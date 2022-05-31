@@ -588,6 +588,7 @@ def get_action_dict(action_df, list_def):
     action_definition = []
     for action in action_dict:
         form_title = ''
+        #TODO, sometimes this id odesnt exist in the list of forms due to misconfiguration 
         if action['xform_id']:
             form_title = __db_fetch_single_value("""select title from logger_xform 
                                               where id = %d"""%(int(action['xform_id'])))
