@@ -629,8 +629,7 @@ def submission_request(request, username):
     xml_string = json.loads(body.encode('utf-8'))['xml_submission_file']
     xml = ET.fromstring(xml_string)
     xml_file = StringIO.StringIO(xml_string)
-    sub_url = 'http://' + str(request.META['SERVER_NAME']) + ':' + str(
-        request.META['SERVER_PORT']) + '/' + username + '/submission'
+    sub_url = 'http://nginx:80/' + username + '/submission'
     print sub_url
     files = {'xml_submission_file': xml_file}
     r = requests.post(sub_url, files=files)
