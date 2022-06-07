@@ -41,7 +41,6 @@
         function load_forms_html(form_id) {
             server_address = '{{ kobo_server | safe }}'
             username = '{{ username | safe }}';
-            console.log(server_address);
             var param_url = ''
             if(Object.keys(request_param).length) {
                 Object.keys(request_param).forEach(key => {
@@ -51,9 +50,11 @@
             }
             url = form_builder_server + "/?id=" + form_id + "&url=" + server_address + "&username=" + username
             url+= param_url;
-            console.log(url);
 
-            $('.portlet-body').html('<iframe src="' + url + '" style="width:100%;height:500px;"></iframe>');
+            console.log("Loading form renderer using", url);
+
+            $('.portlet-body').html('<h1> This feature is not yet available.</h1>');
+            /* $('.portlet-body').html('<iframe src="' + url + '" style="width:100%;height:500px;"></iframe>'); */
 
             window.addEventListener('message', handleIframeTask);
         }

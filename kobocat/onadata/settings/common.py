@@ -28,7 +28,7 @@ djcelery.setup_loader()
 
 KOBO_SERVER = os.environ.get('KOBO_SERVER_HOST')
 WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
-FORM_BUILDER_SERVER = os.environ.get('KOBO_BUILDER_HOST')
+FORM_RENDERER_SERVER = os.environ.get('KOBO_RENDERER_HOST')
 WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 KOBO_MODULE_URL = os.environ.get('KOBO_SERVER_HOST')
 

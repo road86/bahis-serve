@@ -1,14 +1,13 @@
 import os
 from onadata.settings.common import *
 
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', False)
 TEMPLATE_DEBUG = DEBUG
 TEMPLATE_STRING_IF_INVALID = ''
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 
 import dj_database_url
-
 
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'mlfs33^s1l4xf6a36$0xsrgcpj_dd*sisfo6HOktYXB9y')
 
@@ -63,7 +62,7 @@ if CSRF_COOKIE_DOMAIN:
 SESSION_SERIALIZER='django.contrib.sessions.serializers.JSONSerializer'
 
 # for debugging
-# print "KOBOFORM_SERVER=%s" % KOBOFORM_SERVER
-# print "SECRET_KEY=%s" % SECRET_KEY
-# print "CSRF_COOKIE_DOMAIN=%s " % CSRF_COOKIE_DOMAIN
+print("DEBUG=%s" % DEBUG)
+print("KOBOFORM_SERVER=%s" % KOBOFORM_SERVER)
+print("KOBOFORM_SERVER_PORT=%s" % KOBOFORM_SERVER_PORT)
 print("hello kobocat")

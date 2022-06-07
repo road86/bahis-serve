@@ -82,7 +82,7 @@ import decimal
 from onadata.apps.formmodule.form_tools import generate_or_update_flat_table, \
     generate_insert_query
 
-from onadata.settings.common import KOBO_SERVER, WEB_SERVER, FORM_BUILDER_SERVER, KOBO_MODULE_URL
+from onadata.settings.common import KOBO_SERVER, WEB_SERVER, FORM_RENDERER_SERVER, KOBO_MODULE_URL
 from rest_framework import status
 from . import uiform_publish
 
@@ -2350,10 +2350,10 @@ def add_form(request, id_string):
     # form_builder_server = database_utility.__db_fetch_single_value("select form_builder_server from form_builder_configuration")
     form_id = __db_fetch_single_value(
         "select id from logger_xform where id_string='" + id_string + "'")
-    form_builder_server = settings.FORM_BUILDER_SERVER
+    form_renderer_server = settings.FORM_RENDERER_SERVER
     return render(request, 'add_form.html',
                   {'username': username, 'web_address': web_address, 'kobo_server': kobo_server, 'form_id': form_id,
-                   'form_builder_server': form_builder_server, 'request_param': json.dumps(request_param)})
+                   'form_builder_server': form_renderer_server, 'request_param': json.dumps(request_param)})
 
 
 @login_required
