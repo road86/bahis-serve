@@ -9,8 +9,8 @@ jobs:
     check_PR_title:
         uses: road86/.github/.github/workflows/check-pr-title.yml@main
         secrets:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            TOKEN: ${{ secrets.GITHUB_TOKEN }}
     add_labels:
         uses: road86/.github/.github/workflows/add-labels.yml@main
         secrets:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            TOKEN: ${{ secrets.GITHUB_TOKEN }}
