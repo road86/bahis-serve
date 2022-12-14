@@ -1,0 +1,16 @@
+name: check PR title and label appropriately
+on:
+    pull_request:
+        types: [opened, edited, synchronize, auto_merge_enabled, reopened]
+        branches:
+            - main
+
+jobs:
+    check_PR_title:
+        uses: road86/.github/.github/workflows/check-pr-title.yml@main
+        secrets:
+            TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    add_labels:
+        uses: road86/.github/.github/workflows/apply-labels-to-pr.yml@main
+        secrets:
+            TOKEN: ${{ secrets.GITHUB_TOKEN }}

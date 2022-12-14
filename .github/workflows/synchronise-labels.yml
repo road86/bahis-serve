@@ -1,0 +1,20 @@
+name: Set Repo Label List
+
+on:
+    workflow_dispatch:
+    schedule:
+        - cron: '00 00 * * *'
+
+jobs:
+    labeler:
+        runs-on: ubuntu-latest
+        steps:
+            - name: checkout
+              uses: actions/checkout@v2
+            - name: synchronize labels
+              uses: julbme/gh-action-manage-label@v1
+              with:
+                  from: https://raw.githubusercontent.com/road86/.github/main/.github/labels.yml
+                  skip-delete: true
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
