@@ -69,7 +69,7 @@ def get_own_and_partner_orgs_usermodule_users(request):
         if current_user:
             current_user = current_user[0]
         all_organizations = get_recursive_organization_children(current_user.organisation_name,[])
-        user_list = UserModuleProfile.objects.filter(organisation_name__in=all_organizations)
+        user_list = UserModuleProfile.objects.filter(organisation_name__in=all_organizations).select_related("user")
     return user_list
 
 
