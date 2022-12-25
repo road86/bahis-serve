@@ -1,58 +1,33 @@
+from __future__ import print_function
 import json
 import os
-import re
 import logging
-
 from datetime import datetime
-from tempfile import NamedTemporaryFile
 from time import strftime, strptime
-
 from django.conf import settings
+from django.http import (
+    HttpResponseForbidden, HttpResponseNotFound,
+    HttpResponseBadRequest, HttpResponse)
+from django.shortcuts import get_object_or_404, render
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.core.files.storage import FileSystemStorage
-from django.core.files.storage import get_storage_class
-from django.core.servers.basehttp import FileWrapper
 from django.core.urlresolvers import reverse
-from django.http import (
-    HttpResponseForbidden, HttpResponseRedirect, HttpResponseNotFound,
-    HttpResponseBadRequest, HttpResponse)
-from django.shortcuts import get_object_or_404
-from django.shortcuts import redirect
-from django.shortcuts import render
 from django.utils.translation import ugettext as _
-from django.views.decorators.http import require_POST
-
-from onadata.apps.main.models import UserProfile, MetaData, TokenStorageModel
-from onadata.apps.logger.models import XForm, Attachment
-from onadata.apps.logger.views import download_jsonform
-from onadata.apps.viewer.models.data_dictionary import DataDictionary
-from onadata.apps.viewer.models.export import Export
-from onadata.apps.viewer.tasks import create_async_export,new_create_async_export
+from django.views.decorators.http import require_POST, require_http_methods
 from onadata.libs.exceptions import NoRecordsFoundError
+from onadata.apps.main.models import UserProfile, MetaData
+from onadata.apps.logger.models import XForm
+from onadata.apps.logger.views import download_jsonform
 from onadata.libs.utils.common_tags import SUBMISSION_TIME
 from onadata.libs.utils.export_tools import (
     generate_export,
     should_create_new_export,
-    kml_export_data,
     newset_export_for)
-from onadata.libs.utils.image_tools import image_url
-from onadata.libs.utils.google import google_export_xls, redirect_uri
 from onadata.libs.utils.log import audit_log, Actions
-from onadata.libs.utils.logger_tools import response_with_mimetype_and_name,\
-    disposition_ext_and_date
-from onadata.libs.utils.viewer_tools import create_attachments_zipfile,\
-    export_def_from_filename
-from onadata.libs.utils.user_auth import has_permission, get_xform_and_perms,\
-    helper_auth_helper, has_edit_permission
-from xls_writer import XlsWriter
-from onadata.libs.utils.chart_tools import build_chart_data
-from django.db import connection
-from django.views.decorators.http import require_POST, require_http_methods
-from onadata.libs.utils.logger_tools import check_form_permissions,get_form_permissions
-from collections import OrderedDict
-import pandas
-from onadata.apps.bh_module.utility_functions import datasource_query_generate
+from onadata.libs.utils.logger_tools import response_with_mimetype_and_name
+from onadata.libs.utils.user_auth import has_permission, helper_auth_helper, has_edit_permission
+from onadata.apps.viewer.models.data_dictionary import DataDictionary
+from onadata.apps.viewer.models.export import Export
 
 media_file_logger = logging.getLogger('media_files')
 
@@ -316,8 +291,8 @@ def create_export(request, username, id_string, export_type):
             return HttpResponseForbidden(_(u'No XLS Template set.'))
 
     query = request.POST.get("query")
-    print ("query++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    print query
+    print("query++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    print(query)
     force_xlsx = request.POST.get('xls') != 'true'
 
     # export options
@@ -851,6 +826,7 @@ def instance(request, username, id_string):
     # if can_edit:
     #     can_edit = check_additional_edit_perms(id_string)
     ################## data view code #######################
+    print(instance_id)
     prev_next_query = "SELECT * FROM( (SELECT id FROM logger_instance WHERE xform_id = (SELECT id FROM logger_xform where id_string = '" + id_string + "' LIMIT 1) AND user_id = " + str(
         request.user.id) + " AND id < " + instance_id + " ORDER BY id DESC LIMIT 1) UNION (SELECT id FROM logger_instance WHERE xform_id = (SELECT id FROM logger_xform where id_string = '" + id_string + "' LIMIT 1) AND user_id = " + str(
         request.user.id) + " AND id > " + instance_id + " ORDER BY id ASC LIMIT 1)) maybe_three_records ORDER BY id"
@@ -1117,7 +1093,7 @@ def custom_data_view(request, username, id_string):
     elif state_list != "*":
         submission_instance_query = submission_instance_query + " and app_inst.status in" + state_list
 
-    print submission_instance_query
+    print(submission_instance_query)
     data_list = []
     col_names = []
 
@@ -1142,7 +1118,7 @@ def custom_data_view(request, username, id_string):
     except Exception, e:
         if connection is not None:
             connection.rollback()
-            print ('DB query error:: ', str(e))
+            print('DB query error:: ', str(e))
             ACTIVATE_CUSTOM_VIEW_QUERY = False
     finally:
         if cursor is not None:
