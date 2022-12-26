@@ -79,22 +79,12 @@ def get_branch_catchment(branch_id):
     :param branch_id: `int` branch ID
     :return: `dataframe` geo Definition
     """
-
-    geo_query = """with t as ( WITH RECURSIVE starting (id, value, name, parent, loc_type) 
-    AS ( select id, value, name, parent, loc_type from core.geo_cluster where 
-    value = any(select geoid from branch_catchment_area where 
-    branch_id = %s and deleted_at is null) ), descendants (id, value, name, parent, loc_type) 
-    AS ( SELECT id, value, name, parent, loc_type FROM starting AS s 
-    UNION ALL SELECT t.id, t.value, t.name, t.parent, t.loc_type 
-    FROM core.geo_cluster AS t JOIN descendants AS d ON t.parent = d.value ), 
-    ancestors (id, value, name, parent, loc_type) AS ( SELECT t.id, t.value ,t.name, 
-    t.parent, t.loc_type FROM core.geo_cluster AS t WHERE t.value IN (SELECT parent FROM starting) 
-    UNION ALL SELECT t.id, t.value, t.name, t.parent, t.loc_type FROM core.geo_cluster AS t JOIN 
-    ancestors AS a ON t.value = a.parent ) TABLE ancestors UNION ALL TABLE descendants) 
-    select t.*, c.node_name as loc_name  from t 
-    join core.geo_definition c on t.loc_type = c.id order by value asc ;""" % (str(branch_id))
+    geo_id = pandas.read_sql_query("""select geoid from core.branch_catchment_area where branch_id = %s""" % (str(branch_id)), connection).values[0,0]
+    geo_query = """with t as (select id, value, name, parent, loc_type from core.geo_cluster where cast(value as varchar(8)) like \'%s\') """ % (str(geo_id)+"%")
+    geo_query += """select t.*, c.node_name as loc_name from t join core.geo_definition c on t.loc_type = c.id order by value asc ;"""
     geo_df = pandas.read_sql_query(geo_query, connection)
-    geo_df = geo_df.fillna('')
+
+    # geo_df = geo_df.fillna('')  # probably not needed
     return geo_df
 
 
@@ -104,6 +94,7 @@ def get_module_catchment(module_id):
     :param module_id: `int` module ID
     :return: `dataframe` geo Definition
     """
+    # FIXME we should be able to make this a bit more readable and a little faster like the branch catchment function?
     geo_query = """with t as ( WITH RECURSIVE starting (id, value, name, parent, loc_type) 
     AS ( select id, value, name, parent, loc_type from core.geo_cluster where 
     value = any(select geoid from module_catchment_area where 
@@ -113,8 +104,10 @@ def get_module_catchment(module_id):
     FROM core.geo_cluster AS t JOIN descendants AS d ON t.parent = d.value ) TABLE descendants) 
     select t.*, c.node_name as loc_name  from t 
     join core.geo_definition c on t.loc_type = c.id order by value asc ;""" % (str(module_id))
-
-    geo_df = pandas.read_sql(geo_query, connection)
+    geo_df = pandas.read_sql_query(geo_query, connection)
+    if module_id == 98:
+        # the main module has no catchment so we pass an empty df
+        return pandas.DataFrame()
     geo_df = geo_df.fillna('')
     return geo_df
 

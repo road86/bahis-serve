@@ -167,6 +167,25 @@ def get_form_api(request, username,last_sync_time):
     return response
 
 
+# @api_view(['GET'])
+# @permission_classes((IsAuthenticated,))
+def get_catchment_api(request, username):
+    """Get a user's catchments for offline storage in bahis-desk
+
+    Args:
+        request ([GET]): []
+        username ([string]): [Requested user's username]
+
+    Returns:
+        [json]: [Module configuration json tree]
+    """
+    user = User.objects.get(username = username)
+    branch_id = utility_functions.get_user_branch(user.id)
+    catchment_df = utility_functions.get_branch_catchment(branch_id)
+    catchment_dict = catchment_df.to_dict('records') 
+    response = HttpResponse(json.dumps(catchment_dict))
+    response["Access-Control-Allow-Origin"] = "*"  # TODO why is this needed?
+    return response
 
 
 # @api_view(['GET'])
@@ -181,37 +200,37 @@ def get_module_api(request, username):
     Returns:
         [json]: [Module configuration json tree]
     """
+    # FIXME use the last_sync_time as per other api endpoints?
     if request.GET.get('last_modified') is not None:
         last_sync_time = request.GET.get('last_modified')
     else:
         last_sync_time = 0
-    role_id = None
-    branch_id = None
     user = User.objects.get(username = username)
-    role_id = utility_functions.get_user_role(user.id)
     branch_id = utility_functions.get_user_branch(user.id)
     branch_catchment_df = utility_functions.get_branch_catchment(branch_id)
+    role_id = utility_functions.get_user_role(user.id)
+
+    # FIXME we should be able to make this a bit more readable and a little faster like the branch catchment function?
     module_query = """select id,'module_'||id::text as "name", m_name::json as label, 
     (case when module_type='1' then 'form' when module_type='2' then 'list' 
     when module_type='3' then 'container' end ) as "type", icon as img_id, 
     node_parent, xform_id::int, list_def_id as list_id, "order" from core.module_definition where publish_status=1 and archive = 0
     and id = any (SELECT  module_id FROM core.modulerolemap where role_id = %d and deleted_at is null)"""%(role_id)
-    
     module_df = pandas.read_sql_query(module_query, connection)
     module_df = module_df.fillna('')
+
     root = module_df['node_parent'] == ''
     root_df = module_df[root]
-    root_dict = root_df.drop(['node_parent'], axis=1).to_dict('records') # FIXME? later
+    root_dict = root_df.drop(['node_parent'], axis=1).to_dict('records')
 
-    final_dict = get_children_dict(root_dict, module_df, branch_catchment_df) # FIXME! now
+    final_dict = get_children_dict(root_dict, module_df, branch_catchment_df)
 
     if len(final_dict)>0:
         response = HttpResponse(json.dumps(final_dict[0]))
     else:
         response = HttpResponse(json.dumps({}))
-    response["Access-Control-Allow-Origin"] = "*"
+    response["Access-Control-Allow-Origin"] = "*"  # TODO why is this needed?
     return response
-
 
 
 def get_children_dict(module_dict, module_df, parent_catchment_df):
@@ -228,18 +247,22 @@ def get_children_dict(module_dict, module_df, parent_catchment_df):
         module_catchment_df = utility_functions.get_module_catchment(module['id'])
         
         if not module_catchment_df.empty:
+            # if children, make the catchment include parent and child
             catchment_df = pandas.merge(module_catchment_df, parent_catchment_df, how ='inner') 
         else:
+            # if no children, stick with parent
             catchment_df = parent_catchment_df
-        module['catchment_area'] = catchment_df.to_dict('records') 
         if module['xform_id'] != '':
             module['xform_id'] = int(module['xform_id'])
         if module['img_id'] != '':
             module['img_id'] = ''+module['img_id']
-        
+
         if len(catchment_df) > 0:
+            # cycle through all children
+            # FIXME does this then cycle through catchments multiple times unnecessarily?
             module['children'] = get_children_dict(child_dict, module_df, catchment_df)
             final_dict.append(module)
+    
     return final_dict
 
 
