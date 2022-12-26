@@ -156,7 +156,7 @@ def get_form_api(request, username,last_sync_time):
 
     form_config_query = """select lower(sql_script) as sql_script, xform_id as id, (extract(epoch from created_at::timestamp) * 1000)::bigint as updated_at from database_static_script where (extract(epoch from created_at::timestamp) * 1000)::bigint > %s""" % (str(last_sync_time))
     #print form_config_query
-    form_config_df = pandas.read_sql(form_config_query, connection)
+    form_config_df = pandas.read_sql_query(form_config_query, connection)
     # if not form_config_df.empty:
     #     print form_df
     #     print form_config_df
