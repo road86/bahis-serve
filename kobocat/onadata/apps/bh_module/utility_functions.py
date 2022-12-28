@@ -79,7 +79,11 @@ def get_branch_catchment(branch_id):
     :param branch_id: `int` branch ID
     :return: `dataframe` geo Definition
     """
-    geo_id = pandas.read_sql_query("""select geoid from core.branch_catchment_area where branch_id = %s""" % (str(branch_id)), connection).values[0,0]
+    geo_id = pandas.read_sql_query("""select geoid from core.branch_catchment_area where branch_id = %s and deleted_at is null""" % (str(branch_id)), connection).values[0,0]
+    parent = pandas.read_sql_query("""select parent from core.geo_cluster where value = %s""" % (str(geo_id)), connection).values[0,0]
+    while parent > 0:
+        geo_id = parent
+        parent = pandas.read_sql_query("""select parent from core.geo_cluster where value = %s""" % (str(geo_id)), connection).values[0,0]
     geo_query = """with t as (select id, value, name, parent, loc_type from core.geo_cluster where cast(value as varchar(8)) like \'%s\') """ % (str(geo_id)+"%")
     geo_query += """select t.*, c.node_name as loc_name from t join core.geo_definition c on t.loc_type = c.id order by value asc ;"""
     geo_df = pandas.read_sql_query(geo_query, connection)
