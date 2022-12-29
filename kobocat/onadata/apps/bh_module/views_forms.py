@@ -1,60 +1,26 @@
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.hashers import make_password
-from django.contrib import messages
-from django.db.models import Count,Q
-from django.http import (
-    HttpResponseRedirect, HttpResponse)
-from django.shortcuts import render_to_response, get_object_or_404
-from django.template import RequestContext,loader
-from django.contrib.auth.models import User
-from datetime import date, timedelta, datetime
-# from django.utils import simplejson
+from __future__ import print_function
 import json
-import logging
-import sys
-from django.core.urlresolvers import reverse
-import pandas
-from collections import OrderedDict
-
-from django.db import (IntegrityError,transaction)
-from django.db.models import ProtectedError
-from django.shortcuts import redirect
-import StringIO
-from django.contrib.auth.decorators import login_required, user_passes_test
-from django import forms
-# Menu imports
-from onadata.apps.usermodule.forms import MenuForm
-from onadata.apps.usermodule.models import MenuItem
-# Unicef Imports
-from onadata.apps.logger.models import Instance,XForm
-# Organization Roles Import
-from onadata.apps.usermodule.models import OrganizationRole,MenuRoleMap,UserRoleMap
-from onadata.apps.usermodule.forms import OrganizationRoleForm,RoleMenuMapForm,UserRoleMapForm,UserRoleMapfForm
-from django.forms.models import inlineformset_factory,modelformset_factory
-from django.forms.formsets import formset_factory
-
-from django.core.exceptions import ObjectDoesNotExist
-from django.views.decorators.csrf import csrf_exempt
-from django.db import connection
-from django.shortcuts import render
-from django.conf import settings
-from django.core.files.storage import FileSystemStorage
 import os
-import pandas as pd
+import pandas
 import requests
-import csv
-#from onadata.apps.bh_module.views import datasource_query_generate
-from onadata.apps.usermodule.models import UserModuleProfile, UserPasswordHistory, UserFailedLogin,UserBranch
-import xml.etree.ElementTree as ET
-from onadata.apps.main.database_utility  import __db_fetch_values_dict,__db_fetch_values,__db_fetch_single_value,__db_commit_query,__db_insert_query
-# file zip related import
-import zipfile
 import StringIO
-from onadata.apps.bh_module.utility_functions import datasource_query_generate
+import zipfile
+import xml.etree.ElementTree as ET
+from django.conf import settings
+from django.db import connection
+from django.http import HttpResponse
+from django.template import RequestContext,loader
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.views.decorators.csrf import csrf_exempt
 from onadata.apps.bh_module import utility_functions
+from onadata.apps.bh_module.utility_functions import datasource_query_generate
+from onadata.apps.logger.models import Instance,XForm
+from onadata.apps.main.database_utility  import __db_fetch_values_dict,__db_fetch_values,__db_fetch_single_value,__db_commit_query,__db_insert_query
+from onadata.apps.usermodule.models import UserRoleMap, UserFailedLogin, UserBranch
 
 datasource_type = [['2', 'Datasource'], ['1', 'Table']]
-#----------------------------- Form Related ---------------------
 
 
 @login_required
@@ -116,7 +82,7 @@ def update_form_csv(request, xform_id):
                 new_config.append(
                     {'csv_name': c['csv_name'],  'datasource_id': c['datasource_id'],
                      'datasource_title': c['datasource_title']})
-    print new_config
+    print(new_config)
     update_query = "update xform_config_data set updated_at=now(), updated_by ='" + request.user.username + "' ,csv_config = '" + json.dumps(
         new_config) + "' where xform_id =" + xform_id
     __db_commit_query(update_query)
@@ -190,7 +156,7 @@ def get_form_api(request, username,last_sync_time):
 
     form_config_query = """select lower(sql_script) as sql_script, xform_id as id, (extract(epoch from created_at::timestamp) * 1000)::bigint as updated_at from database_static_script where (extract(epoch from created_at::timestamp) * 1000)::bigint > %s""" % (str(last_sync_time))
     #print form_config_query
-    form_config_df = pandas.read_sql(form_config_query, connection)
+    form_config_df = pandas.read_sql_query(form_config_query, connection)
     # if not form_config_df.empty:
     #     print form_df
     #     print form_config_df
@@ -201,6 +167,25 @@ def get_form_api(request, username,last_sync_time):
     return response
 
 
+# @api_view(['GET'])
+# @permission_classes((IsAuthenticated,))
+def get_catchment_api(request, username):
+    """Get a user's catchments for offline storage in bahis-desk
+
+    Args:
+        request ([GET]): []
+        username ([string]): [Requested user's username]
+
+    Returns:
+        [json]: [Module configuration json tree]
+    """
+    user = User.objects.get(username = username)
+    branch_id = utility_functions.get_user_branch(user.id)
+    catchment_df = utility_functions.get_branch_catchment(branch_id)
+    catchment_dict = catchment_df.to_dict('records') 
+    response = HttpResponse(json.dumps(catchment_dict))
+    response["Access-Control-Allow-Origin"] = "*"  # TODO why is this needed?
+    return response
 
 
 # @api_view(['GET'])
@@ -215,44 +200,40 @@ def get_module_api(request, username):
     Returns:
         [json]: [Module configuration json tree]
     """
+    # FIXME use the last_sync_time as per other api endpoints?
     if request.GET.get('last_modified') is not None:
         last_sync_time = request.GET.get('last_modified')
     else:
         last_sync_time = 0
-    role_id = None
-    branch_id = None
     user = User.objects.get(username = username)
-    role_id = utility_functions.get_user_role(user.id)
     branch_id = utility_functions.get_user_branch(user.id)
     branch_catchment_df = utility_functions.get_branch_catchment(branch_id)
-    #print len(branch_catchment_df)
-    media_url = 'http://' + str(request.META['SERVER_NAME']) + ':' + str(
-        request.META['SERVER_PORT']) + '/media/shared_file/'
+    role_id = utility_functions.get_user_role(user.id)
+
+    # FIXME we should be able to make this a bit more readable and a little faster like the branch catchment function?
     module_query = """select id,'module_'||id::text as "name", m_name::json as label, 
     (case when module_type='1' then 'form' when module_type='2' then 'list' 
     when module_type='3' then 'container' end ) as "type", icon as img_id, 
     node_parent, xform_id::int, list_def_id as list_id, "order" from core.module_definition where publish_status=1 and archive = 0
     and id = any (SELECT  module_id FROM core.modulerolemap where role_id = %d and deleted_at is null)"""%(role_id)
-    #print(module_query)
-    
-    module_df = pandas.read_sql(module_query, connection)
+    module_df = pandas.read_sql_query(module_query, connection)
     module_df = module_df.fillna('')
+
     root = module_df['node_parent'] == ''
     root_df = module_df[root]
     root_dict = root_df.drop(['node_parent'], axis=1).to_dict('records')
 
-    final_dict = get_children_dict(root_dict, module_df, media_url, branch_catchment_df)
-    # print("------------final_dict------------")
-    # print(final_dict)
+    final_dict = get_children_dict(root_dict, module_df, branch_catchment_df)
+
     if len(final_dict)>0:
         response = HttpResponse(json.dumps(final_dict[0]))
-    else: response = HttpResponse(json.dumps({}))
-    response["Access-Control-Allow-Origin"] = "*"
+    else:
+        response = HttpResponse(json.dumps({}))
+    response["Access-Control-Allow-Origin"] = "*"  # TODO why is this needed?
     return response
 
 
-
-def get_children_dict(module_dict, module_df, media_url, parent_catchment_df):
+def get_children_dict(module_dict, module_df, parent_catchment_df):
     """
     :param module_dict: module definition dictionary
     :param module_df: module dataframe
@@ -265,23 +246,23 @@ def get_children_dict(module_dict, module_df, media_url, parent_catchment_df):
         child_dict = child_df.drop(['node_parent'], axis=1).to_dict('records')
         module_catchment_df = utility_functions.get_module_catchment(module['id'])
         
-        
         if not module_catchment_df.empty:
+            # if children, make the catchment include parent and child
             catchment_df = pandas.merge(module_catchment_df, parent_catchment_df, how ='inner') 
-            #if len(catchment_df)<=0:
-            #    return []
-        else: catchment_df = parent_catchment_df
-        #print len(catchment_df), len(parent_catchment_df)
-        # module['label'] = json.loads(module['label'])
-        module['catchment_area'] = catchment_df.to_dict('records') 
+        else:
+            # if no children, stick with parent
+            catchment_df = parent_catchment_df
         if module['xform_id'] != '':
             module['xform_id'] = int(module['xform_id'])
         if module['img_id'] != '':
             module['img_id'] = ''+module['img_id']
-        
+
         if len(catchment_df) > 0:
-            module['children'] = get_children_dict(child_dict, module_df, media_url, catchment_df)
+            # cycle through all children
+            # FIXME does this then cycle through catchments multiple times unnecessarily?
+            module['children'] = get_children_dict(child_dict, module_df, catchment_df)
             final_dict.append(module)
+    
     return final_dict
 
 
@@ -545,7 +526,7 @@ def get_list_def_api(request, username):
 
 
         except Exception as ex:
-            print ex
+            print(ex)
         try:
               #sorting Filter accroding to order
             filter_df = pandas.DataFrame(list_def['filter_definition']).sort_values(by=['order'], ascending=True)
@@ -554,7 +535,7 @@ def get_list_def_api(request, username):
             #sorting Filter according to order
 
         except Exception as ex:
-            print ex
+            print(ex)
         if list_def['datasource_type'] == 1:
             query = "select * from " + list_def['datasource']
         else:
@@ -630,7 +611,7 @@ def submission_request(request, username):
     xml = ET.fromstring(xml_string)
     xml_file = StringIO.StringIO(xml_string)
     sub_url = 'http://nginx:80/' + username + '/submission'
-    print sub_url
+    print(sub_url)
     files = {'xml_submission_file': xml_file}
     r = requests.post(sub_url, files=files)
     message = {'status': r.status_code, 'message': r.text}
@@ -667,7 +648,7 @@ def system_tabl_sync(request, username):
 
     if request.GET.get('last_modified') is not None:
         last_modified = request.GET.get('last_modified')
-        print last_modified
+        print(last_modified)
         where_string = " where (extract(epoch from date_modified::timestamp) * 1000)::bigint>" + str(last_modified) + ""
     else:
         last_modified = '0'
@@ -688,7 +669,7 @@ def system_tabl_sync(request, username):
         qry="select jsonb_agg(vw_primary_keys.key_column)  from vw_primary_keys where table_name = '" + id_string + "'"
         d["primary_key"]=__db_fetch_single_value(qry)  
         datas.append(d)
-    print datas
+    print(datas)
         
                      
     response = HttpResponse(json.dumps(datas))
@@ -775,7 +756,7 @@ def data_sync_paginated(request, username):
 
     if request.GET.get('last_modified') is not None:
         last_modified = request.GET.get('last_modified')
-        print last_modified
+        print(last_modified)
         where_string = " where (extract(epoch from date_modified::timestamp) * 1000)::bigint>" + str(last_modified) + ""
 
     if request.GET.get('page_length') is not None:
@@ -792,7 +773,7 @@ def data_sync_paginated(request, username):
 
     logger_query = """select id,xform_id, json, user_id, 
     (extract(epoch from date_modified::timestamp) * 1000)::bigint as updated_at from logger_instance""" + where_string + geo_filter_query + order_limit_str
-    print logger_query
+    print(logger_query)
     logger_df = pandas.read_sql(logger_query, connection)
     logger_df = logger_df.fillna('')
     logger_json = logger_df.to_json(orient='records')
@@ -1143,12 +1124,12 @@ def get_qry_result(request):
         [json]: [All instance data submitted after the sync time]
     """
     post_qry = request.POST
-    print post_qry
+    print(post_qry)
     response={}
 
     if "query" in post_qry:
         query = post_qry['query']
-        print  query    
+        print(query)
         logger_df = pandas.read_sql(query, connection)
         logger_df = logger_df.fillna('')
         logger_json = logger_df.to_json(orient='records')

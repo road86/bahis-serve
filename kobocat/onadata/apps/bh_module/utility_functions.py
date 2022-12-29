@@ -1,12 +1,11 @@
+from __future__ import print_function
 import pandas
-from django.db import connection
 import os
 import time
+from django.db import connection
 from django.conf import settings
 from django.core.files.storage import FileSystemStorage
-from onadata.apps.main.database_utility import db_fetch_dataframe, __db_fetch_single_value_excption, \
-    __db_fetch_values_dict, __db_fetch_values, __db_fetch_single_value, __db_commit_query, __db_insert_query, database
-
+from onadata.apps.main.database_utility import db_fetch_dataframe, __db_fetch_single_value_excption
 
 def get_module_dict(module_query, media_url):
     module_df = pandas.read_sql(module_query, connection)
@@ -80,23 +79,16 @@ def get_branch_catchment(branch_id):
     :param branch_id: `int` branch ID
     :return: `dataframe` geo Definition
     """
+    geo_id = pandas.read_sql_query("""select geoid from core.branch_catchment_area where branch_id = %s and deleted_at is null""" % (str(branch_id)), connection).values[0,0]
+    parent = pandas.read_sql_query("""select parent from core.geo_cluster where value = %s""" % (str(geo_id)), connection).values[0,0]
+    while parent > 0:
+        geo_id = parent
+        parent = pandas.read_sql_query("""select parent from core.geo_cluster where value = %s""" % (str(geo_id)), connection).values[0,0]
+    geo_query = """with t as (select id, value, name, parent, loc_type from core.geo_cluster where cast(value as varchar(8)) like \'%s\') """ % (str(geo_id)+"%")
+    geo_query += """select t.*, c.node_name as loc_name from t join core.geo_definition c on t.loc_type = c.id order by value asc ;"""
+    geo_df = pandas.read_sql_query(geo_query, connection)
 
-    geo_query = """with t as ( WITH RECURSIVE starting (id, value, name, parent, loc_type) 
-    AS ( select id, value, name, parent, loc_type from core.geo_cluster where 
-    value = any(select geoid from branch_catchment_area where 
-    branch_id = %s and deleted_at is null) ), descendants (id, value, name, parent, loc_type) 
-    AS ( SELECT id, value, name, parent, loc_type FROM starting AS s 
-    UNION ALL SELECT t.id, t.value, t.name, t.parent, t.loc_type 
-    FROM core.geo_cluster AS t JOIN descendants AS d ON t.parent = d.value ), 
-    ancestors (id, value, name, parent, loc_type) AS ( SELECT t.id, t.value ,t.name, 
-    t.parent, t.loc_type FROM core.geo_cluster AS t WHERE t.value IN (SELECT parent FROM starting) 
-    UNION ALL SELECT t.id, t.value, t.name, t.parent, t.loc_type FROM core.geo_cluster AS t JOIN 
-    ancestors AS a ON t.value = a.parent ) TABLE ancestors UNION ALL TABLE descendants) 
-    select t.*, c.node_name as loc_name  from t 
-    join core.geo_definition c on t.loc_type = c.id order by value asc ;""" % (str(branch_id))
-    print(geo_query)
-    geo_df = pandas.read_sql(geo_query, connection)
-    geo_df = geo_df.fillna('')
+    # geo_df = geo_df.fillna('')  # probably not needed
     return geo_df
 
 
@@ -106,22 +98,7 @@ def get_module_catchment(module_id):
     :param module_id: `int` module ID
     :return: `dataframe` geo Definition
     """
-    '''
-    geo_query = """with t as ( WITH RECURSIVE starting (id, value, name, parent, loc_type) 
-    AS ( select id, value, name, parent, loc_type from core.geo_cluster where 
-    value = any(select geoid from module_catchment_area where 
-    module_id = %s and deleted_at is null) ), descendants (id, value, name, parent, loc_type) 
-    AS ( SELECT id, value, name, parent, loc_type FROM starting AS s 
-    UNION ALL SELECT t.id, t.value, t.name, t.parent, t.loc_type 
-    FROM core.geo_cluster AS t JOIN descendants AS d ON t.parent = d.value ), 
-    ancestors (id, value, name, parent, loc_type) AS ( SELECT t.id, t.value ,t.name, 
-    t.parent, t.loc_type FROM core.geo_cluster AS t WHERE t.value IN (SELECT parent FROM starting) 
-    UNION ALL SELECT t.id, t.value, t.name, t.parent, t.loc_type FROM core.geo_cluster AS t JOIN 
-    ancestors AS a ON t.value = a.parent ) TABLE ancestors UNION ALL TABLE descendants) 
-    select t.*, c.node_name as loc_name  from t 
-    join core.geo_definition c on t.loc_type = c.id order by value asc ;"""%(str(module_id))
-    '''
-
+    # FIXME we should be able to make this a bit more readable and a little faster like the branch catchment function?
     geo_query = """with t as ( WITH RECURSIVE starting (id, value, name, parent, loc_type) 
     AS ( select id, value, name, parent, loc_type from core.geo_cluster where 
     value = any(select geoid from module_catchment_area where 
@@ -131,10 +108,10 @@ def get_module_catchment(module_id):
     FROM core.geo_cluster AS t JOIN descendants AS d ON t.parent = d.value ) TABLE descendants) 
     select t.*, c.node_name as loc_name  from t 
     join core.geo_definition c on t.loc_type = c.id order by value asc ;""" % (str(module_id))
-
-    if module_id == 74:
-        print(geo_query)
-    geo_df = pandas.read_sql(geo_query, connection)
+    geo_df = pandas.read_sql_query(geo_query, connection)
+    if module_id == 98:
+        # the main module has no catchment so we pass an empty df
+        return pandas.DataFrame()
     geo_df = geo_df.fillna('')
     return geo_df
 
@@ -180,11 +157,9 @@ def datasource_query_generate(datasource_id):
     source_query = "SELECT  ds_name, title, p_source, p_source_type, s_source, s_source_type, " \
                    "column_mapping, columns_list FROM core.datasource_definition WHERE " \
                    "id = %s" % (datasource_id)
-    datasource_df = pandas.read_sql(source_query, connection)
-    # print datasource_df
+    datasource_df = pandas.read_sql_query(source_query, connection)
     datasource = datasource_df.to_dict('records')[0]
     column_mapping = datasource['column_mapping']
-    #print column_mapping
 
     where_query = ' where '
     group_query = ' group by '
