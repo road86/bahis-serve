@@ -9,6 +9,7 @@
 # imports this one.
 # The local files should be used as the value for your DJANGO_SETTINGS_FILE
 # environment variable as needed.
+from __future__ import print_function
 import logging
 import multiprocessing
 import os
@@ -21,9 +22,6 @@ from django.utils.log import AdminEmailHandler
 import djcelery
 from pymongo import MongoClient
 
-
-
-
 djcelery.setup_loader()
 
 KOBO_SERVER = os.environ.get('KOBO_SERVER_HOST')
@@ -31,7 +29,7 @@ WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 FORM_RENDERER_SERVER = os.environ.get('KOBO_RENDERER_HOST')
 WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 KOBO_MODULE_URL = os.environ.get('KOBO_SERVER_HOST')
-
+DEBUG = os.environ.get('DJANGO_DEBUG', False)
 
 
 
@@ -40,9 +38,9 @@ CURRENT_FILE = os.path.abspath(__file__)
 PROJECT_ROOT = os.path.realpath(
     os.path.join(os.path.dirname(CURRENT_FILE), '..//'))
 
-#print "project root"
+#print("project root")
 
-#print PROJECT_ROOT
+#print(PROJECT_ROOT)
 ############################
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 ONADATA_DIR = BASE_DIR
@@ -219,8 +217,8 @@ TEMPLATE_LOADERS = (
     # 'django.template.loaders.eggs.Loader',
 )
 
-
 MIDDLEWARE_CLASSES = (
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
     'reversion.middleware.RevisionMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
@@ -270,6 +268,7 @@ INSTALLED_APPS = (
     'reversion',
     'django_nose',
     'django_digest',
+    'debug_toolbar',
     'corsheaders',
     'oauth2_provider',
     'rest_framework',
@@ -647,3 +646,30 @@ DEFAULT_VALIDATION_STATUSES = [
 ALLOWED_HOSTS = '*'
 
 SYSTEM_TABLE = ['geo_cluster']
+
+if DEBUG:
+    # requried for django debug toolbar inside dockers
+    import socket  # only if you haven't already imported this
+    hostname, _, ips = socket.gethostbyname_ex(socket.gethostname())
+    INTERNAL_IPS = [ip[: ip.rfind(".")] + ".1" for ip in ips] + ["127.0.0.1", "10.0.2.2"]
+    print(INTERNAL_IPS)
+
+    DEBUG_TOOLBAR_PANELS = [
+        # 'debug_toolbar.panels.versions.VersionsPanel',
+        # 'debug_toolbar.panels.timer.TimerPanel',
+        # 'debug_toolbar.panels.settings.SettingsPanel',
+        # 'debug_toolbar.panels.headers.HeadersPanel',
+        # 'debug_toolbar.panels.request.RequestPanel',
+        'debug_toolbar.panels.sql.SQLPanel',
+        # 'debug_toolbar.panels.staticfiles.StaticFilesPanel',
+        # 'debug_toolbar.panels.templates.TemplatesPanel',
+        # 'debug_toolbar.panels.cache.CachePanel',
+        # 'debug_toolbar.panels.signals.SignalsPanel',
+        # 'debug_toolbar.panels.logging.LoggingPanel',
+        # 'debug_toolbar.panels.redirects.RedirectsPanel',
+    ]
+
+    DEBUG_TOOLBAR_CONFIG = {
+        # Panel options
+        'SQL_WARNING_THRESHOLD': 100,   # milliseconds
+    }
