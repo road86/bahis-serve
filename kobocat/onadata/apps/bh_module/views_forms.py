@@ -93,8 +93,7 @@ def update_form_csv(request, xform_id):
 def add_form_data_embed(request, xform_id):
     # csv_config = __db_fetch_single_value("select csv_config from xform_config_data where xform_id="+xform_id)
     post_dict = request.POST
-    print
-    post_dict
+    print(post_dict)
     # edited= post_dict['flag']
     # csv_name = post_dict['csv_name']
     # attribute_name = post_dict['attribute_name']
@@ -693,8 +692,7 @@ def data_sync(request, username):
 
     if request.GET.get('last_modified') is not None:
         last_modified = request.GET.get('last_modified')
-        print
-        last_modified
+        print(last_modified)
         where_string = " where (extract(epoch from date_modified::timestamp) * 1000)::bigint>" + str(last_modified) + ""
 
     logger_query = """select id,xform_id, json, user_id, 
