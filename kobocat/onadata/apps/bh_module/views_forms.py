@@ -93,8 +93,7 @@ def update_form_csv(request, xform_id):
 def add_form_data_embed(request, xform_id):
     # csv_config = __db_fetch_single_value("select csv_config from xform_config_data where xform_id="+xform_id)
     post_dict = request.POST
-    print
-    post_dict
+    print(post_dict)
     # edited= post_dict['flag']
     # csv_name = post_dict['csv_name']
     # attribute_name = post_dict['attribute_name']
@@ -205,6 +204,13 @@ def get_module_api(request, username):
         last_sync_time = request.GET.get('last_modified')
     else:
         last_sync_time = 0
+    if request.GET.get('bahis_desk_version') is not None:
+        bahis_desk_version = request.GET.get('bahis_desk_version')
+        if bahis_desk_version.endswith("-dev"):
+            bahis_desk_version = bahis_desk_version[:-4:]
+    else:
+        # we only introduced this on API calls post 2.0.5
+        bahis_desk_version = "2.0.5"
     user = User.objects.get(username = username)
     branch_id = utility_functions.get_user_branch(user.id)
     branch_catchment_df = utility_functions.get_branch_catchment(branch_id)
@@ -223,7 +229,10 @@ def get_module_api(request, username):
     root_df = module_df[root]
     root_dict = root_df.drop(['node_parent'], axis=1).to_dict('records')
 
-    final_dict = get_children_dict(root_dict, module_df, branch_catchment_df)
+    if bahis_desk_version >= "2.1.0":
+        final_dict = get_children_dict(root_dict, module_df, branch_catchment_df)
+    else:
+        final_dict = get_children_dict_pre_2_1_0(root_dict, module_df, branch_catchment_df)
 
     if len(final_dict)>0:
         response = HttpResponse(json.dumps(final_dict[0]))
@@ -263,6 +272,38 @@ def get_children_dict(module_dict, module_df, parent_catchment_df):
             module['children'] = get_children_dict(child_dict, module_df, catchment_df)
             final_dict.append(module)
     
+    return final_dict
+
+def get_children_dict_pre_2_1_0(module_dict, module_df, parent_catchment_df):
+    """
+    :param module_dict: module definition dictionary
+    :param module_df: module dataframe
+    :parent_catchment_df: catchment dataframe
+    :return: json data containing module definition
+    """
+    final_dict = []
+    for module in module_dict:
+        child_df = module_df[module_df['node_parent'] == module['id']]
+        child_dict = child_df.drop(['node_parent'], axis=1).to_dict('records')
+        module_catchment_df = utility_functions.get_module_catchment(module['id'])
+        
+        
+        if not module_catchment_df.empty:
+            catchment_df = pandas.merge(module_catchment_df, parent_catchment_df, how ='inner') 
+            #if len(catchment_df)<=0:
+            #    return []
+        else: catchment_df = parent_catchment_df
+        #print len(catchment_df), len(parent_catchment_df)
+        # module['label'] = json.loads(module['label'])
+        module['catchment_area'] = catchment_df.to_dict('records') 
+        if module['xform_id'] != '':
+            module['xform_id'] = int(module['xform_id'])
+        if module['img_id'] != '':
+            module['img_id'] = ''+module['img_id']
+        
+        if len(catchment_df) > 0:
+            module['children'] = get_children_dict(child_dict, module_df, catchment_df)
+            final_dict.append(module)
     return final_dict
 
 
@@ -693,8 +734,7 @@ def data_sync(request, username):
 
     if request.GET.get('last_modified') is not None:
         last_modified = request.GET.get('last_modified')
-        print
-        last_modified
+        print(last_modified)
         where_string = " where (extract(epoch from date_modified::timestamp) * 1000)::bigint>" + str(last_modified) + ""
 
     logger_query = """select id,xform_id, json, user_id, 
