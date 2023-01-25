@@ -1,3 +1,5 @@
+import debug_toolbar
+
 from django.conf.urls import patterns, include, url
 from django.conf import settings
 from django.views.generic import RedirectView
@@ -332,7 +334,9 @@ urlpatterns = patterns(
         'onadata.apps.logger.views.superuser_stats'),
     url(r"^(?P<username>[^/]+)/superuser_stats/(?P<base_filename>[^/]+)$",
         'onadata.apps.logger.views.retrieve_superuser_stats'),
-
+        
+    # django debug toolbar
+    url(r'^__debug__/', include(debug_toolbar.urls)),
 )
 
 urlpatterns += patterns('django.contrib.staticfiles.views',

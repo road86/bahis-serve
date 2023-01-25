@@ -1,7 +1,6 @@
 import os
 from onadata.settings.common import *
 
-DEBUG = os.environ.get('DJANGO_DEBUG', False)
 TEMPLATE_DEBUG = DEBUG
 TEMPLATE_STRING_IF_INVALID = ''
 
