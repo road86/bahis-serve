@@ -908,10 +908,8 @@ def app_user_verify(request):
     try :
         body = request.body
         data_json = json.loads(body)
-        division, district, upazila, mac_address, username, password = '', '', '', '', '', ''
+        mac_address, username, password = '', '', ''
 
-        if 'upazila' in data_json:
-            upazila = data_json['upazila']
         if 'mac_address' in data_json:
             mac_address = data_json['mac_address']
         if 'username' in data_json:
@@ -919,20 +917,18 @@ def app_user_verify(request):
         if 'password' in data_json:
             password = data_json['password']
         user_information = {}
-        
 
+        # TODO is this ever used, it is basically harcoded in the front end
+        upazila = ''
+        if 'upazila' in data_json:
+            upazila = data_json['upazila']
         working_upazila_id = str(upazila)
 
         # first authenticate user
         if username != '' and password != '':
             user = authenticate(username=username, password=password)
 
-
             if user:
-                user_branch = UserBranch.objects.filter(user_id=user.id).first()
-
-                # checking user branch catchment area matches with request area
-                #if checking_user_upazila(user_branch, working_upazila_id):
                 # number of login attempts allowed
                 max_allowed_attempts = 5
                 # count of invalid logins in db
@@ -944,6 +940,15 @@ def app_user_verify(request):
 
                 # Is the account active? It could have been disabled.
                 if user.is_active:
+                    # Only let upazilas use this login route
+                    user_branch = UserBranch.objects.filter(user_id=user.id).first().branch
+                    query = "select geoid from core.branch_catchment_area where branch_id in ("+str(user_branch.id)+") and deleted_at is null"
+                    geoid = pandas.read_sql_query(query, connection).values[0,0]
+                    query = "select loc_type from core.geo_cluster where value in ("+str(geoid)+")"
+                    loc_type = pandas.read_sql_query(query, connection).values[0,0]
+                    if loc_type != 3:
+                        return HttpResponse("Only upazilas can use BAHIS-desk, please contact support.", status=403)
+
                     if hasattr(user, 'usermoduleprofile'):
                         # user profile
                         user_profile = user.usermoduleprofile
@@ -955,7 +960,7 @@ def app_user_verify(request):
                         user_information['role'] = user_role.role.role
                         user_information['organization'] = user_profile.organisation_name_id
                         user_information['branch'] = user_branch.branch_id
-                        user_information['branch_catchment'] = utility_functions.get_branch_catchment(user_information['branch']).to_dict('records')
+                        user_information['upazila'] = geoid
 
                     login(request, user)
                     UserFailedLogin.objects.filter(user_id=user.id).delete()
@@ -963,6 +968,7 @@ def app_user_verify(request):
             else:
                 return HttpResponse('Invalid login credentials!!', status= 409)
 
+        # TODO is this ever used, mac_address always seems to be null
         if mac_address != '' and working_upazila_id != '':
             query = "select id from core.registered_device where working_upazila_id=" + working_upazila_id + " and mac_address = '" + mac_address + "'"
             df = pandas.read_sql(query, connection)
