@@ -29,7 +29,7 @@ WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 FORM_RENDERER_SERVER = os.environ.get('KOBO_RENDERER_HOST')
 WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 KOBO_MODULE_URL = os.environ.get('KOBO_SERVER_HOST')
-DEBUG = os.environ.get('DJANGO_DEBUG', False)
+DEBUG = os.environ.get('DJANGO_DEBUG') == 'True'
 
 
 
