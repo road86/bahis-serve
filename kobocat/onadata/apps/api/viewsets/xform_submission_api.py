@@ -210,12 +210,15 @@ Here is some example JSON, it would replace `[the JSON]` above:
         context = self.get_serializer_context()
         serializer = SubmissionSerializer(instance, context=context)
 
+        print("XFormSubmissionApi.create")
+        print(instance.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z')
+
         return Response({
             'formid': instance.xform.id_string,
             'encrypted': instance.xform.encrypted,
             'instanceID': u'uuid:%s' % instance.uuid,
-            'submissionDate': instance.date_created.isoformat(),
-            'markedAsCompleteDate': instance.date_modified.isoformat()},
+            'submissionDate': instance.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',  # TODO MAKE ME THE SAME AS JS ISOSTRING!
+            'markedAsCompleteDate': instance.date_modified.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'},
                         headers=self.get_openrosa_headers(request),
                         status=status.HTTP_201_CREATED,
                         template_name=self.template_name)

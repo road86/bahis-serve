@@ -212,7 +212,7 @@ class TestBriefcaseAPI(test_abstract_viewset.TestAbstractViewSet):
         with codecs.open(download_submission_path, encoding='utf-8') as f:
             text = f.read()
             text = text.replace(u'{{submissionDate}}',
-                                instance.date_created.isoformat())
+                                instance.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z')
             self.assertContains(response, instanceId, status_code=200)
             self.assertMultiLineEqual(response.content, text)
 

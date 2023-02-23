@@ -99,7 +99,7 @@ def import_submission_for_form(request, username, id_string):
     sms_identity = request.POST.get('phone', '').strip()
     sms_relayer = request.POST.get('relayer', '').strip()
     sms_text = request.POST.get('text', '').strip()
-    now_time = datetime.datetime.now().isoformat()
+    now_time = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     sent_time = request.POST.get('time', now_time).strip()
 
     try:

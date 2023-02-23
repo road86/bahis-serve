@@ -684,12 +684,8 @@ def system_tabl_sync(request, username):
     Returns:
         [json]: [All instance data submitted after the sync time]
     """
-    last_modified = 'null'
-    where_string = ' '
-
     if request.GET.get('last_modified') is not None:
         last_modified = request.GET.get('last_modified')
-        print(last_modified)
         where_string = " where (extract(epoch from date_modified::timestamp) * 1000)::bigint>" + str(last_modified) + ""
     else:
         last_modified = '0'
@@ -841,7 +837,6 @@ def data_sync_count(request, username):
         4:'basic_info/union',
         5:'basic_info/mouza'
     }
-    last_modified = 'null'
     where_string = ' '
 
     # user = User.objects.get(username=username)

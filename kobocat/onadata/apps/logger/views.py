@@ -111,8 +111,8 @@ def _submission_response(request, instance):
     data['formid'] = instance.xform.id_string
     data['encrypted'] = instance.xform.encrypted
     data['instanceID'] = u'uuid:%s' % instance.uuid
-    data['submissionDate'] = instance.date_created.isoformat()
-    data['markedAsCompleteDate'] = instance.date_modified.isoformat()
+    data['submissionDate'] = instance.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
+    data['markedAsCompleteDate'] = instance.date_modified.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
 
     context = RequestContext(request, data)
     t = loader.get_template('submission.xml')
@@ -685,7 +685,7 @@ def view_download_submission(request, username):
     submission_xml_root_node.setAttribute(
         'instanceID', u'uuid:%s' % instance.uuid)
     submission_xml_root_node.setAttribute(
-        'submissionDate', instance.date_created.isoformat()
+        'submissionDate', instance.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     )
     data['submission_data'] = submission_xml_root_node.toxml()
     data['media_files'] = Attachment.objects.filter(instance=instance)

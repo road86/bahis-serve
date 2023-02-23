@@ -220,7 +220,7 @@ class BriefcaseApi(OpenRosaHeadersMixin, mixins.CreateModelMixin,
         submission_xml_root_node.setAttribute(
             'instanceID', u'uuid:%s' % self.object.uuid)
         submission_xml_root_node.setAttribute(
-            'submissionDate', self.object.date_created.isoformat()
+            'submissionDate', self.object.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         )
         data = {
             'submission_data': submission_xml_root_node.toxml(),
