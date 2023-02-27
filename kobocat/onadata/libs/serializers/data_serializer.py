@@ -101,6 +101,6 @@ class SubmissionSerializer(serializers.Serializer):
             'formid': obj.xform.id_string,
             'encrypted': obj.xform.encrypted,
             'instanceID': u'uuid:%s' % obj.uuid,
-            'submissionDate': obj.date_created.isoformat(),
-            'markedAsCompleteDate': obj.date_modified.isoformat()
+            'submissionDate': obj.date_created.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z',
+            'markedAsCompleteDate': obj.date_modified.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         }

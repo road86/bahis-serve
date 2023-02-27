@@ -1,5 +1,6 @@
 bulk/
 bahisweb/src/kobocat/onadata/apps/reportsmodule/static/
+**/static
 # Django #
 *.log
 *.pot

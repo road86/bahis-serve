@@ -156,9 +156,9 @@ def parse_sms_text(xform, identity, text):
         if xlsf_type in ('deviceid', 'subscriberid', 'imei'):
             return NA_VALUE
         elif xlsf_type in ('start', 'end'):
-            return datetime.now().isoformat()
+            return datetime.now().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         elif xlsf_type == 'today':
-            return date.today().isoformat()
+            return date.today().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
         elif xlsf_type == 'phonenumber':
             return identity
         return NA_VALUE

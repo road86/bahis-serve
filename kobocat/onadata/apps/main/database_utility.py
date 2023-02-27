@@ -52,7 +52,7 @@ def decimal_date_default(obj):
     if isinstance(obj, decimal.Decimal):
         return float(obj)
     elif hasattr(obj, 'isoformat'):
-        return obj.isoformat()
+        return obj.strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     else:
         return obj
     raise TypeError

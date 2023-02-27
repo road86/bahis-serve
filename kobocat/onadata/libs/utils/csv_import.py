@@ -77,7 +77,7 @@ def submit_csv(username, xform, csv_file):
 
     csv_reader = ucsv.DictReader(csv_file)
     rollback_uuids = []
-    submission_time = datetime.utcnow().isoformat()
+    submission_time = datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%S.%f')[:-3] + 'Z'
     ona_uuid = {'formhub': {'uuid': xform.uuid}}
     error = None
     additions = inserts = 0
