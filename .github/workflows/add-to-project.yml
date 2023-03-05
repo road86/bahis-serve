@@ -9,4 +9,4 @@ jobs:
     add_to_project:
         uses: road86/.github/.github/workflows/add-to-project.yml@main
         secrets:
-            TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            TOKEN: ${{ secrets.ROBOT_TOKEN }}
