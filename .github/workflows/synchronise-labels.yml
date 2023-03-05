@@ -17,4 +17,4 @@ jobs:
                   from: https://raw.githubusercontent.com/road86/.github/main/.github/labels.yml
                   skip-delete: true
               env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+                  GITHUB_TOKEN: ${{ secrets.ROBOT_TOKEN  }}
