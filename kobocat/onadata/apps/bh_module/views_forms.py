@@ -307,8 +307,6 @@ def get_children_dict_pre_2_1_0(module_dict, module_df, parent_catchment_df):
     return final_dict
 
 
-# @api_view(['GET'])
-# @permission_classes((IsAuthenticated,))
 def get_form_list_api(request, username):
     """
     this function will return form json
@@ -316,70 +314,53 @@ def get_form_list_api(request, username):
     :return:
     """
     if request.GET.get('last_modified') is not None:
-        last_sync_time = request.GET.get('last_modified')
+        last_sync_time = int(request.GET.get('last_modified'))
     else:
         last_sync_time = 0
     user = User.objects.get(username = username)
-    role_id = utility_functions.get_user_role(user.id)
-    form_query = """select
-	lx.id,
-	lx.id_string as name,
-	lx.json::json as form_definition,
-	lx.uuid as form_uuid
-from
-	instance.logger_xform lx
-where
-	lx.id in (with tf as(with tmax as(with t1 as(
-	select
-		md.xform_id,(extract(epoch
-	from
-		coalesce(md.updated_at, md.created_at)::timestamp) * 1000)::bigint as updated_at
-	from
-		core.module_definition md
-	left join core.modulerolemap mrm on
-		mrm.module_id = md.id
-	where
-		md.module_type = '1'
-		and mrm.role_id = %d), t2 as(
-	select
-		lw.xform_id::int,(extract(epoch
-	from
-		coalesce(ld.updated_at, ld.created_at)::timestamp) * 1000)::bigint as updated_at
-	from
-		core.list_workflow lw
-	left join core.module_definition md on
-		md.list_def_id = lw.list_id
-	left join core.list_definition ld on
-		ld.id = lw.list_id
-	left join core.modulerolemap mrm on
-		mrm.module_id = md.id
-	where
-		lw.workflow_type = 'entry'
-		and md.publish_status = 1
-		and md.module_type = '2'
-		and mrm.role_id = %d)
-	select
-		*
-	from
-		t1
-union all
-	select
-		*
-	from
-		t2)
-	select
-		xform_id, max(updated_at) as updated_at
-	from
-		tmax
-	group by
-		xform_id)
-	select
-		xform_id
-	from
-		tf
-	where
-		updated_at > %d)"""%(int(role_id),int(role_id),int(last_sync_time))
-    # print(form_query)
+    role_id = int(utility_functions.get_user_role(user.id))
+    form_query = """
+    SELECT
+        instance.logger_xform.id,
+        instance.logger_xform.id_string AS name,
+        instance.logger_xform.json::json AS form_definition,
+        instance.logger_xform.uuid AS form_uuid
+    FROM
+        instance.logger_xform
+    WHERE
+        instance.logger_xform.id IN (
+            SELECT
+                core.list_workflow.xform_id
+            FROM
+                core.list_workflow
+                JOIN core.module_definition
+                    ON core.module_definition.list_def_id = core.list_workflow.list_id
+                JOIN core.list_definition
+                    ON core.list_definition.id = core.list_workflow.list_id
+                JOIN core.modulerolemap
+                    ON core.modulerolemap.module_id = core.module_definition.id
+            WHERE
+                core.list_workflow.workflow_type = 'entry'
+                AND core.module_definition.publish_status = 1
+                AND core.module_definition.module_type = '2'
+                AND core.modulerolemap.role_id = {role_id}
+                AND COALESCE(core.list_definition.updated_at, core.list_definition.created_at) > TIMESTAMP 'epoch' + {last_sync_time} * INTERVAL '1 millisecond'
+            
+            UNION
+            
+            SELECT
+                core.module_definition.xform_id
+            FROM
+                core.module_definition
+                JOIN core.modulerolemap
+                    ON core.modulerolemap.module_id = core.module_definition.id
+            WHERE
+                core.module_definition.module_type = '1'
+                AND core.modulerolemap.role_id = {role_id}
+                AND COALESCE(core.module_definition.updated_at, core.module_definition.created_at) > TIMESTAMP 'epoch' + {last_sync_time} * INTERVAL '1 millisecond'
+        )
+        OR instance.logger_xform.date_modified > TIMESTAMP 'epoch' + {last_sync_time} * INTERVAL '1 millisecond'
+    """.format(role_id=role_id, last_sync_time=last_sync_time)
     form_df = pandas.read_sql(form_query, connection)
     form_id_list = form_df['id'].tolist()
     form_id_string = ','.join(str(x) for x in form_id_list)
