@@ -16,13 +16,24 @@
         </div>
         <div class="portlet-body">
             <div class="row">
-                <div class="col-md-12">
+                <div class="col-md-6">
                     {% if can_conf == True %}
                     <a href="/usermodule/geo_form/">
                         <button type="submit" class="btn btn-info pull-left" id="add_new" data-original-title=""
                                 title="">Add New
                         </button>
                     </a>
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    {% if can_conf == True %}
+                        <form onsubmit="searchChange(event)" id="search-form" class="pull-right form-search">
+                            <input id="search-text" style="display: inline-block;" class="form-control input-medium" type="text" value="{{ search }}">
+                            <button type="submit" id="search-btn" class="btn btn-info" data-original-title=""
+                                    title="">Search
+                                <span class="ml-1 glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                        </form>
                     {% endif %}
                 </div>
             </div>
@@ -60,7 +71,7 @@
                     <li><a onclick="goBackPage();"><i class="fa fa-angle-left"></i></a></li>
                     {% for i in range %}
                         <li class="{% if page_no == i %}active{% endif %}">
-                            <a href="/usermodule/geo_list/?page_length={{ page_length }}&page_no={{ i }}">{{ i }}</a>
+                            <a href="/usermodule/geo_list/?page_length={{ page_length }}&page_no={{ i }}{% if search != '' %}&search={{ search }}{% endif%}">{{ i }}</a>
                         </li>
                     {% endfor %}
                     <li><a onclick="goForwardPage();"><i class="fa fa-angle-right"></i></a></li>
@@ -103,6 +114,15 @@
      <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/jquery.dataTables.js"></script>
 <script type="text/javascript" src="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.js"></script>
     <script>
+        function searchChange(evt){
+            evt.preventDefault()
+
+            let searchText = evt.target.elements[0].value;
+
+            window.location.href = '/usermodule/geo_list/?search=' + searchText;
+
+        }
+
         var range_last = {{ range_last }};
 
         function getSearchParameters() {
@@ -125,18 +145,21 @@
 
 
         function goBackPage(){
-            if (params['page_no'] > 1) {
-                var prev_page_no = params['page_no'] - 1;
+            let pageNo = parseInt(params['page_no'])
+            if (pageNo > 1) {
+                var prev_page_no = pageNo - 1;
             } else {
                 prev_page_no = 1
             }
-            window.location.href = '/usermodule/geo_list/?page_length={{page_length}}&page_no='+prev_page_no;
+
+            window.location.href = '/usermodule/geo_list/?page_length={{page_length}}&page_no='+prev_page_no+'{% if search != '' %}&search={{ search }}{% endif%}';
         }
 
         function goForwardPage(){
             if (params.hasOwnProperty('page_no')) {
-                if (params['page_no'] < range_last) {
-                    var next_page_no = params['page_no'] + 1;
+                let pageNo = parseInt(params['page_no'])
+                if (pageNo < range_last) {
+                    var next_page_no = pageNo + 1;
                 } else {
                     var next_page_no = range_last;
                 }
@@ -147,7 +170,8 @@
                     next_page_no = range_last;
                 }
             }
-            window.location.href = '/usermodule/geo_list/?page_length={{page_length}}&page_no='+next_page_no;
+
+            window.location.href = '/usermodule/geo_list/?page_length={{page_length}}&page_no='+next_page_no+'{% if search != '' %}&search={{ search }}{% endif%}';
         }
 
 
