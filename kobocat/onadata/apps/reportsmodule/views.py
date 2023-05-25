@@ -2333,7 +2333,7 @@ def form_summary_report(request):
         to_date = request.POST.get('to_date')
 
     if from_date!= '' and to_date != '':
-        date_filter = "and li.date_created >= '%s' and li.date_created < '%s'" % (from_date, to_date)
+        date_filter = "and li.date_created >= '%s' and li.date_created <= '%s'" % (from_date, to_date)
 
 
     query_division = "select value,name as division_name from core.geo_cluster where loc_type = 1"

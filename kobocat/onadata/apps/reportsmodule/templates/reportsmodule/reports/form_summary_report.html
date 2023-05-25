@@ -15,15 +15,24 @@
 
     <style>
 
-        #workday_table .search-column td {
+        #workday_table_wrapper {
+            margin-top: 1rem;
+        }
+
+        .workday_table .search-column td {
             padding: 3px;
         }
 
-        #workday_table .search-column td select {
+        .workday_table .search-column td select {
             width: 90%;
             height: 25px;
             padding: 3px 6px;
             margin: 0;
+        }
+
+        #workday_table_wrapper .dataTables_length{
+            padding-top: 0.75rem;
+            padding-left: 1rem;
         }
 
     </style>
@@ -107,7 +116,7 @@
 
 
             <div id="container"></div>
-            <table id="workday_table" class="table table-bordered table-striped  nowrap">
+            <table style="width:100%" id="workday_table" class="workday_table table table-bordered table-striped hover nowrap">
                 <thead>
                 <!--<tr><th style="text-align:center;" colspan="6">Upazila wise Patients Report (Sick and Treated) </th></tr>-->
                 <tr>
@@ -224,12 +233,15 @@
             });
 
             let dt = $("#workday_table").dataTable({
-                dom: 'Bfrtip',
+                scrollX: true,
+                dom: 'Bfrtipl',
                 orderCellsTop: true,
                 buttons: [
                     'copy', 'csv', 'excel', 'pdf', 'print'
                 ],
-
+                rowCallback: function(row, data) {
+                    $(row).attr('title', data[2])
+                }
             });
 
 
@@ -245,8 +257,7 @@
                 if(idx>2) return
 
                 var column = _table.column( this, {search: 'applied'} );
-                var select = $('<select class="form-control" ><option value=""></option></select>')
-                    .appendTo($("thead tr:eq(1) td").eq(this.index()).empty())
+                var select = $('<select class="form-control" ></select>')
                     .on( 'change', function () {
                         var val = $.fn.dataTable.util.escapeRegex(
                             $(this).val()
@@ -257,9 +268,29 @@
                             .draw();
                     } );
 
-                column.data().unique().sort().each( function ( d, j ) {
-                    select.append( '<option value="'+d+'">'+d+'</option>' );
-                } );
+                if (idx === 0){
+
+                    console.log(select[0].options.length);
+
+                    if (select[0].options.length < 1) {
+                        select.appendTo($("thead tr:eq(1) td").eq(this.index()).empty())
+
+                        select.append( '<option value="">Select None</option>' );
+                        column.data().unique().sort().each( function ( d, j ) {
+                            select.append( '<option value="'+d+'">'+d+'</option>' );
+                        });
+                    }
+
+
+                }else{
+                    select.appendTo($("thead tr:eq(1) td").eq(this.index()).empty())
+                    select.append( '<option value="">Select None</option>' );
+                    column.data().unique().sort().each( function ( d, j ) {
+                        select.append( '<option value="'+d+'">'+d+'</option>' );
+                    });
+                }
+
+
 
                 var currSearch = column.search();
                 if ( currSearch ) {
@@ -348,8 +379,6 @@
 
 
         $(document).on("change", "#division_id", function () {
-
-            console.log("Division changed");
 
             division = $(this).val()
 
