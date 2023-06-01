@@ -13,6 +13,30 @@
         </title>
     </head>
 
+    <style>
+
+        #workday_table_wrapper {
+            margin-top: 1rem;
+        }
+
+        .workday_table .search-column td {
+            padding: 3px;
+        }
+
+        .workday_table .search-column td select {
+            width: 90%;
+            height: 25px;
+            padding: 3px 6px;
+            margin: 0;
+        }
+
+        #workday_table_wrapper .dataTables_length{
+            padding-top: 0.75rem;
+            padding-left: 1rem;
+        }
+
+    </style>
+
 {% endblock %}
 
 {% block content %}
@@ -28,7 +52,8 @@
         <form id="filter_trends" action="" method="post">
             {% csrf_token %}
             <div class="row" style="margin-left: 15px;">
-                <div class="col-md-3">
+            <div class="row">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Division: </label>
                         <select class="form-control" name="division_id" id="division_id">
@@ -40,7 +65,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>District: </label>
                         <select class="form-control" name="district_id" id="district_id"
@@ -50,7 +75,7 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <div class="form-group">
                         <label>Upazila: </label>
                         <select class="form-control" name="upazila_id" id="upazila_id"
@@ -60,13 +85,29 @@
                         </select>
                     </div>
                 </div>
-                <div class="col-md-3" style="margin-top: 25px;">
+            </div>
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="from_date">From Date: </label>
+                        <input value="{{ from_date }}" class="form-control" name="from_date" id="from_date" type="date">
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <label for="to_date">To Date: </label>
+                        <input value="{{ to_date }}"  class="form-control" name="to_date" id="to_date" type="date">
+                    </div>
+                </div>
+                <div class="col-md-4" style="margin-top: 25px;">
                     <label class="control-label"></label>
                     <button type="submit"
                             class="btn btn-primary">Search <span
                             class="glyphicon glyphicon-search" aria-hidden="true"></span>
                     </button>
                 </div>
+            </div>
+
             </div>
         </form>
 
@@ -75,11 +116,11 @@
 
 
             <div id="container"></div>
-            <table id="workday_table" class="table table-bordered table-striped  nowrap">
+            <table style="width:100%" id="workday_table" class="workday_table table table-bordered table-striped hover nowrap">
                 <thead>
                 <!--<tr><th style="text-align:center;" colspan="6">Upazila wise Patients Report (Sick and Treated) </th></tr>-->
                 <tr>
-                <th class="td-left">Division</th>
+                    <th class="td-left">Division</th>
                     <th class="td-left">District</th>
                     <th class="td-left">Upazila</th>
                     <th class="td-right">Patients Registry</th>
@@ -88,6 +129,17 @@
                     <th class="td-right">AI Sample Subm.</th>
                     <th class="td-right">Disease investigation</th>
                     <th class="td-right">Participatory Livestock Assessment</th>
+                </tr>
+                <tr class="search-column">
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
                 </tr>
                 </thead>
 
@@ -152,6 +204,8 @@
         var district_id = '{{ district_id|safe }}';
         var upazila_id = '{{ upazila_id|safe }}';
 
+        let div_id = '{{ division_id|safe }}';
+
 
         var loc_type = '{{ loc_type|safe }}';
         var geoid = '{{ geoid|safe }}';
@@ -177,13 +231,82 @@
                 format: 'yyyy-mm-dd',
                 todayHighlight: true
             });
-            $('#division_id').val(division_id);
+
+            let dt = $("#workday_table").dataTable({
+                scrollX: true,
+                dom: 'Bfrtipl',
+                orderCellsTop: true,
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ],
+                rowCallback: function(row, data) {
+                    $(row).attr('title', data[2])
+                }
+            });
+
+
+
+          buildSelect( dt.api() );
+          dt.on('draw.dt', function() {
+              buildSelect(dt.api());
+          });
+
+
+        function buildSelect( _table ) {
+            _table.columns().every( function (idx) {
+                if(idx>2) return
+
+                var column = _table.column( this, {search: 'applied'} );
+                var select = $('<select class="form-control" ></select>')
+                    .on( 'change', function () {
+                        var val = $.fn.dataTable.util.escapeRegex(
+                            $(this).val()
+                        );
+
+                        column
+                            .search( val ? '^'+val+'$' : '', true, false )
+                            .draw();
+                    } );
+
+                if (idx === 0){
+
+                    console.log(select[0].options.length);
+
+                    if (select[0].options.length < 1) {
+                        select.appendTo($("thead tr:eq(1) td").eq(this.index()).empty())
+
+                        select.append( '<option value="">Select None</option>' );
+                        column.data().unique().sort().each( function ( d, j ) {
+                            select.append( '<option value="'+d+'">'+d+'</option>' );
+                        });
+                    }
+
+
+                }else{
+                    select.appendTo($("thead tr:eq(1) td").eq(this.index()).empty())
+                    select.append( '<option value="">Select None</option>' );
+                    column.data().unique().sort().each( function ( d, j ) {
+                        select.append( '<option value="'+d+'">'+d+'</option>' );
+                    });
+                }
+
+
+
+                var currSearch = column.search();
+                if ( currSearch ) {
+                    select.val( currSearch.substring(1, currSearch.length-1) );
+                }
+            } );
+        }
+
+
+            $('#division_id').val(div_id);
             if (division_id != '%') {
                 $.ajax({
                     type: 'POST',
                     url: '/reportsmodule/getDistrict_jq/',
                     data: {
-                        'division': division_id
+                        'division': div_id
                     },
                     success: function (data) {
                         console.log(data);
@@ -191,7 +314,12 @@
                         $('#district_id').append("<option value = '%'> Select Any </option>");
                         var list = JSON.parse(data);
                         for (var i = 0; i < list.district_List.length; i++) {
-                            $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+
+                            if(parseInt(district_id) == list.district_List[i][0]){
+                                $('#district_id').append('<option selected value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                            }else {
+                                $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                            }
                         }
                         $('#district_id').val(district_id);
                         if (district_id != '%') {
@@ -275,7 +403,13 @@
 
                         for (var i = 0; i < list.district_List.length; i++) {
 
-                            $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                            if(parseInt(district_id) == list.district_List[i][0]){
+                                $('#district_id').append('<option selected value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                            }else {
+                                $('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')
+                            }
+
+                            {#$('#district_id').append('<option value = ' + list.district_List[i][0] + '>' + list.district_List[i][1] + '</option>')#}
 
                         }
 

@@ -1685,17 +1685,31 @@ def geo_list(request):
     else:
         page_no = 1
 
-    tc = __db_fetch_single_value("""
-    select count(*) from core.geo_data
-    """)
+    if 'search' in request.GET:
+        search = request.GET['search']
+    else:
+        search = ''
+
+
     query = """
     select gd.id,field_name,gdf.node_name as field_type,geocode 
 	from core.geo_data gd
 	left join core.geo_definition gdf
 	on gdf.id = gd.field_type_id 
+	where lower(field_name) like lower('%%%s%%') or
+    lower(geocode) like lower('%%%s%%')
 	order by gd.updated_date desc
 	limit %s offset (%s * (%s -1))
-    """ % (page_length, page_length, page_no)
+    """ % (search, search, page_length, page_length, page_no)
+
+    tc = __db_fetch_single_value("""
+    select count(*) from core.geo_data gd
+	left join core.geo_definition gdf
+	on gdf.id = gd.field_type_id 
+	where lower(field_name) like lower('%%%s%%') or
+    lower(geocode) like lower('%%%s%%')
+    """ % (search, search))
+
     range_last = tc / int(page_length)
     page_start = int(page_no) - 3
     if page_start < 1:
@@ -1712,6 +1726,7 @@ def geo_list(request):
         'geo_def_data': geo_def_data,
         'page_no': page_no,
         'page_length': page_length,
+        'search': search,
         'range': range(page_start, page_end + 1),
         'range_last': range_last + 1,
         'tc': tc,

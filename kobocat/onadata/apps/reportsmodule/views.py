@@ -2288,6 +2288,10 @@ def form_summary_report(request):
     division_id = '%'
     district_id = '%'
     upazila_id = '%'
+    from_date = ""
+    to_date = ""
+    date_filter = ""
+
     user_geo_data = __db_fetch_values_dict(
         """
     select bca.id,case ub.organization_id when 10 then 2 when 41 then 3 else 1 end as organization_type,bca.geoid,
@@ -2325,6 +2329,12 @@ def form_summary_report(request):
         division_id = request.POST.get('division_id')
         district_id = request.POST.get('district_id')
         upazila_id = request.POST.get('upazila_id')
+        from_date = request.POST.get('from_date')
+        to_date = request.POST.get('to_date')
+
+    if from_date!= '' and to_date != '':
+        date_filter = "and li.date_created >= '%s' and li.date_created <= '%s'" % (from_date, to_date)
+
 
     query_division = "select value,name as division_name from core.geo_cluster where loc_type = 1"
     get_division_list = __db_fetch_values(query_division)
@@ -2347,6 +2357,7 @@ def form_summary_report(request):
     left join instance.logger_xform lx
     on lx.id = li.xform_id
     where li.deleted_at is null
+    %s
     and lx.id_string in ('patient_registrydyncsv_live','farm_assessment_p2','avian_influenza_investigate_p2','avian_influenza_sample_p2','disease_investigation_p2','participatory_livestock_assessment'))
     select 'Patients Registry'as form_name,bprlt.basic_info_division as division,bprlt.basic_info_district as district,bprlt.basic_info_upazila as upazila,date(bprlt.basic_info_date) as action_date from core.bahis_patient_registrydyncsv_live_table bprlt, dx where instanceid::int8 in (dx.id) 
     union all
@@ -2371,17 +2382,17 @@ def form_summary_report(request):
     and datax.district = gl.dist_code
     and datax.upazila = gl.upz_code
     group by gl.div_name,gl.dist_name,gl.upz_name
-    """ % (division_id,district_id,upazila_id)
+    """ % (division_id,district_id,upazila_id, date_filter)
 
     form_summary_data = __db_fetch_values_dict(select_query)
     all_geo_id.append(1)
+
     return render(request, 'reportsmodule/reports/form_summary_report.html',
                   {'get_division_list': get_division_list, 'col_name': col_name, 'form_summary_data': form_summary_data, 'all_geo_id': all_geo_id,
                    'division_id': division_id, 'district_id': district_id, 'upazila_id': upazila_id,
-                   'loc_type': loc_type, 'geoid': geoid
+                   'loc_type': loc_type, 'geoid': geoid,
+                   'from_date': from_date, 'to_date': to_date
                    })
-
-
 
 def handle_none(dictionary):
     for key, value in dictionary.items():
