@@ -118,7 +118,7 @@ class UserRoleMap(models.Model):
 
 #branch
 class Branch(models.Model):
-    id = models.BigIntegerField(null=False)
+    # id = models.BigIntegerField(null=False)
     branch_name = models.CharField(max_length=150)
     organization = models.ForeignKey('Organizations', blank=True, null=True, related_name='org',
                                             on_delete=models.PROTECT)

@@ -19,6 +19,7 @@ from onadata.apps.bh_module.utility_functions import datasource_query_generate
 from onadata.apps.logger.models import Instance,XForm
 from onadata.apps.main.database_utility  import __db_fetch_values_dict,__db_fetch_values,__db_fetch_single_value,__db_commit_query,__db_insert_query
 from onadata.apps.usermodule.models import UserRoleMap, UserFailedLogin, UserBranch
+from onadata.apps.bh_module.models import DeskVersion
 
 datasource_type = [['2', 'Datasource'], ['1', 'Table']]
 
@@ -646,6 +647,9 @@ def submission_request(request, username):
 
         instance_data = instance_data.replace('uuid:', '')
         instance = Instance.objects.filter(uuid=instance_data).first()
+        user = User.objects.get(username = username)
+        bahis_no = request.GET['bahis_desk_version']
+        DeskVersion.objects.create(user=user, desk_version=bahis_no, instance_id=instance.id)
         message['id'] = instance.id
         message['date_created'] = instance.date_created.strftime("%Y-%m-%d %H:%M:%S")
 
