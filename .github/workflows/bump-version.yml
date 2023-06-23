@@ -1,0 +1,30 @@
+name: bump and release
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  automatically_bump_version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: bump
+        id: bump
+        uses: TriPSs/conventional-changelog-action@v3
+        with:
+          github-token: ${{ secrets.ROBOT_TOKEN }}
+          git-user-name: road86-robot
+          git-user-email: github@chasnelson.co.uk
+          skip-commit: "true"
+          skip-version-file: "true"
+          output-file: "false"
+      - name: release
+        uses: softprops/action-gh-release@v1
+        if: ${{ steps.bump.outputs.skipped == 'false' }}
+        with:
+          tag_name: ${{ steps.bump.outputs.tag }}
+          body: ${{ steps.bump.outputs.clean_changelog }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.ROBOT_TOKEN }}
