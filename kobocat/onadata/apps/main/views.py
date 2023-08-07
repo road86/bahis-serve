@@ -2171,6 +2171,17 @@ def parseXML(root, ins, parent, form_id):
 
 
 @login_required
+def landing_page(request):
+    variables = RequestContext(request, {
+        'head_title': 'Welcome to BAHIS',
+        'username': request.user.username,
+        'version': 'v2.4.0' # FIXME make this dynamic
+    })
+    output = render(request, 'landing_page.html', variables);
+    return HttpResponse(output)
+
+
+@login_required
 def survey_summary(request):
     # instance_parse()
     surveyData = {}
