@@ -20,6 +20,7 @@ jobs:
           skip-commit: "true"
           skip-version-file: "true"
           output-file: "false"
+          pre-release: "true"
       - name: release
         uses: softprops/action-gh-release@v1
         if: ${{ steps.bump.outputs.skipped == 'false' }}
