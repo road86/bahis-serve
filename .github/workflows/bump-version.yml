@@ -27,5 +27,6 @@ jobs:
         with:
           tag_name: ${{ steps.bump.outputs.tag }}
           generate_release_notes: "true"
+          prerelease: "true"
         env:
           GITHUB_TOKEN: ${{ secrets.ROBOT_TOKEN }}
