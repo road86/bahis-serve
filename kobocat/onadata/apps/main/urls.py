@@ -46,7 +46,8 @@ urlpatterns = patterns(
     url(r'^formmodule/', include('onadata.apps.formmodule.urls', namespace="formmodule")),
     url(r'^reportsmodule/', include('onadata.apps.reportsmodule.urls', namespace="reportsmodule")),
     # main website views
-    url(r'^$', 'onadata.apps.main.views.survey_summary'),
+    url(r'^$', 'onadata.apps.main.views.landing_page'),
+    url(r'^survey_summary/$', 'onadata.apps.main.views.survey_summary', name='survey_summary'),
     url(r'^add/(?P<id_string>[^/]+)/$', 'onadata.apps.main.views.add_form', name='add_form'),
     url(r'^form_designer/$','onadata.apps.main.views.form_designer', name='form_designer'),
     # url(r'^$', 'onadata.apps.main.views.configure_template'),

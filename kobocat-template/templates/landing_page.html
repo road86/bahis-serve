@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}{{ head_title }}{% endblock %}
+
+{% block additional-headers %}
+<link rel="stylesheet" href="{{STATIC_URL}}css/style.css" />
+<link
+  rel="stylesheet"
+  href="{{STATIC_URL}}assets/plugins/data-tables/DT_bootstrap.css"
+/>
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-6">
+            <div class="portlet box red">
+                <div class="portlet-title">
+                    <div class="caption">Welcome to BAHIS {{ version }}</div>
+                </div>
+                <div class="portlet-body">
+                    <p>Logged in as: {{ username }}.</p>
+                </div>
+            </div>
+
+            <div class="portlet box red">
+                <div class="portlet-title">
+                    <div class="caption">Latest Improvements</div>
+                </div>
+                <div class="portlet-body">
+                    <ul>
+                        <li>(2023-08-07) It was hard to tell exactly how well a new roll-out of bahis-desk had been so
+                            we have added the ability to track which version of the desktop app is being used in the
+                            field.</li>
+                        <li>(2023-06-23) We now how automated semantic versioning for an improved release cycle.</li>
+                        <li>(2023-05-25) The Geoinformation and Form Summary pages had no search feature and so were
+                            difficult to use - we have added search features to both pages.</li>
+                        <li>(2023-03-29) Buitl and released bahis-dash v1!</li>
+                        <li>(2023-03-28) When users sign in from bahis-desk they used to have the entire branch
+                            catchment returned to them but no upazila (which was later inferred from the whole catchment
+                            every time it was needed); we now don't send the catchment (as users already have this) and
+                            do send the upazilla (so it no longer needs to be determined over and over again) -
+                            importantly this limits login to account that have been correctly assigned as an upazila.
+                        </li>
+                        <li>(2023-03-22) When forms were being updated, bahis-desk was not recognising this unless the
+                            parent module was also updated. This has now been corrected.</li>
+                        <li>(2023-03-21) Previously users were being asked to fill out mouza every time they filled out
+                            any form; however, nobody was using this as union is enough granularity and so we have
+                            removed this from all forms.</li>
+                        <li>(2023-03-07) When synchronising new form submissions, clicking "sync now" twice in a row was
+                            creating local duplications due to timestamp discrepancies. In this version, there will be
+                            no duplicated entry as we always default to the version kept on the central server.</li>
+                        <li>(2023-02-23) When editing a form that had been submitted but not synchronised, clicking
+                            "submit" in the edit window was creating a local duplicate of that submission. In this
+                            version, there will be no locally duplicated entries.</li>
+                        <li>(2023-01-24) Previously there was no auto-fill for geolocations (division, district, and
+                            upazila), the geolocation fields have been hidden from users, and now it is auto filling in
+                            the back.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="portlet box red">
+                <div class="portlet-title">
+                    <div class="caption">Quick Links</div>
+                </div>
+                <div class="portlet-body">
+                        <ul>
+                            {% for menu in main_menu_items %}
+                            <li type=""button" class="btn btn-default btn-lg" style="margin: 10px;">
+                                <a href="{{menu.url}}">
+                                    <i class="{{menu.icon_class}}"></i>
+                                    <span class="title">{{menu.title}}</span>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
