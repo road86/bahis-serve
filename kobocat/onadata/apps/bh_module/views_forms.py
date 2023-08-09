@@ -943,6 +943,15 @@ def app_user_verify(request):
                         user_information['upazila'] = geoid
 
                     login(request, user)
+                    # if get the bahis version number then save it in the table
+                    # for older bahis desk (2.2.1 and backward) application will
+                    # not send the version number so save None
+                    if 'bahis_desk_version' in data_json:
+                        bahis_no = data_json['bahis_desk_version']
+                        DeskVersion.objects.create(user=user, desk_version=bahis_no)
+                    else:
+                        DeskVersion.objects.create(user=user, desk_version='None')
+
                     UserFailedLogin.objects.filter(user_id=user.id).delete()
                     status = 200
             else:
