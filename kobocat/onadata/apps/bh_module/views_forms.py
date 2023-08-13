@@ -647,9 +647,6 @@ def submission_request(request, username):
 
         instance_data = instance_data.replace('uuid:', '')
         instance = Instance.objects.filter(uuid=instance_data).first()
-        user = User.objects.get(username = username)
-        bahis_no = request.GET['bahis_desk_version']
-        DeskVersion.objects.create(user=user, desk_version=bahis_no, instance_id=instance.id)
         message['id'] = instance.id
         message['date_created'] = instance.date_created.strftime("%Y-%m-%d %H:%M:%S")
 
