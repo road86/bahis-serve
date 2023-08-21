@@ -76,18 +76,41 @@
                 <div class="portlet-body">
                         <ul>
                             {% for menu in main_menu_items %}
+                            {% if menu.id != 35 %}  
                             <li type=""button" class="btn btn-default btn-lg" style="margin: 10px;">
                                 <a href="{{menu.url}}">
                                     <i class="{{menu.icon_class}}"></i>
                                     <span class="title">{{menu.title}}</span>
                                 </a>
                             </li>
+                            {% endif %}
                             {% endfor %}
                         </ul>
                 </div>
             </div>
-
         </div>
+
+        <div class="col-md-6">
+            <div class="portlet box red">
+                <div class="portlet-title">
+                    <div class="caption reports">Reports</div>
+                </div>
+                <div class="portlet-body">
+                        <ul>
+                            {% for submenu in sub_menu_items %}
+                                {% if submenu.parent_menu_id == 35 %}  
+                                    <li type=""button" class="btn btn-default btn-lg" style="margin: 10px;">
+                                        <a href="{{submenu.url}}">
+                                            <span class="title">{{submenu.title}}</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
