@@ -23,12 +23,19 @@
                 </div>
             </div>
 
-            <div class="portlet box red">
+            <div class="portlet box red" style="max-height: 512px; overflow-y: scroll">
                 <div class="portlet-title">
                     <div class="caption">Latest Improvements</div>
                 </div>
                 <div class="portlet-body">
                     <ul>
+                        <li>(2023-08-17) Previously some data was not pulled to the app if a synchronisation request
+                            failed, now the application will retry the request up to 5 times if a request fails.</li>
+                        <li>(2023-08-17) Previously newly entered data could be deleted after a failed sync; this has
+                            been resolved.</li>
+                        <li>(2023-08-17) We have improved the synchronisation message system: now the synchronizing
+                            message will close only at the end of a sync and there are new animations on the message.
+                            The count of not synced data will also show on top of the sync button.</li>
                         <li>(2023-08-07) It was hard to tell exactly how well a new roll-out of bahis-desk had been so
                             we have added the ability to track which version of the desktop app is being used in the
                             field.</li>
@@ -69,18 +76,41 @@
                 <div class="portlet-body">
                         <ul>
                             {% for menu in main_menu_items %}
+                            {% if menu.id != 35 %}  
                             <li type=""button" class="btn btn-default btn-lg" style="margin: 10px;">
                                 <a href="{{menu.url}}">
                                     <i class="{{menu.icon_class}}"></i>
                                     <span class="title">{{menu.title}}</span>
                                 </a>
                             </li>
+                            {% endif %}
                             {% endfor %}
                         </ul>
                 </div>
             </div>
-
         </div>
+
+        <div class="col-md-6">
+            <div class="portlet box red">
+                <div class="portlet-title">
+                    <div class="caption reports">Reports</div>
+                </div>
+                <div class="portlet-body">
+                        <ul>
+                            {% for submenu in sub_menu_items %}
+                                {% if submenu.parent_menu_id == 35 %}  
+                                    <li type=""button" class="btn btn-default btn-lg" style="margin: 10px;">
+                                        <a href="{{submenu.url}}">
+                                            <span class="title">{{submenu.title}}</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
