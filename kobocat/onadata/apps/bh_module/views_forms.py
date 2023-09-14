@@ -1,5 +1,6 @@
 from __future__ import print_function
 import json
+import logging
 import os
 import pandas
 import requests
@@ -882,7 +883,10 @@ def app_user_verify(request):
     :param request: catchment info and user credential info in request body
     :return: user information with unique machine id
     """
-    try :
+    # deprecated by introduction of OAuth2 protocols
+    logging.Logger.warn("DEPRECATED: app_user_verify; this endpoint will be removed in future versions of bahis-serve")
+    # FIXME Remove after all users are on bahis-desk v3.0.0
+    try:
         body = request.body
         data_json = json.loads(body)
         mac_address, username, password = '', '', ''
