@@ -976,6 +976,20 @@ def app_user_verify(request):
         return HttpResponse('failed', status= 409)
 
 
+@csrf_exempt
+def log_desk_version(request, userid):
+    data_json = json.loads(request.body)
+
+    if 'bahis_desk_version' in data_json:
+        user = get_user(userid)
+        bahis_no = data_json['bahis_desk_version']
+        logging.Logger.debug("User '" + str(user.username) + "' logged in from bahis-desk v" + str(bahis_no))
+        DeskVersion.objects.create(user=user, desk_version=bahis_no)
+    else:
+        logging.Logger.debug("User '" + str(user.username) + "' logged in from bahis-desk < v2.0.5")
+        DeskVersion.objects.create(user=user, desk_version='None')
+    return HttpResponse(status=200)
+
 
 def catchment_area_api(request):
     """

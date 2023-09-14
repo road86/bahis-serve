@@ -338,6 +338,9 @@ urlpatterns = patterns(
         
     # django debug toolbar
     url(r'^__debug__/', include(debug_toolbar.urls)),
+
+    # BAHIS v2 specific API endpoints
+    url(r'^/api/v2/<userid>/deskVersion', 'onadata.apps.bhmodule.views_forms.log_desk_version'),
 )
 
 urlpatterns += patterns('django.contrib.staticfiles.views',
