@@ -50,16 +50,23 @@
                             {% endif %} required>
                         <span id="date-error"></span>
                     </div>
+                    
+                    <div class="form-group">
+                        <label>Is external module?</label>
+                        <input class="form-check-input ios-switch" type="checkbox" />
+                      </div>
+                    </div>
+                    <div class="form-group">
+                        <label>External URL (if exeternal module):</label>
+                        <input type="text" name="module_order" class="form-control">
+                      </div>
+                    </div>
+
                     <div class="form-group">
                         <label>Description:</label>
                         <textarea type="text" name="description" class="form-control" {% if parent_module_name %}
                             value="{{ parent_module_name }}" {% endif %}>
                         </textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Icon:</label>
-                        <input type="file" name="module_icon" accept="image/*" value="{{ icon }}">
                     </div>
 
 

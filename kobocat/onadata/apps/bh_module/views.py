@@ -609,7 +609,6 @@ def module_profile(request, module_id):
                                     from module_definition where id = m.node_parent) as parent_is_project 
                                     from module_definition m left join logger_xform l 
                                     on l.id = m.xform_id where m.id = %s""" % (module_id)).to_dict('r')[0]
-    print module_data
     if module_data['module_type'] == Constants.MODULE_TYPE_CONTAINER:
         template_html = 'module_profile.html'
         child_module_query = """select id, (m_name::json)->>'English' as \"module_name_english\",
@@ -635,7 +634,6 @@ def module_profile(request, module_id):
         child_archived_module_df = child_archived_module_df.fillna('')
         child_archived_module_data = child_archived_module_df.to_dict('records')
 
-    print template_html
     template = loader.get_template('module/module_profile.html')
     context = RequestContext(request, {
         'child_module_list': child_module_data,
@@ -658,7 +656,7 @@ def add_module(request, parent_id=None):
     parent_module_name = __db_fetch_single_value(
         "select (m_name::json)->>'English' as \"module_name_english\" from module_definition where id =%s" % (
             parent_id))
-    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'))
+    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'), ('4', 'iFrame'))
     form_query = "select id, title from logger_xform where id = any(select xform_id from xform_config_data where status= 0)"
     form_list = __db_fetch_values(form_query)
     module_applicable_list = [['ulo', 'ULO'], ['lab', 'LAB']]
@@ -742,7 +740,7 @@ def edit_module(request, module_id):
     if redirect_url is None:
         redirect_url = '/bhmodule/module-profile/' + str(module_dict['node_parent']) + '/'
 
-    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'))
+    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'), ('4', 'iFrame'))
     form_query = "select id, title from logger_xform"
     form_list = __db_fetch_values(form_query)
     module_applicable_list = [['ulo', 'ULO'], ['lab', 'LAB']]
@@ -806,7 +804,7 @@ def module_list(request):
     module_query = "select id, (m_name::json)->>'English' as \"module_name_english\"," \
                    " (m_name::json)->>'Bangla' as \"module_name_bangla\", " \
                    "(case when module_type='1' then 'New Entry' when " \
-                   "module_type='2' then 'List' when module_type='3' then 'Container' end ) module_type, " \
+                   "module_type='2' then 'List' when module_type='3' then 'Container' when module_type='4' then 'iFrame' end ) module_type, " \
                    "applicable_for, (select title from logger_xform where id = xform_id) as xform_id, " \
                    "\"order\",node_parent as node from core.module_definition "
     module_df = pandas.read_sql(module_query, connection)

@@ -220,7 +220,7 @@ def get_module_api(request, username):
     # FIXME we should be able to make this a bit more readable and a little faster like the branch catchment function?
     module_query = """select id,'module_'||id::text as "name", m_name::json as label, 
     (case when module_type='1' then 'form' when module_type='2' then 'list' 
-    when module_type='3' then 'container' end ) as "type", icon as img_id, 
+    when module_type='3' then 'container' when module_type='4' then 'iframe' end ) as "type", icon as img_id, 
     node_parent, xform_id::int, list_def_id as list_id, "order" from core.module_definition where publish_status=1 and archive = 0
     and id = any (SELECT  module_id FROM core.modulerolemap where role_id = %d and deleted_at is null)"""%(role_id)
     module_df = pandas.read_sql_query(module_query, connection)
