@@ -209,19 +209,12 @@ def add_datasource(request):
         primary_agg = []
         secondary_agg = []
         post_dict = dict(request.POST.iterlists())
-        print (post_dict)
-        print("********************************")
+
         main_data = json.loads(post_dict['main_data'][0])
         primary_source = json.loads(post_dict['primary_source'][0])
         if 'aggregation_data' in post_dict:
             aggregation_data = json.loads(post_dict['aggregation_data'][0])
             primary_agg, secondary_agg = parse_aggregate_def(aggregation_data)
-            print aggregation_data
-
-        print("##########################################")
-
-        print main_data, primary_source
-        print("##########################################")
 
         datasource_name = main_data['datasource_name']
         p_source_type = main_data['p_source_type']
@@ -230,10 +223,8 @@ def add_datasource(request):
         p_source_name = main_data['p_source'][0] if main_data['p_source'] != '' else main_data['p_source'][1]
         p_source_name = primary_source['p_source']
 
-        print p_source_name
         if p_source_name != '':
             p_source_info = parsing_source_info(primary_source, 'p_source')
-            print p_source_info + primary_agg
 
             column_mapping['p_source'] = {'column_names': p_source_info + primary_agg}
 
@@ -244,7 +235,6 @@ def add_datasource(request):
                 p_source_key = primary_source['p_source_key']
                 s_source_type = main_data['s_source_type']
                 s_source_info = parsing_source_info(primary_source, 's_source')
-                print s_source_info
                 column_mapping['s_source'] = {'column_names': s_source_info + secondary_agg}
 
             join_key_list = []
@@ -265,10 +255,9 @@ def add_datasource(request):
         condition_list = parse_condition(main_data)
         column_mapping['condition'] = condition_list
 
-        print column_mapping
         query = "INSERT INTO core.datasource_definition (title, p_source, p_source_type, " \
                 "s_source, s_source_type, column_mapping, created_at, created_by) " \
-                "VALUES( '%s', '%s',%s , '%s', %s, '%s', now(), %d )" % \
+                "VALUES( '%s', '%s',%s , '%s', '%s', '%s', now(), %d )" % \
                 (datasource_name, p_source_name, p_source_type, s_source_name, s_source_type,
                  json.dumps(column_mapping), request.user.id)
         __db_commit_query(query)
@@ -283,8 +272,7 @@ def add_datasource(request):
 
 
 def parse_condition(data_dict):
-    print "---------------------------------------"
-    print (data_dict)
+
     condition_source_type = ''
     condition_column = ''
     condition_column_type = ''
@@ -388,8 +376,6 @@ def parsing_source_info(data_dict, source_type):
 
 def get_datasource_query(request, datasource_id):
     datasource_query = datasource_query_generate(datasource_id)
-    print datasource_query
-
 
 # -------------------------Datasource Related ---------------------#
 
@@ -401,10 +387,9 @@ def project_profile(request, project_id):
     :return: template
     """
     redirect_url = request.GET.get('next')
-    print redirect_url
     module_query = "select id, (m_name::json)->>'English' as \"module_name_english\"," \
                    " (m_name::json)->>'Bangla' as \"module_name_bangla\", description, " \
-                   "starting_year, ending_year, icon, \"order\" as module_order, node_parent,status,publish_status,archive from core.module_definition where id =" + project_id
+                   "starting_year, ending_year, icon, \"order\" as module_order, external_url, node_parent,status,publish_status,archive from core.module_definition where id =" + project_id
 
     project_dict = __db_fetch_values_dict(module_query)[0]
 
@@ -413,7 +398,7 @@ def project_profile(request, project_id):
                          "applicable_for, (select title from logger_xform where id = xform_id) as xform_id, " \
                          "\"order\",node_parent as node, icon, list_def_id::text, xform_id::text, is_project, created_at::date, " \
                          "(case when module_type='1' then 'New Entry' when " \
-                         "module_type='2' then 'List' when module_type='3' then 'Container' end ) module_type,status,publish_status,archive" \
+                         "module_type='2' then 'List' when module_type='3' then 'Container' when module_type='4' then 'iFrame' end ) module_type,status,publish_status,archive" \
                          " from module_definition where archive = 0 and node_parent = %s order by \"order\"" % (
                              project_id)
     child_module_df = pandas.read_sql(child_module_query, connection)
@@ -425,7 +410,7 @@ def project_profile(request, project_id):
 (select title from "instance".logger_xform where id = xform_id) as xform_id,
                          "order",node_parent as node, icon, list_def_id::text, xform_id::text, is_project, created_at::date,
                          (case when module_type='1' then 'New Entry' when 
-                         module_type='2' then 'List' when module_type='3' then 'Container' end ) module_type,status,publish_status,archive
+                         module_type='2' then 'List' when module_type='3' then 'Container' when module_type='4' then 'iFrame' end ) module_type,status,publish_status,archive
                          from core.module_definition where archive = 1 and node_parent = %s order by "order"
     """ % (project_id)
 
@@ -452,13 +437,12 @@ def project_edit(request, project_id):
     :return: template
     """
     redirect_url = request.GET.get('next')
-    print redirect_url
     module_query = "select id, (m_name::json)->>'English' as \"module_name_english\"," \
                    " (m_name::json)->>'Bangla' as \"module_name_bangla\", description, " \
-                   "starting_year, ending_year, icon, \"order\" as module_order from core.module_definition where id =" + project_id
+                   "starting_year, ending_year, icon, \"order\" as module_order, external_url, module_type from core.module_definition where id =" + project_id
 
     project_dict = __db_fetch_values_dict(module_query)[0]
-    print project_dict
+    project_dict['is_external'] = project_dict['module_type'] == Constants.MODULE_TYPE_IFRAME
     if request.method == 'POST':
 
         module_name_bangla = request.POST.get('module_name_bangla')
@@ -467,16 +451,17 @@ def project_edit(request, project_id):
         ending_year = request.POST.get('ending_year')
         description = request.POST.get('description')
         module_order = request.POST.get('module_order')
+        external_url = request.POST.get('external_url')
 
         m_name = {'English': module_name_english, 'Bangla': module_name_bangla}
         if request.FILES:
             myfile = request.FILES['module_icon']
             uploaded_file_url = utility_functions.document_upload(myfile, myfile.name, 'module_icon')
-        update_query = "update module_definition set m_name='%s',starting_year='%s', ending_year = '%s'," \
-                       "description = '%s', \"order\" = %s, updated_at=now(), updated_by = %d " \
-                       "where id = %s " % (json.dumps(m_name), starting_year,
-                                           ending_year, description, module_order, request.user.id, project_id)
-        print update_query
+        update_query = "update module_definition set m_name = '%s',starting_year = '%s', ending_year = '%s'," \
+                       "description = '%s', \"order\" = '%s', external_url = '%s', updated_at = now(), updated_by = %d " \
+                       "where id = '%s' " % (json.dumps(m_name), starting_year,
+                                           ending_year, description, module_order, external_url, request.user.id, project_id)
+
         __db_commit_query(update_query)
         messages.success(request, '<i class="fa fa-check-circle"></i> Module Edited successfully!',
                          extra_tags='alert-success crop-both-side')
@@ -499,8 +484,6 @@ def project_settings(request):
     :return: template
     """
     if request.method == 'POST':
-        print request.POST
-
         project_id = request.POST.get('project_id')
         project_active = request.POST.get('project_active')
         project_publish = request.POST.get('project_publish')
@@ -528,7 +511,10 @@ def project_add(request):
         ending_year = request.POST.get('ending_year')
         description = request.POST.get('description')
         module_order = request.POST.get('module_order')
+        external_url = request.POST.get('external_url')
         module_type = Constants.MODULE_TYPE_CONTAINER
+        if request.POST.get('is_external') == 'true':
+            module_type = Constants.MODULE_TYPE_IFRAME
         node_parent = __db_fetch_single_value("""select id 
                       from module_definition where node_parent is null""")
         if request.FILES:
@@ -539,10 +525,10 @@ def project_add(request):
 
         try:
             insert_query = "INSERT INTO core.module_definition (m_name, module_type, starting_year," \
-                           " ending_year, node_parent, \"order\", icon ,description, created_at, created_by, is_project) " \
-                           "VALUES('%s', '%s', '%s', '%s', %s, %s, '%s','%s', now(), %d, 'true') returning id;" % (
+                           " ending_year, node_parent, \"order\", external_url, icon ,description, created_at, created_by, is_project) " \
+                           "VALUES('%s', '%s', '%s', '%s', '%s', '%s', '%s','%s', '%s', now(), %d, 'true') returning id;" % (
                                json.dumps(m_name),
-                               module_type, starting_year, ending_year, node_parent, module_order,
+                               module_type, starting_year, ending_year, node_parent, module_order, external_url,
                                uploaded_file_url, description, request.user.id)
             id = __db_commit_query(insert_query)
             messages.success(request, '<i class="fa fa-check-circle"></i> Project Added successfully!',
@@ -551,7 +537,6 @@ def project_add(request):
 
             return HttpResponseRedirect('/bhmodule/project-list/')
         except Exception as ex:
-            print ex
             messages.success(request, '<i class="fa fa-check-circle"></i> Project Add failed!',
                              extra_tags='alert-danger crop-both-side')
 
@@ -609,13 +594,12 @@ def module_profile(request, module_id):
                                     from module_definition where id = m.node_parent) as parent_is_project 
                                     from module_definition m left join logger_xform l 
                                     on l.id = m.xform_id where m.id = %s""" % (module_id)).to_dict('r')[0]
-    print module_data
     if module_data['module_type'] == Constants.MODULE_TYPE_CONTAINER:
         template_html = 'module_profile.html'
         child_module_query = """select id, (m_name::json)->>'English' as \"module_name_english\",
                         (m_name::json)->>'Bangla' as \"module_name_bangla\", module_type as module_type_id, 
                         (case when module_type='1' then 'New Entry' when 
-                    module_type='2' then 'List' when module_type='3' then 'Container' end ) module_type ,
+                    module_type='2' then 'List' when module_type='3' then 'Container' when module_type='4' then 'iFrame' end ) module_type ,
                     applicable_for, xform_id, 
                     \"order\",node_parent as node, icon, list_def_id::text, xform_id::text, created_at::date,archive,publish_status,status 
                     from module_definition  where archive = 0 and node_parent = %s order by \"order\"""" % (module_id)
@@ -626,7 +610,7 @@ def module_profile(request, module_id):
         child_archived_module_query = """select id, (m_name::json)->>'English' as \"module_name_english\",
                                 (m_name::json)->>'Bangla' as \"module_name_bangla\", module_type as module_type_id, 
                                 (case when module_type='1' then 'New Entry' when 
-                            module_type='2' then 'List' when module_type='3' then 'Container' end ) module_type ,
+                            module_type='2' then 'List' when module_type='3' then 'Container' when module_type='4' then 'iFrame' end ) module_type ,
                             applicable_for, xform_id, 
                             \"order\",node_parent as node, icon, list_def_id::text, xform_id::text, created_at::date,archive,publish_status,status 
                             from module_definition  where archive = 1 and node_parent = %s order by \"order\"""" % (
@@ -635,7 +619,6 @@ def module_profile(request, module_id):
         child_archived_module_df = child_archived_module_df.fillna('')
         child_archived_module_data = child_archived_module_df.to_dict('records')
 
-    print template_html
     template = loader.get_template('module/module_profile.html')
     context = RequestContext(request, {
         'child_module_list': child_module_data,
@@ -658,7 +641,7 @@ def add_module(request, parent_id=None):
     parent_module_name = __db_fetch_single_value(
         "select (m_name::json)->>'English' as \"module_name_english\" from module_definition where id =%s" % (
             parent_id))
-    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'))
+    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'), ('4', 'iFrame'))
     form_query = "select id, title from logger_xform where id = any(select xform_id from xform_config_data where status= 0)"
     form_list = __db_fetch_values(form_query)
     module_applicable_list = [['ulo', 'ULO'], ['lab', 'LAB']]
@@ -670,6 +653,7 @@ def add_module(request, parent_id=None):
         module_name_english = request.POST.get('module_name_english')
         module_type = request.POST.get('module_type')
         module_order = request.POST.get('module_order')
+        external_url = request.POST.get('external_url')
         node_parent = request.POST.get('node_parent')
         if module_type == Constants.MODULE_TYPE_ENTRY:
             xform_id = request.POST.get('xform_id')
@@ -681,25 +665,25 @@ def add_module(request, parent_id=None):
 
         parent_module = parent_id
         module_order = request.POST.get('module_order')
+        external_url = request.POST.get('external_url')
         applicable_for = request.POST.get('applicable_for')
-        print
-        applicable_for
         m_name = {'English': module_name_english, 'Bangla': module_name_bangla}
 
         try:
             insert_query = "INSERT INTO core.module_definition (m_name, module_type," \
-                           " applicable_for, created_at, created_by,xform_id, node_parent, \"order\") " \
-                           "VALUES('%s', '%s', '%s', now(), %d, %s, %s,%s) returning id;" % (json.dumps(m_name),
+                           " applicable_for, created_at, created_by,xform_id, node_parent, \"order\", external)url) " \
+                           "VALUES('%s', '%s', '%s', now(), %d, '%s', '%s', '%s', '%s') returning id;" % (json.dumps(m_name),
                                                                                              module_type,
                                                                                              applicable_for,
                                                                                              request.user.id, xform_id,
                                                                                              parent_module,
-                                                                                             module_order)
+                                                                                             module_order,
+                                                                                             external_url)
             id = __db_commit_query(insert_query)
 
             update_query = "update core.module_definition set node_parent = %s," \
-                           " \"order\" = %s, icon='%s' where id = %s" % (parent_module,
-                                                                         module_order, uploaded_file_url, str(id))
+                           " \"order\" = %s, external_url = %s, icon = '%s' where id = %s" % (parent_module,
+                                                                         module_order, external_url, uploaded_file_url, str(id))
             messages.success(request, '<i class="fa fa-check-circle"></i> Module Added successfully!',
 
                              extra_tags='alert-success crop-both-side')
@@ -742,7 +726,7 @@ def edit_module(request, module_id):
     if redirect_url is None:
         redirect_url = '/bhmodule/module-profile/' + str(module_dict['node_parent']) + '/'
 
-    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'))
+    module_type_list = (('1', 'New Entry'), ('2', 'List'), ('3', 'Container'), ('4', 'iFrame'))
     form_query = "select id, title from logger_xform"
     form_list = __db_fetch_values(form_query)
     module_applicable_list = [['ulo', 'ULO'], ['lab', 'LAB']]
@@ -753,31 +737,29 @@ def edit_module(request, module_id):
         module_type = request.POST.get('module_type')
         if module_type == Constants.MODULE_TYPE_ENTRY:
             xform_id = request.POST.get('xform_id')
-            print
-            xform_id
         else:
             xform_id = 'null'
-        print xform_id
+
         applicable_for = request.POST.get('applicable_for')
         parent_module = request.POST.get('parent_module')
         if parent_module == '':
             parent_module = 'null'
             redirect_url = '/bhmodule/module-profile/' + str(module_id) + '/'
         module_order = request.POST.get('module_order')
+        external_url = request.POST.get('external_url')
         if request.FILES:
             myfile = request.FILES['module_icon']
             icon = utility_functions.document_upload(myfile, myfile.name, 'module_icon')
         else:
             icon = request.POST.get('icon')
 
-        print applicable_for
         m_name = {'English': module_name_english, 'Bangla': module_name_bangla}
         update_query = "update core.module_definition set m_name='%s', module_type='%s'," \
                        "applicable_for='%s',updated_at=now(), updated_by = %d, xform_id=%s,node_parent = %s," \
-                       " \"order\" = %s, icon='%s' " \
+                       " \"order\" = %s, external_url = %s, icon = '%s' " \
                        "where id = %s " % (json.dumps(m_name), module_type,
                                            applicable_for, request.user.id, xform_id, parent_module,
-                                           module_order, icon, module_id)
+                                           module_order, external_url, icon, module_id)
         __db_commit_query(update_query)
         messages.success(request, '<i class="fa fa-check-circle"></i> Module Edited successfully!',
                          extra_tags='alert-success crop-both-side')
@@ -806,7 +788,7 @@ def module_list(request):
     module_query = "select id, (m_name::json)->>'English' as \"module_name_english\"," \
                    " (m_name::json)->>'Bangla' as \"module_name_bangla\", " \
                    "(case when module_type='1' then 'New Entry' when " \
-                   "module_type='2' then 'List' when module_type='3' then 'Container' end ) module_type, " \
+                   "module_type='2' then 'List' when module_type='3' then 'Container' when module_type='4' then 'iFrame' end ) module_type, " \
                    "applicable_for, (select title from logger_xform where id = xform_id) as xform_id, " \
                    "\"order\",node_parent as node from core.module_definition "
     module_df = pandas.read_sql(module_query, connection)
@@ -814,6 +796,7 @@ def module_list(request):
     temp_df.columns = ['node', 'node_parent']
     module_df = module_df.merge(temp_df, on="node", how="left")
     module_df = module_df.fillna('')
+    print(module_df)
     module_data = module_df.to_dict('records')
     template = loader.get_template('module_list.html')
     context = RequestContext(request, {
@@ -867,9 +850,10 @@ def update_module_properties(request, module_id):
         else:
             parent_module = request.POST.get('parent_module')
         module_order = request.POST.get('module_order')
+        external_url = request.POST.get('external_url')
         try:
-            update_query = "update core.module_definition set node_parent = %s, \"order\" = %s, icon='%s' where id = %s" % (
-                parent_module, module_order, uploaded_file_url, module_id)
+            update_query = "update core.module_definition set node_parent = %s, \"order\" = %s, external_url = '%s', icon='%s' where id = %s" % (
+                parent_module, module_order, external_url, uploaded_file_url, module_id)
             cursor = connection.cursor()
             cursor.execute(update_query)
             cursor.close()
@@ -974,13 +958,10 @@ def add_entry_config(request, module_id):
 
     publish = 1 if publish == 'true' else 0
     status = 0 if status == 'true' else 1
-    # print post_dict
     entry_data = {}
 
     if 'entry_info' in post_dict:
         entry_info = json.loads(post_dict['entry_info'][0])
-        print entry_info
-        # entry_data = {}
         if 'entry_type' in entry_info:
             entry_type = entry_info['entry_type']
         if entry_type == Constants.ENTRY_TYPE_CUSTOM:
@@ -2020,8 +2001,6 @@ def module_access(request, module_id):
     @return: template
     """
     if request.method == 'POST':
-        print "Hello"
-        print request.POST
         bulk_query = ''
         new_access = request.POST.getlist('access_id')
         for val in new_access:
@@ -2124,7 +2103,6 @@ def module_catchment_tree(request, module_id):
     :return: template
     """
     redirect_url = request.GET.get('next')
-    print redirect_url
     query = "select * from geo_cluster where parent=-1"
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
@@ -2132,7 +2110,6 @@ def module_catchment_tree(request, module_id):
     name = df.name.tolist()
     all = zip(code, name)
     list_of_dictionary = []
-    start = time.time()
 
     for code, name in all:
         query = "select value from geo_cluster where parent =" + str(code) + " limit 1"
@@ -2143,7 +2120,6 @@ def module_catchment_tree(request, module_id):
             true = False
         temp = {"id": code, "text": name, "hasChildren": true, "children": []}
         list_of_dictionary.append(temp)
-    print list_of_dictionary
     datasource = json.dumps({'list_of_dictionary': list_of_dictionary})
 
     check_nodes = get_module_check_nodes(module_id)
@@ -2153,15 +2129,8 @@ def module_catchment_tree(request, module_id):
             query_for_json = "select uploaded_file_path from geo_data where id = " + str(each) + ""
             df = pandas.DataFrame()
             df = pandas.read_sql(query_for_json, connection)
-            # uploaded_file_path = df.uploaded_file_path.tolist()[0]
-            # if uploaded_file_path != "cd":
-            #     file = open(uploaded_file_path, 'r')
-            #     json_content = file.read()
-            #     file.close()
-            # else:
             json_content = "{}"
             json_content_dictionary.append(json_content)
-    print("END    " + str(time.time() - start))
     query = "select *, (m_name)::json->>'English' as name from module_definition where id=" + str(module_id)
     df = pandas.DataFrame()
     df = pandas.read_sql(query, connection)
@@ -2258,7 +2227,7 @@ def category_add(request):
         category_parent = category_parent if category_parent != '' else 'null'
 
         insert_query = """INSERT INTO core.master_category(category_name, parent_id, created_by, 
-        created_date, active)VALUES('%s', %s, %s, now(), true);""" % (
+        created_date, active)VALUES('%s', '%s', '%s', now(), true);""" % (
             category_name, category_parent, str(request.user.id))
 
         utility_functions.__db_commit_query(insert_query)
@@ -2419,7 +2388,7 @@ def category_item_add(request, category_id):
         parent_item = parent_item if parent_item != '' else 'null'
 
         insert_query = """INSERT INTO master_category_item(name_eng, name_bangla, value, 
-        category_id, parent_item_id, created_date) VALUES('%s', '%s', '%s', %s, %s, now());""" % (
+        category_id, parent_item_id, created_date) VALUES('%s', '%s', '%s', '%s', '%s', now());""" % (
             item_name_eng, item_name_bangla, item_value, category_id, parent_item)
 
         utility_functions.__db_commit_query(insert_query)
