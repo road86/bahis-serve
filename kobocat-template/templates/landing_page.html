@@ -74,18 +74,26 @@
                     <div class="caption">Quick Links</div>
                 </div>
                 <div class="portlet-body">
-                        <ul>
-                            {% for menu in main_menu_items %}
+                    <ul>
+                        {% if dashboard_url %}
+                            <li type-"button" class="btn btn-default btn-lg" style="margin: 10px;">
+                                <a target="_blank" href="{{dashboard_url}}">
+                                    <i class="fa fa-area-chart"></i>
+                                    <span class="title">Dashboard (beta)</span>
+                                </a>
+                            </li>
+                        {% endif %}
+                        {% for menu in main_menu_items %}
                             {% if menu.id != 35 %}  
-                            <li type=""button" class="btn btn-default btn-lg" style="margin: 10px;">
+                            <li type="button" class="btn btn-default btn-lg" style="margin: 10px;">
                                 <a href="{{menu.url}}">
                                     <i class="{{menu.icon_class}}"></i>
                                     <span class="title">{{menu.title}}</span>
                                 </a>
                             </li>
                             {% endif %}
-                            {% endfor %}
-                        </ul>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
