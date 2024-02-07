@@ -73,13 +73,34 @@ def get_user_branch(user_id):
     return branch_id
 
 
+def get_user_branch_geo(user_id):
+    """
+    this function will return user's branch geoid
+    :param user_id: `int` user ID
+    :return: `dataframe` geo Definition
+    """
+    branch_id = get_user_branch(user_id)
+    geo_id = get_branch_geo(branch_id)
+    return geo_id
+
+
+def get_branch_geo(branch_id):
+    """
+    this function will return user's branch geoid
+    :param user_id: `int` user ID
+    :return: `dataframe` geo Definition
+    """
+    geo_id = pandas.read_sql_query("""select geoid from core.branch_catchment_area where branch_id = %s and deleted_at is null""" % (str(branch_id)), connection).values[0,0]
+    return geo_id
+
+
 def get_branch_catchment(branch_id):
     """
     this function will return branch catchment
     :param branch_id: `int` branch ID
     :return: `dataframe` geo Definition
     """
-    geo_id = pandas.read_sql_query("""select geoid from core.branch_catchment_area where branch_id = %s and deleted_at is null""" % (str(branch_id)), connection).values[0,0]
+    geo_id = get_branch_geo(branch_id)
     parent = pandas.read_sql_query("""select parent from core.geo_cluster where value = %s""" % (str(geo_id)), connection).values[0,0]
     while parent > 0:
         geo_id = parent

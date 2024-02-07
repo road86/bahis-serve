@@ -86,6 +86,8 @@ from onadata.settings.common import KOBO_SERVER, WEB_SERVER, FORM_RENDERER_SERVE
 from rest_framework import status
 from . import uiform_publish
 
+from onadata.apps.bh_module.utility_functions import get_user_branch_geo
+
 field_list = ''
 
 
@@ -2170,12 +2172,29 @@ def parseXML(root, ins, parent, form_id):
         # indent -= 4
 
 
+def encode_geolocation(geolocation_id):
+    encoded_geolocation_id = geolocation_id * 42;
+    buffered_geolocation_id = str(encoded_geolocation_id).rjust(12,'0')
+    encoded_geolocation = ''.join(chr(int(n) + 66) for n in buffered_geolocation_id)
+    print(geolocation_id)
+    print(encode_geolocation)
+    return encoded_geolocation
+
+
 @login_required
 def landing_page(request):
+    dashboard_base_url = 'http://localhost:2000/?aid='  # FIXME make this dynamic
+    dashboard_url = None
+    if request.user.id == 651:
+        dashboard_url = dashboard_base_url + 'BBBBHJBIHBJE'
+    else:
+        geo_id = get_user_branch_geo(request.user.id)
+        dashboard_url = dashboard_base_url + encode_geolocation(geo_id)
     variables = RequestContext(request, {
         'head_title': 'Welcome to BAHIS',
         'username': request.user.username,
-        'version': 'v2.4.0' # FIXME make this dynamic
+        'version': 'v2.4.0', # FIXME make this dynamic
+        'dashboard_url': dashboard_url,
     })
     output = render(request, 'landing_page.html', variables);
     return HttpResponse(output)
