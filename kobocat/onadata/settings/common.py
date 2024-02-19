@@ -27,10 +27,10 @@ djcelery.setup_loader()
 KOBO_SERVER = os.environ.get('KOBO_SERVER_HOST')
 WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 FORM_RENDERER_SERVER = os.environ.get('KOBO_RENDERER_HOST')
-WEB_SERVER = os.environ.get('KOBO_SERVER_HOST')
 KOBO_MODULE_URL = os.environ.get('KOBO_SERVER_HOST')
 DEBUG = os.environ.get('DJANGO_DEBUG') == 'True'
 
+os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
 
 ####################
@@ -309,7 +309,7 @@ DATABASES = {
     'default' : {
         'ENGINE': 'django.contrib.gis.db.backends.postgis',
         'OPTIONS': {
-            'options': '-c search_path=public,instance,core,custom'
+            'options': '-c search_path=instance,core,public,custom'
         },
         'NAME': os.environ.get('KOBO_PSQL_DB_NAME'),
         'USER': os.environ.get('KOBO_PSQL_DB_USER'),

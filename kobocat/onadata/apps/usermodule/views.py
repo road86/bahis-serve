@@ -48,6 +48,9 @@ from django.conf import settings
 from django.core.files.storage import FileSystemStorage
 import os
 
+from oauthlib.oauth2 import LegacyApplicationClient
+from requests_oauthlib import OAuth2Session
+
 import csv
 EXIST_BRANCH = settings.IS_EXIST_BRANCH
 
@@ -56,7 +59,7 @@ def admin_check(user):
     if current_user:
         current_user = current_user[0]
     else:
-        return True    
+        return True
     return current_user.admin
 
 
@@ -341,7 +344,7 @@ def delete_user(request, user_id):
 def change_password(request):
     context = RequestContext(request)
     if request.GET.get('userid'):
-        edit_user = get_object_or_404(User, pk = request.GET.get('userid')) 
+        edit_user = get_object_or_404(User, pk = request.GET.get('userid'))
         logged_in_user = edit_user.username
         change_password_form = ChangePasswordForm(logged_in_user=logged_in_user)
     else:
@@ -407,7 +410,7 @@ def reset_password(request,reset_user_id):
         # Attempt to grab information from the raw form information.
         # Note that we make use of both UserForm and UserProfileForm.
         reset_password_form = ResetPasswordForm(data=request.POST)
-        
+
         if reset_password_form.is_valid() and reset_user is not None:
             """ current user is authenticated and also new password
              is available so change the password and redirect to
@@ -436,6 +439,19 @@ def reset_password(request,reset_user_id):
                 'reset_user':reset_user,'id':reset_user_id,
                 })
 
+# example http://119.40.84.203:3000
+oidc_server = os.environ.get('OIDC_SERVER')
+
+
+authorization_base_url = oidc_server + '/authorize/'
+token_url = oidc_server + '/token/'
+user_info_url = oidc_server + '/userinfo/'
+
+scope = ["openid", "profile", 'email', ]
+
+client_id = os.environ.get('CLIENT_ID')
+client_secret = os.environ.get('CLIENT_SECRET')
+
 
 def user_login(request):
     # Like before, obtain the context for the user's request.
@@ -453,6 +469,14 @@ def user_login(request):
         username = request.POST['username']
         password = request.POST['password']
 
+        oauth = OAuth2Session(client=LegacyApplicationClient(client_id=client_id))
+        token = oauth.fetch_token(token_url=token_url, username=username, password=password, client_id=client_id,
+                                  client_secret=client_secret)
+
+        request.session['token'] = token
+        print("~~~~~~~~~~~access token~~~~~~~~~", request.session['token']['access_token'])
+
+
         # Use Django's machinery to attempt to see if the username/password
         # combination is valid - a User object is returned if it is.
         user = authenticate(username=username, password=password)
@@ -460,12 +484,12 @@ def user_login(request):
         # If we have a User object, the details are correct.
         # If None (Python's way of representing the absence of a value), no user
         # with matching credentials was found.
-        if user:
+        if user and token['access_token']:
             # number of login attempts allowed
             max_allowed_attempts = 5
             # count of invalid logins in db
             counter_login_attempts = UserFailedLogin.objects.filter(user_id=user.id).count()
-            # check for number of allowed logins if it crosses limit do not login.
+            # check for number of allowed logins if it crosses limit do not log in.
             if counter_login_attempts > max_allowed_attempts:
                 return HttpResponse("Your account is locked for multiple invalid logins, contact admin to unlock")
 
@@ -483,7 +507,7 @@ def user_login(request):
                 # return HttpResponse("Your User account is disabled.")
                 return error_page(request,"Your User account is disabled")
         else:
-            # Bad login details were provided. So we c an't log the user in.
+            # Bad login details were provided. So we can't log the user in.
             # try:
             #     attempted_user_id = User.objects.get(username=username).pk
             # except User.DoesNotExist:
@@ -495,8 +519,8 @@ def user_login(request):
             return render(request, 'usermodule/login.html',
                           {'data': "Invalid login details supplied", 'redirect_url': redirect_url})
 
-    # The request is not a HTTP POST, so display the login form.
-    # This scenario would most likely be a HTTP GET.
+    # The request is not an HTTP POST, so display the login form.
+    # This scenario would most likely be an HTTP GET.
     else:
         # No context variables to pass to the template system, hence the
         # blank dictionary object...
@@ -541,7 +565,7 @@ def unlock(request):
     param_user_id = request.POST['id']
     current_user = request.user
     response_data = {}
-    
+
     user = UserModuleProfile.objects.filter(user_id=current_user.id)
     admin = False
     if user:
@@ -591,7 +615,7 @@ def add_menu(request):
         return HttpResponseRedirect('/usermodule/menu-list/')
     else:
         menu_form = MenuForm()
-    
+
     # Render the template depending on the context.
         return render(request,
             'usermodule/add_menu.html',
@@ -616,13 +640,13 @@ def edit_menu(request,menu_id):
     context = RequestContext(request)
     edited = False
     menu = get_object_or_404(MenuItem, id=menu_id)
-    
+
     # If it's a HTTP POST, we're interested in processing form data.
     if request.method == 'POST':
         # Attempt to grab information from the raw form information.
         # Note that we make use of both UserForm and UserProfileForm.
         menu_form = MenuForm(data=request.POST,instance=menu)
-        
+
         # If the two forms are valid...
         if menu_form.is_valid():
             edited_user = menu_form.save(commit=False);
@@ -840,7 +864,7 @@ def add_role_menu_map(request):
     else:
         if request.user.is_superuser:
             RoleMenuMapForm.base_fields['role'] = forms.ModelChoiceField(queryset=OrganizationRole.objects.all().order_by("organization"),empty_label="Select a Organization Role")
-            
+
         else:
             org_id_list = get_organization_by_user(request.user)
             RoleMenuMapForm.base_fields['role'] = forms.ModelChoiceField(queryset=OrganizationRole.objects.filter(organization__in=org_id_list).order_by("organization"),empty_label="Select a Organization Role")
@@ -895,11 +919,11 @@ def organization_roles(request):
     context = RequestContext(request)
     if request.user.is_superuser:
         all_organizations = Organizations.objects.all()
-    else:    
+    else:
         org_id_list = get_organization_by_user(request.user)
         all_organizations = Organizations.objects.filter(pk__in=org_id_list)
     message = None
-    if len(all_organizations) == 0:    
+    if len(all_organizations) == 0:
         message = "You do not have any Organizations under your supervision."
     return render(request,
             'usermodule/organization_roles.html',
@@ -913,7 +937,7 @@ def user_role_map(request, org_id=None):
     roles = OrganizationRole.objects.filter(organization=org_id)
     users = UserModuleProfile.objects.filter(organisation_name=org_id)
     message = None
-    if len(roles) == 0 or len(users) == 0:    
+    if len(roles) == 0 or len(users) == 0:
         message = "Your organization must have atleast one user and one role before assignment."
     return render(request,
             'usermodule/user_role_map.html',
@@ -941,7 +965,7 @@ def adjust_user_role_map(request, org_id=None):
     UserRoleMapfForm.base_fields['role'] = forms.ModelChoiceField(queryset=roles,empty_label=None)
     PermisssionFormSet = formset_factory(UserRoleMapfForm,max_num=len(users))
     new_formset = PermisssionFormSet(initial=initial_list)
-    
+
     if request.method == 'POST':
         new_formset = PermisssionFormSet(data=request.POST)
         for idx,user_role_form in enumerate(new_formset):
@@ -963,7 +987,7 @@ def adjust_user_role_map(request, org_id=None):
         messages.success(request, '<i class="fa fa-check-circle"></i> Organization Roles have been adjusted successfully!',
                          extra_tags='alert-success crop-both-side')
         return HttpResponseRedirect('/usermodule/user-role-map/'+org_id)
-    
+
     return render(request,
             'usermodule/add_user_role_map.html',
             {
@@ -977,7 +1001,7 @@ def adjust_user_role_map(request, org_id=None):
 
 def error_page(request,message = None):
     context = RequestContext(request)
-    if not message:    
+    if not message:
         message = "Something went wrong"
     return render(request,
             'usermodule/error_404.html',
@@ -2765,7 +2789,7 @@ def getUserRoles(request):
     elif organization !="":
         filter_query += " organization_id = "+str(organization)
 
-    
+
 
     query = "WITH t AS(SELECT(SELECT user_id FROM usermodule_usermoduleprofile WHERE id = m.user_id)user_id, role_id FROM usermodule_userrolemap m ), t1 AS (SELECT user_id, ROLE, 1 AS status FROM t, usermodule_organizationrole r WHERE t.role_id = r.id), t2 AS (SELECT auth_user.id user_id, ROLE FROM auth_user, usermodule_organizationrole "+str(filter_query)+"), all_false AS (SELECT user_id, ROLE FROM t2 EXCEPT SELECT user_id, ROLE FROM t1), all_false1 AS (SELECT *, 0 AS status FROM all_false), final_res AS (SELECT * FROM t1 UNION ALL SELECT * FROM all_false1) SELECT user_id, (SELECT username FROM auth_user WHERE id = user_id) username, (SELECT first_name || ' ' || last_name FROM auth_user WHERE id = user_id) fullname, ROLE, status FROM final_res"
 
